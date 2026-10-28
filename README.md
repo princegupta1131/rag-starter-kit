@@ -34,10 +34,7 @@ New to this? Follow the step-by-step **[Setup Guide](docs/SETUP_GUIDE.md)** (inc
 
 ### Ingestion: content in
 
-```mermaid
-flowchart LR
-    A([Upload]) --> B[Extract] --> C[Caption] --> D[Chunk] --> E[Embed] --> F[(Store)]
-```
+**Upload → Extract → Caption → Chunk → Embed → Store**
 
 | Step | What it does |
 |---|---|
@@ -49,10 +46,7 @@ flowchart LR
 
 ### Retrieval: question to answer
 
-```mermaid
-flowchart LR
-    G([Guard]) --> C[Cache] --> R[Rewrite] --> E[Embed] --> S[Search] --> A[Answer] --> K([Check])
-```
+**Question → Guard → Cache → Rewrite → Embed → Search → Answer → Check → Reply**
 
 | Step | What it does |
 |---|---|
