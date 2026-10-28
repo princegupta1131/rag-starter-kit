@@ -1,13 +1,14 @@
 """
 Postgres + pgvector: connection and table setup.
 
-Two tables hold everything:
+The tables are defined in backend/sql/schema.sql:
     documents  -> one row per uploaded file (status, steps log)
     chunks     -> one row per searchable piece of text, with
                   * embedding  : vector for meaning-based search
                   * tsv        : keyword index for exact-word search (auto-filled by Postgres)
 """
 from contextlib import contextmanager
+from pathlib import Path
 
 import psycopg
 from pgvector.psycopg import register_vector
@@ -26,42 +27,18 @@ def get_conn():
         conn.close()
 
 
+SCHEMA_FILE = Path(__file__).resolve().parents[2] / "sql" / "schema.sql"
+
+
 def init_schema() -> None:
-    """Create the extension, tables and indexes if they don't exist yet. Safe to run on every start."""
+    """Run backend/sql/schema.sql. Safe on every start: it only creates what is missing."""
     lang = settings.text_search_language
     dim = settings.embed_dim
+    # schema.sql is written with the defaults; swap in this project's settings
+    sql = SCHEMA_FILE.read_text(encoding="utf-8")
+    sql = sql.replace("vector(768)", f"vector({dim})").replace("to_tsvector('english'", f"to_tsvector('{lang}'")
     with psycopg.connect(settings.database_url, autocommit=True) as conn:
-        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS documents (
-                id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                filename      TEXT NOT NULL,
-                content_hash  TEXT NOT NULL UNIQUE,
-                status        TEXT NOT NULL DEFAULT 'queued',   -- queued | processing | ready | failed
-                error         TEXT,
-                num_chunks    INT NOT NULL DEFAULT 0,
-                steps         JSONB NOT NULL DEFAULT '[]',      -- ingestion trace shown in the UI
-                created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-            )
-            """
-        )
-        conn.execute(
-            f"""
-            CREATE TABLE IF NOT EXISTS chunks (
-                id           BIGSERIAL PRIMARY KEY,
-                document_id  UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
-                chunk_index  INT NOT NULL,
-                page         INT,
-                content      TEXT NOT NULL,
-                embedding    vector({dim}) NOT NULL,
-                tsv          tsvector GENERATED ALWAYS AS (to_tsvector('{lang}', content)) STORED
-            )
-            """
-        )
-        conn.execute("CREATE INDEX IF NOT EXISTS chunks_embedding_idx ON chunks USING hnsw (embedding vector_cosine_ops)")
-        conn.execute("CREATE INDEX IF NOT EXISTS chunks_tsv_idx ON chunks USING gin (tsv)")
-        conn.execute("CREATE INDEX IF NOT EXISTS chunks_document_idx ON chunks (document_id)")
+        conn.execute(sql)
 
         # The vector size is fixed when the table is created. Catch a changed EMBED_DIM early.
         row = conn.execute(

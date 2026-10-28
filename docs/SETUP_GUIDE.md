@@ -28,6 +28,9 @@ Use any Postgres that has **pgvector**:
 | Your own Postgres | `createdb rag_starter` | `postgresql://USER:PASSWORD@localhost:5432/rag_starter` |
 | No Postgres | free project on [Supabase](https://supabase.com) or [Neon](https://neon.tech) | copy the connection string they give you |
 
+The tables are created automatically when the app starts.
+To create them yourself instead: `psql "your-database-url" -f backend/sql/schema.sql`
+
 ---
 
 ## Step 3: Install
