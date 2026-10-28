@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Requests to /api/* are forwarded to the Python backend, so the UI needs no config.
+// /api/* is forwarded to the backend, so the UI needs no config of its own.
 export default defineConfig({
   plugins: [react()],
   server: {

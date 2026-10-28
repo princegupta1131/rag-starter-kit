@@ -1,16 +1,9 @@
 """
-STEP 4 — EMBED: turn every chunk into a vector (a list of EMBED_DIM numbers).
-
-Chunks with similar meaning get vectors that point in a similar direction,
-which is what lets step 5 of retrieval find "anaemia treatment" when the
-question says "how to treat low blood".
-
-We tell Gemini these are RETRIEVAL_DOCUMENT texts; questions are embedded
-as RETRIEVAL_QUERY. The model is multilingual, so a Hindi question can match
-English content.
+STEP 4 — EMBED: turn every chunk into a vector with the configured embedding model.
+Search (retrieval step 4) must use the same model, so the model name is stored per document.
 """
-from app.shared import gemini
+from app.providers import get_embedder
 
 
 def embed_chunks(chunks: list[dict]) -> list[list[float]]:
-    return gemini.embed([c["text"] for c in chunks], task="RETRIEVAL_DOCUMENT")
+    return get_embedder().embed_documents([c["text"] for c in chunks])

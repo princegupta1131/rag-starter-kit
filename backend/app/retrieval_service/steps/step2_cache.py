@@ -1,29 +1,23 @@
 """
-STEP 2 — CACHE: answer repeated questions instantly, without calling the LLM.
+STEP 2 — CACHE: answer a repeated question instantly, without calling the LLM.
 
-Key = normalised question + a fingerprint of the document set, so the cache
-empties itself whenever a document is added or deleted.
-Only first questions are cached; follow-ups depend on the conversation.
+Key = collection + a fingerprint of its documents + the normalised question, so the
+cache empties itself when documents change. Follow-up questions are never cached.
 
-This is an exact-match, in-memory cache (lost on restart).
-Extend: a *semantic* cache that also matches re-worded questions by embedding
-similarity, or Redis to share it between servers.
+In-memory and per process. For several servers, replace this module with Redis.
 """
 import time
+from uuid import UUID
 
 from app.config import settings
-from app.shared.database import get_conn
+from app.repositories import chunks as chunks_repo
 
-_store: dict[str, tuple[float, dict]] = {}
 MAX_ENTRIES = 500
+_store: dict[str, tuple[float, dict]] = {}
 
 
-def make_key(question: str) -> str:
-    with get_conn() as conn:
-        docs, chunks = conn.execute(
-            "SELECT count(*), coalesce(sum(num_chunks), 0) FROM documents WHERE status = 'ready'"
-        ).fetchone()
-    return f"{docs}:{chunks}:{' '.join(question.lower().split())}"
+def make_key(question: str, collection_id: UUID | None) -> str:
+    return f"{chunks_repo.corpus_fingerprint(collection_id)}:{' '.join(question.lower().split())}"
 
 
 def get(key: str) -> dict | None:
@@ -41,3 +35,7 @@ def put(key: str, response: dict) -> None:
     if len(_store) >= MAX_ENTRIES:
         _store.pop(next(iter(_store)))  # drop the oldest
     _store[key] = (time.time(), response)
+
+
+def clear() -> None:
+    _store.clear()

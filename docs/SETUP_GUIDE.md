@@ -5,7 +5,7 @@
 - **Python** 3.10+ → <https://www.python.org/downloads/>
 - **Node.js** 22 → <https://nodejs.org/>
 - **Git** → <https://git-scm.com/downloads>
-- **Gemini API key** (free) → <https://aistudio.google.com/apikey>
+- **Gemini API key** (free) → <https://aistudio.google.com/apikey>, or an OpenAI key
 - **A Postgres database** with pgvector (see Step 2)
 
 ---
@@ -29,7 +29,7 @@ Use any Postgres that has **pgvector**:
 | No Postgres | free project on [Supabase](https://supabase.com) or [Neon](https://neon.tech) | copy the connection string they give you |
 
 The tables are created automatically when the app starts.
-To create them yourself instead: `psql "your-database-url" -f backend/sql/schema.sql`
+To create them yourself instead, run the files in `backend/sql/migrations/` in order with `psql`.
 
 ---
 
@@ -45,6 +45,8 @@ Open `backend/.env` and fill in these 2 lines:
 DATABASE_URL=your-database-url
 GEMINI_API_KEY=your-gemini-key
 ```
+
+Using OpenAI instead? Set `LLM_PROVIDER=openai` and `OPENAI_API_KEY=your-openai-key`.
 
 Check it:
 
@@ -66,9 +68,10 @@ Open **<http://localhost:5173>**. Press **Ctrl + C** to stop.
 
 ## Step 5: Use it
 
-1. Upload `sample-docs/greenleaf-employee-handbook.md`
-2. Wait until it shows **READY**
-3. Ask: *How many days of annual leave do I get?*
+1. Pick the **Default** collection (or create one with **+ New**)
+2. Upload `sample-docs/greenleaf-employee-handbook.md`
+3. Wait until it shows **READY**
+4. Ask: *How many days of annual leave do I get?*
 
 ---
 
@@ -88,6 +91,7 @@ make run
 | `make setup` | Install everything (first time only) |
 | `make check` | Test your database and Gemini key |
 | `make run` | Start the app |
+| `make test` | Run the tests |
 
 ---
 
@@ -97,7 +101,7 @@ make run
 cd backend
 py -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 copy .env.example .env
 python check_setup.py
 uvicorn app.main:app --reload --port 8000

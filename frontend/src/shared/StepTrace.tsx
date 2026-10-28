@@ -1,8 +1,9 @@
-// Shows a pipeline trace from the backend: [{step, detail, ms, ok}]
-// Used by both panels so learners see what every step did.
+// Renders a pipeline trace from the backend, used by both panels.
 
-export default function StepTrace({ steps }) {
-  if (!steps?.length) return null
+import type { TraceStep } from '../types'
+
+export default function StepTrace({ steps }: { steps: TraceStep[] }) {
+  if (!steps.length) return null
   const total = steps.reduce((sum, s) => sum + s.ms, 0)
   return (
     <ol className="trace">
@@ -22,4 +23,4 @@ export default function StepTrace({ steps }) {
   )
 }
 
-const formatMs = (ms) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${ms} ms`)
+const formatMs = (ms: number) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${ms} ms`)

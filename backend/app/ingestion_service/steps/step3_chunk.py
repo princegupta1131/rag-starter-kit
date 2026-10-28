@@ -1,9 +1,6 @@
 """
 STEP 3 — CHUNK: split long text into small, searchable pieces.
 
-Why: an embedding of a whole 50-page PDF is too blurry to match a specific question,
-and the LLM can only read a limited amount. Small pieces = precise search.
-
 How (sentence-aware sliding window):
   1. Split text into sentences.
   2. Add sentences to a chunk until it reaches CHUNK_SIZE_WORDS.
@@ -11,7 +8,6 @@ How (sentence-aware sliding window):
      crosses a boundary is still found.
   4. Skip exact duplicate chunks (e.g. repeated headers/footers).
 
-Try in the hands-on: change CHUNK_SIZE_WORDS (100 vs 400) and compare answers.
 """
 import hashlib
 import re

@@ -1,11 +1,14 @@
 # RAG Starter Kit
 
-A small, complete **RAG** (Retrieval-Augmented Generation) app for learning.
-Upload documents, ask questions, and get answers **from your documents, with sources**.
+A clean, working **RAG** (Retrieval-Augmented Generation) boilerplate: upload documents, ask questions,
+get answers **from your documents, with sources**. Use it to learn RAG, or as the base for your own app.
 
-- **Backend:** Python, FastAPI, Postgres + pgvector, Gemini
-- **Frontend:** React, one page
-- **You set only two things:** `DATABASE_URL` and `GEMINI_API_KEY`
+- **Backend:** Python, FastAPI, Postgres + pgvector
+- **LLM:** Gemini (default) or OpenAI, behind one interface
+- **Frontend:** React + TypeScript, one page
+- **You set only two things:** `DATABASE_URL` and an API key
+
+[![CI](https://github.com/princegupta1131/rag-starter-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/princegupta1131/rag-starter-kit/actions/workflows/ci.yml)
 
 ---
 
@@ -17,7 +20,7 @@ cd rag-starter-kit
 make setup
 ```
 
-Put your two values in `backend/.env`, then:
+Put your `DATABASE_URL` and `GEMINI_API_KEY` in `backend/.env`, then:
 
 ```bash
 make check
@@ -26,7 +29,20 @@ make run
 
 Open <http://localhost:5173>
 
-New to this? Follow the step-by-step **[Setup Guide](docs/SETUP_GUIDE.md)** (includes Windows).
+Step-by-step instructions (including Windows): **[Setup Guide](docs/SETUP_GUIDE.md)**
+
+---
+
+## Features
+
+- **Collections:** separate knowledge bases (e.g. "HR", "Product"); chat with one at a time
+- **Any document:** PDF, Word, TXT, Markdown, CSV, JSON, HTML, and images (described by the vision model)
+- **Hybrid search:** meaning (pgvector) + keywords (Postgres full-text), fused with RRF
+- **Grounded answers:** says "not found" when nothing matches; every fact cites a source; fake citations removed
+- **Clean answers:** formatted Markdown, only relevant sources, the most relevant sentence shown for each
+- **Step trace:** every upload and answer shows what each pipeline step did and how long it took
+- **Swappable LLM:** Gemini or OpenAI with one setting; add others with one file
+- **Production basics:** connection pool, SQL migrations, typed API, one error format, logging, tests, CI
 
 ---
 
@@ -39,7 +55,7 @@ New to this? Follow the step-by-step **[Setup Guide](docs/SETUP_GUIDE.md)** (inc
 | Step | What it does |
 |---|---|
 | 1. Extract | Gets text from PDF, Word, TXT, Markdown, CSV, JSON, HTML |
-| 2. Caption | Describes images with Gemini so they become text |
+| 2. Caption | Describes images with the vision model so they become text |
 | 3. Chunk | Splits text into small overlapping pieces |
 | 4. Embed | Turns each piece into a vector (numbers that capture meaning) |
 | 5. Store | Saves pieces + vectors in Postgres, ready to search |
@@ -55,10 +71,8 @@ New to this? Follow the step-by-step **[Setup Guide](docs/SETUP_GUIDE.md)** (inc
 | 3. Rewrite | Fixes typos and completes follow-up questions |
 | 4. Embed | Turns the question into a vector |
 | 5. Search | Finds matching pieces by meaning **and** by keywords |
-| 6. Answer | Says "not found" if nothing matches well; otherwise Gemini answers using only those pieces |
-| 7. Check | Makes sure the answer cites real sources |
-
-In the app, every document and every answer shows these steps with what happened and how long each took.
+| 6. Answer | Says "not found" if nothing matches well; otherwise answers from the relevant pieces only |
+| 7. Check | Keeps only real citations and returns the cited sources |
 
 ---
 
@@ -67,50 +81,47 @@ In the app, every document and every answer shows these steps with what happened
 ```
 rag-starter-kit/
 ├── backend/
-│   ├── .env.example            your settings (copy to .env)
-│   ├── sql/schema.sql          database tables (created automatically)
-│   └── app/
-│       ├── ingestion_service/  content in   (steps/step1 … step5)
-│       ├── retrieval_service/  answers out  (steps/step1 … step7, prompts/)
-│       └── shared/             database, Gemini, step trace
-├── frontend/src/features/
-│   ├── ingestion/              left panel: upload
-│   └── retrieval/              right panel: chat
-├── docs/SETUP_GUIDE.md
-├── sample-docs/                a practice document
-└── Makefile                    make setup / check / run
+│   ├── app/
+│   │   ├── main.py                 app entry: routers, startup, /api/health
+│   │   ├── config.py               every setting and its default
+│   │   ├── core/                   database pool, migrations, errors, logging, step trace
+│   │   ├── providers/              LLM + embeddings: base.py (interfaces), gemini.py, openai.py
+│   │   ├── repositories/           all SQL: collections, documents, chunks
+│   │   ├── collections_service/    /api/collections
+│   │   ├── ingestion_service/      /api/documents   (steps/step1 … step5)
+│   │   └── retrieval_service/      /api/chat        (steps/step1 … step7, prompts/)
+│   ├── sql/migrations/             numbered SQL files, applied on startup
+│   ├── tests/                      unit + API tests (no API key needed)
+│   └── .env.example                all settings
+├── frontend/src/
+│   ├── api/client.ts               typed calls to the backend
+│   ├── types.ts                    response types (mirror backend schemas)
+│   ├── shared/                     step trace, answer renderer
+│   └── features/                   collections/, ingestion/, retrieval/
+├── docs/                           setup guide, extending guide, hands-on exercises
+└── Makefile                        setup / check / run / test / lint
 ```
 
-Each step is its own file, named in order (`step1_extract.py`, `step2_caption.py`, …), with a short note at the top explaining what it does.
+**Rules of the codebase:** steps never write SQL (that's `repositories/`), and nothing outside
+`providers/` knows which LLM is used. Each service has `api.py` (HTTP), `schemas.py` (types),
+`pipeline.py` (order of steps) and `steps/` (one file per step).
 
 ---
 
-## Where to change what
+## Configuration
+
+All settings live in `backend/.env`; every option and its default is in [`.env.example`](backend/.env.example).
 
 | I want to… | Change |
 |---|---|
+| Use OpenAI instead of Gemini | `LLM_PROVIDER=openai` and `OPENAI_API_KEY` (then upload documents again) |
+| Use a different model | `CHAT_MODEL`, `EMBED_MODEL` |
 | Change the assistant's rules or tone | `backend/app/retrieval_service/prompts/answer_system.md` |
-| Change chunk size | `CHUNK_SIZE_WORDS` in `.env` (then re-upload) |
-| Be stricter or looser about "not found" | `MIN_SIMILARITY` in `.env` |
-| Send more or fewer pieces to Gemini | `TOP_K` in `.env` |
-| Use a different Gemini model | `CHAT_MODEL` in `.env` |
-| Use another LLM provider | `backend/app/shared/gemini.py` |
-| Support a new file type | `backend/app/ingestion_service/steps/step1_extract.py` |
-| Add a safety rule | `backend/app/retrieval_service/steps/step1_guard.py` |
+| Change chunk size | `CHUNK_SIZE_WORDS`, `CHUNK_OVERLAP_WORDS` (then upload again) |
+| Be stricter or looser about "not found" | `MIN_SIMILARITY` |
+| Send more or fewer pieces to the LLM | `TOP_K` |
 
-All settings and their defaults are listed in `backend/.env.example`. Restart `make run` after changing `.env`.
-
----
-
-## Hands-on exercises
-
-1. **Chunk size:** set `CHUNK_SIZE_WORDS=60`, re-upload, and compare answers. Then try `400`.
-2. **"Not found" threshold:** ask something off-topic. Try `MIN_SIMILARITY=0.3`, then `0.8`.
-3. **Follow-ups:** ask "until when?" after a question. Compare `QUERY_REWRITE=true` and `false`.
-4. **Keyword search:** ask for an exact word like "TravelDesk" and check the Search step.
-5. **Prompts:** edit `prompts/answer_system.md` (e.g. "answer in 2 sentences"). No restart needed.
-6. **Languages:** ask in Hindi about the English sample document.
-7. **Build a step:** add a step between Chunk and Embed that adds keywords to each piece.
+Adding a provider, file type, pipeline step or database table: **[Extending guide](docs/EXTENDING.md)**
 
 ---
 
@@ -118,35 +129,52 @@ All settings and their defaults are listed in `backend/.env.example`. Restart `m
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/health` | Is the database connected and the key set? |
-| `POST` | `/api/documents` | Upload files |
+| `GET` | `/api/health` | Database, provider and document counts |
+| `GET` `POST` | `/api/collections` | List / create collections |
+| `DELETE` | `/api/collections/{id}` | Delete a collection and its documents |
+| `POST` | `/api/documents` | Upload files (`collection_id` + `files`) |
 | `POST` | `/api/documents/text` | Add pasted text |
-| `GET` | `/api/documents` | List documents and their status |
+| `GET` | `/api/documents?collection_id=` | List documents and their status |
 | `GET` | `/api/documents/{id}/chunks` | See a document's pieces |
 | `DELETE` | `/api/documents/{id}` | Delete a document |
-| `POST` | `/api/chat` | Ask a question |
+| `POST` | `/api/chat` | Ask a question (`question`, `history`, `collection_id`) |
 
-Interactive docs: <http://localhost:8000/docs> (while the app is running).
-
----
-
-## Problems?
-
-See **[Setup Guide → Problems](docs/SETUP_GUIDE.md#problems)**. Two more you may hit:
-
-| Error | Fix |
-|---|---|
-| Every answer says "not found" | Open **How this answer was made**, check *best similarity*, and lower `MIN_SIMILARITY` |
-| `404 model not found` | Pick a current model from <https://ai.google.dev/gemini-api/docs/models> and set `CHAT_MODEL` |
+Full, typed docs at <http://localhost:8000/docs> while the app runs.
+Errors always look like `{"error": {"code": "not_found", "message": "..."}}`.
 
 ---
 
-## From starter to production
+## Development
 
-| This kit | A production RAG usually adds |
+```bash
+make test    # unit tests: no database, no API key, no network
+make lint    # ruff + TypeScript
+```
+
+For the full API tests, create an empty database whose name contains `test` (it gets wiped) and set
+`TEST_DATABASE_URL` in `backend/.env`. CI runs lint, unit tests and the frontend build on every push.
+
+---
+
+## Going to production
+
+This kit includes the basics. Before serving real users, also consider:
+
+| This kit | Add for production |
 |---|---|
-| Background task in FastAPI | A job queue (Celery, Redis) |
-| Text files and images | OCR for scans, speech-to-text for audio and video |
-| In-memory cache | A shared cache (Redis) that also matches reworded questions |
-| Simple safety rules | A classifier for unsafe or urgent questions |
-| Manual testing | A test set of questions run on every change |
+| No login | Authentication, and per-user access to collections |
+| Background tasks inside the web server | A job queue (Celery, RQ) for large or many uploads |
+| In-memory answer cache | Redis, shared by all servers |
+| Text and images | OCR for scanned PDFs, speech-to-text for audio and video |
+| Rule-based guard | A safety classifier for your domain |
+| Tests with fake providers | An evaluation set of real questions and expected answers |
+
+---
+
+## Training
+
+Running a workshop with this repo? See the **[hands-on exercises](docs/HANDS_ON.md)**.
+
+## License
+
+[MIT](LICENSE)

@@ -1,24 +1,26 @@
-# One-word commands for the RAG Starter Kit.
-#   make setup   install everything (first time only)
-#   make check   test your database + Gemini key
-#   make run     start backend + frontend together (Ctrl+C stops both)
+# One-word commands.
+#   make setup   install everything (first time)
+#   make check   test your database + LLM key
+#   make run     start backend + frontend (Ctrl+C stops both)
+#   make test    run the tests (add TEST_DATABASE_URL for the database tests)
+#   make lint    check code style and types
 
 PYTHON ?= python3
 VENV    = backend/.venv/bin
 
-.PHONY: help setup check run backend frontend
+.PHONY: help setup check run backend frontend test lint
 
 help:
 	@echo "make setup     install backend + frontend (first time only)"
-	@echo "make check     test DATABASE_URL and GEMINI_API_KEY in backend/.env"
+	@echo "make check     test DATABASE_URL and your LLM key in backend/.env"
 	@echo "make run       start backend (:8000) + frontend (:5173)"
-	@echo "make backend   start only the backend"
-	@echo "make frontend  start only the frontend"
+	@echo "make test      run tests (set TEST_DATABASE_URL to include database tests)"
+	@echo "make lint      ruff (Python) + TypeScript check"
 
 setup:
 	cd backend && $(PYTHON) -m venv .venv
 	$(VENV)/pip install -q --upgrade pip
-	$(VENV)/pip install -q -r backend/requirements.txt
+	$(VENV)/pip install -q -r backend/requirements-dev.txt
 	@if [ ! -f backend/.env ]; then cp backend/.env.example backend/.env; echo "Created backend/.env"; fi
 	cd frontend && npm install --no-audit --no-fund
 	@echo ""
@@ -40,3 +42,10 @@ run:
 	$(MAKE) --no-print-directory backend & \
 	$(MAKE) --no-print-directory frontend & \
 	wait
+
+test:
+	cd backend && .venv/bin/python -m pytest -q
+
+lint:
+	cd backend && .venv/bin/ruff check .
+	cd frontend && npm run typecheck

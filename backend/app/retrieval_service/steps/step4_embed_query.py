@@ -1,11 +1,10 @@
 """
-STEP 4 — EMBED QUERY: turn the search query into a vector.
-
-Must use the SAME embedding model and size as ingestion (EMBED_MODEL, EMBED_DIM),
-otherwise the question and the chunks live in different "spaces" and can't be compared.
+STEP 4 — EMBED QUERY: turn the search query (and the original question, if different) into vectors,
+with the same model used at ingestion.
 """
-from app.shared import gemini
+from app.providers import get_embedder
 
 
-def embed_query(query: str) -> list[float]:
-    return gemini.embed([query], task="RETRIEVAL_QUERY")[0]
+def embed_queries(search_query: str, question: str) -> list[list[float]]:
+    queries = [search_query] if search_query.strip().lower() == question.strip().lower() else [search_query, question]
+    return [get_embedder().embed_query(q) for q in queries]

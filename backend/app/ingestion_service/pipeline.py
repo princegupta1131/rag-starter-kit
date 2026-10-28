@@ -1,30 +1,27 @@
 """
-INGESTION PIPELINE — runs the 5 steps in order for one document.
+INGESTION PIPELINE: runs the steps in order for one document.
 
-    file bytes
-      -> step1_extract   text out of PDF / DOCX / TXT / HTML ...
-      -> step2_caption   images described by Gemini vision
-      -> step3_chunk     split into overlapping pieces
-      -> step4_embed     each piece -> vector
-      -> step5_store     save to Postgres, mark document 'ready'
+    file bytes -> extract -> caption -> chunk -> embed -> store
 
-Runs in the background after upload; progress is saved in documents.steps
-so the UI can show it.
+Runs as a FastAPI background task. Progress is saved in documents.steps for the UI.
+To use a job queue (Celery, RQ, ...), call run_ingestion() from your worker instead.
 """
-from psycopg.types.json import Jsonb
+import logging
 
+from app.core.trace import Trace
 from app.ingestion_service.steps.step1_extract import extract
 from app.ingestion_service.steps.step2_caption import caption
 from app.ingestion_service.steps.step3_chunk import chunk_sections
 from app.ingestion_service.steps.step4_embed import embed_chunks
 from app.ingestion_service.steps.step5_store import store_chunks
-from app.shared.database import get_conn
-from app.shared.trace import Trace
+from app.repositories import documents as documents_repo
+
+log = logging.getLogger(__name__)
 
 
 def run_ingestion(document_id: str, filename: str, data: bytes) -> None:
     trace = Trace()
-    _set_status(document_id, "processing", trace)
+    documents_repo.set_status(document_id, "processing", trace.steps)
     try:
         with trace.step("extract") as step:
             sections = extract(filename, data)
@@ -33,7 +30,7 @@ def run_ingestion(document_id: str, filename: str, data: bytes) -> None:
 
         with trace.step("caption") as step:
             sections, captioned = caption(filename, data, sections)
-            step["detail"] = "image described by Gemini vision" if captioned else "not an image, skipped"
+            step["detail"] = "image described by the vision model" if captioned else "not an image, skipped"
 
         if not any(s["text"].strip() for s in sections):
             raise ValueError("No text found. Scanned PDF? Add OCR in step1_extract.py.")
@@ -49,21 +46,10 @@ def run_ingestion(document_id: str, filename: str, data: bytes) -> None:
 
         with trace.step("store") as step:
             store_chunks(document_id, chunks, vectors)
-            step["detail"] = "saved to Postgres, document is now searchable"
+            step["detail"] = "saved, document is searchable"
 
-        _save_steps(document_id, trace)
+        documents_repo.set_status(document_id, "ready", trace.steps)
+        log.info("ingested %s: %d chunks in %d ms", filename, len(chunks), trace.total_ms)
     except Exception as e:
-        _set_status(document_id, "failed", trace, error=str(e))
-
-
-def _set_status(document_id: str, status: str, trace: Trace, error: str | None = None) -> None:
-    with get_conn() as conn:
-        conn.execute(
-            "UPDATE documents SET status = %s, error = %s, steps = %s WHERE id = %s",
-            (status, error, Jsonb(trace.steps), document_id),
-        )
-
-
-def _save_steps(document_id: str, trace: Trace) -> None:
-    with get_conn() as conn:
-        conn.execute("UPDATE documents SET steps = %s WHERE id = %s", (Jsonb(trace.steps), document_id))
+        log.warning("ingestion failed for %s: %s", filename, e)
+        documents_repo.set_status(document_id, "failed", trace.steps, error=str(e))

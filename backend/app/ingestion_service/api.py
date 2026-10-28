@@ -1,102 +1,95 @@
 """
-INGESTION API — HTTP endpoints for getting content in.
+INGESTION API: getting content in.
 
-    POST   /api/documents            upload one or more files
-    POST   /api/documents/text       paste text directly
-    GET    /api/documents            list documents + status + step log
-    GET    /api/documents/{id}/chunks  see exactly how a document was chunked
-    DELETE /api/documents/{id}       remove a document and its chunks
+    POST   /api/documents                upload files (multipart: collection_id + files)
+    POST   /api/documents/text           add pasted text
+    GET    /api/documents?collection_id  list documents with status and step log
+    GET    /api/documents/{id}/chunks    how a document was chunked
+    DELETE /api/documents/{id}           remove a document and its chunks
 
-Uploads return immediately with a job id; the pipeline runs in the background.
+Uploads return at once; the pipeline runs in the background (see pipeline.py).
 """
 import hashlib
 from pathlib import Path
+from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, BackgroundTasks, File, Form, UploadFile
 
 from app.config import settings
+from app.core.errors import NotFound
 from app.ingestion_service.pipeline import run_ingestion
+from app.ingestion_service.schemas import ChunkOut, DocumentOut, PastedText, UploadResponse, UploadResult
 from app.ingestion_service.steps.step1_extract import SUPPORTED
-from app.shared.database import get_conn
+from app.providers import get_embedder
+from app.repositories import chunks as chunks_repo
+from app.repositories import collections as collections_repo
+from app.repositories import documents as documents_repo
 
 router = APIRouter(prefix="/api/documents", tags=["ingestion"])
 
 
-class PastedText(BaseModel):
-    title: str = Field(min_length=1, max_length=200)
-    text: str = Field(min_length=1)
-
-
-@router.post("")
-async def upload_files(background: BackgroundTasks, files: list[UploadFile] = File(...)):
+@router.post("", response_model=UploadResponse)
+async def upload_files(
+    background: BackgroundTasks, collection_id: UUID = Form(...), files: list[UploadFile] = File(...)
+):
+    _require_collection(collection_id)
     results = []
     for upload in files:
-        filename = upload.filename or "untitled.txt"
         data = await upload.read()
-        results.append(_register(background, filename, data))
+        results.append(_register(background, collection_id, upload.filename or "untitled.txt", data))
     return {"results": results}
 
 
-@router.post("/text")
+@router.post("/text", response_model=UploadResult)
 def upload_text(body: PastedText, background: BackgroundTasks):
+    _require_collection(body.collection_id)
     filename = body.title if Path(body.title).suffix.lower() in (".txt", ".md") else f"{body.title}.txt"
-    return _register(background, filename, body.text.encode("utf-8"))
+    return _register(background, body.collection_id, filename, body.text.encode("utf-8"))
 
 
-@router.get("")
-def list_documents():
-    with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT id, filename, status, error, num_chunks, steps, created_at "
-            "FROM documents ORDER BY created_at DESC"
-        ).fetchall()
-    keys = ("id", "filename", "status", "error", "num_chunks", "steps", "created_at")
-    return [dict(zip(keys, row)) for row in rows]
+@router.get("", response_model=list[DocumentOut])
+def list_documents(collection_id: UUID | None = None):
+    current = get_embedder().name
+    return [
+        {**doc, "stale": doc["status"] == "ready" and doc["embed_model"] != current}
+        for doc in documents_repo.list_for_collection(collection_id)
+    ]
 
 
-@router.get("/{document_id}/chunks")
-def list_chunks(document_id: str):
-    with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT chunk_index, page, content FROM chunks WHERE document_id = %s ORDER BY chunk_index",
-            (document_id,),
-        ).fetchall()
-    return [{"index": i, "page": p, "text": t} for i, p, t in rows]
+@router.get("/{document_id}/chunks", response_model=list[ChunkOut])
+def list_chunks(document_id: UUID):
+    return chunks_repo.list_for_document(document_id)
 
 
-@router.delete("/{document_id}")
-def delete_document(document_id: str):
-    with get_conn() as conn:
-        deleted = conn.execute("DELETE FROM documents WHERE id = %s RETURNING id", (document_id,)).fetchone()
-    if not deleted:
-        raise HTTPException(404, "Document not found")
-    return {"deleted": document_id}
+@router.delete("/{document_id}", status_code=204)
+def delete_document(document_id: UUID):
+    if not documents_repo.delete(document_id):
+        raise NotFound("Document not found")
 
 
-def _register(background: BackgroundTasks, filename: str, data: bytes) -> dict:
-    """Validate, skip duplicates, create the documents row, queue the pipeline."""
+def _require_collection(collection_id: UUID) -> None:
+    if collections_repo.get(collection_id) is None:
+        raise NotFound("Collection not found")
+
+
+def _register(background: BackgroundTasks, collection_id: UUID, filename: str, data: bytes) -> UploadResult:
+    """Validate, skip duplicates within the collection, create the document row, queue the pipeline."""
     if Path(filename).suffix.lower() not in SUPPORTED:
-        return {"filename": filename, "status": "rejected", "reason": f"Unsupported type. Use: {', '.join(sorted(SUPPORTED))}"}
+        return UploadResult(filename=filename, status="rejected",
+                            reason=f"Unsupported type. Use: {', '.join(sorted(SUPPORTED))}")
     if len(data) > settings.max_upload_mb * 1024 * 1024:
-        return {"filename": filename, "status": "rejected", "reason": f"Larger than {settings.max_upload_mb} MB"}
+        return UploadResult(filename=filename, status="rejected", reason=f"Larger than {settings.max_upload_mb} MB")
     if not data.strip():
-        return {"filename": filename, "status": "rejected", "reason": "File is empty"}
+        return UploadResult(filename=filename, status="rejected", reason="File is empty")
 
     content_hash = hashlib.sha256(data).hexdigest()
-    with get_conn() as conn:
-        existing = conn.execute(
-            "SELECT id, filename, status FROM documents WHERE content_hash = %s", (content_hash,)
-        ).fetchone()
-        if existing and existing[2] != "failed":
-            return {"filename": filename, "status": "duplicate", "id": str(existing[0]),
-                    "reason": f"Same content already uploaded as '{existing[1]}'"}
-        if existing:  # a failed earlier attempt: replace it
-            conn.execute("DELETE FROM documents WHERE id = %s", (existing[0],))
-        (document_id,) = conn.execute(
-            "INSERT INTO documents (filename, content_hash) VALUES (%s, %s) RETURNING id",
-            (filename, content_hash),
-        ).fetchone()
+    existing = documents_repo.find_by_hash(collection_id, content_hash)
+    if existing and existing["status"] != "failed":
+        return UploadResult(filename=filename, status="duplicate", id=existing["id"],
+                            reason=f"Already in this collection as '{existing['filename']}'")
+    if existing:  # an earlier failed attempt: replace it
+        documents_repo.delete(existing["id"])
 
-    background.add_task(run_ingestion, str(document_id), filename, data)
-    return {"filename": filename, "status": "queued", "id": str(document_id)}
+    document_id = documents_repo.create(collection_id, filename, content_hash, get_embedder().name)
+    background.add_task(run_ingestion, document_id, filename, data)
+    return UploadResult(filename=filename, status="queued", id=document_id)

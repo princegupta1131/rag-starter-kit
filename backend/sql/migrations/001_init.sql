@@ -1,13 +1,9 @@
--- RAG Starter Kit: database schema
+-- 001: documents + chunks
 --
--- You do NOT need to run this. The backend runs it automatically on start.
--- Run it yourself only if you prefer to create the tables by hand:
---
---     psql "YOUR_DATABASE_URL" -f backend/sql/schema.sql
---
--- Safe to run again: it only creates what is missing.
--- Values used here are the defaults: EMBED_DIM=768 and TEXT_SEARCH_LANGUAGE=english.
--- If you change those in .env, the backend swaps them in when it runs this file.
+-- Applied automatically on startup (see app/core/migrations.py).
+-- By hand: run every file in this folder in order, e.g.
+--     psql "YOUR_DATABASE_URL" -f backend/sql/migrations/001_init.sql
+-- Written with the defaults EMBED_DIM=768 and TEXT_SEARCH_LANGUAGE=english.
 
 -- pgvector: lets Postgres store and search vectors
 CREATE EXTENSION IF NOT EXISTS vector;

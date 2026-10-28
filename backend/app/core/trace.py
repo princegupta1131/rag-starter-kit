@@ -1,20 +1,32 @@
 """
-A tiny step recorder. Each pipeline wraps its steps like this:
+Records each pipeline step (name, detail, time) so the API can return it and the UI can show it.
 
     trace = Trace()
     with trace.step("chunk") as step:
         chunks = make_chunks(...)
         step["detail"] = f"{len(chunks)} chunks"
-
-The UI shows trace.steps so learners can see what each step did and how long it took.
 """
 import time
 from contextlib import contextmanager
+
+from pydantic import BaseModel
+
+
+class TraceStep(BaseModel):
+    step: str
+    detail: str = ""
+    ms: int = 0
+    ok: bool = True
 
 
 class Trace:
     def __init__(self) -> None:
         self.steps: list[dict] = []
+        self._started = time.perf_counter()
+
+    @property
+    def total_ms(self) -> int:
+        return round((time.perf_counter() - self._started) * 1000)
 
     @contextmanager
     def step(self, name: str):

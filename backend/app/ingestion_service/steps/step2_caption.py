@@ -1,17 +1,13 @@
 """
-STEP 2 — CAPTION: describe images so they become searchable text.
+STEP 2 — CAPTION: describe images with the vision model so they become searchable text.
+Files that produced text in step 1 pass through unchanged.
 
-Text can't be pulled out of a diagram or photo, so we ask a Gemini vision model
-to describe it. The description is then chunked and embedded like any other text.
-
-Files that already produced text in step 1 pass through unchanged.
-
-Extend: also caption images embedded inside PDFs / DOCX, or scanned PDF pages.
+Extend: also caption images inside PDFs / DOCX, or scanned PDF pages.
 """
 from pathlib import Path
 
 from app.ingestion_service.steps.step1_extract import IMAGE_TYPES
-from app.shared import gemini
+from app.providers import get_chat_model
 
 CAPTION_INSTRUCTION = (
     "Describe this image for a search index. Transcribe any visible text exactly, "
@@ -25,5 +21,5 @@ def caption(filename: str, data: bytes, sections: list[dict]) -> tuple[list[dict
     mime_type = IMAGE_TYPES.get(Path(filename).suffix.lower())
     if not mime_type:
         return sections, False
-    description = gemini.describe_image(data, mime_type, CAPTION_INSTRUCTION)
+    description = get_chat_model().describe_image(data, mime_type, CAPTION_INSTRUCTION)
     return [{"text": description, "page": None}], True
