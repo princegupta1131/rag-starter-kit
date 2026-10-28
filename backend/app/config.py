@@ -65,7 +65,7 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     try:
-        return Settings()
+        loaded = Settings()
     except ValidationError as e:
         missing = [str(err["loc"][0]).upper() for err in e.errors() if err["type"] == "missing"]
         if missing:
@@ -74,6 +74,12 @@ def get_settings() -> Settings:
                 f"   Copy backend/.env.example to backend/.env and fill it in.\n"
             )
         raise
+    if loaded.gemini_api_key.strip() in ("", "your-gemini-api-key"):
+        sys.exit(
+            "\n❌ GEMINI_API_KEY is still the placeholder.\n"
+            "   Put your key in backend/.env (get one at https://aistudio.google.com/apikey).\n"
+        )
+    return loaded
 
 
 settings = get_settings()

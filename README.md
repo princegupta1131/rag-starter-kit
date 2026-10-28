@@ -38,7 +38,6 @@ Every upload and every answer comes with a **step-by-step trace** in the UI, so 
 
 **Postgres options (pick one):**
 - **Already have one?** Make sure the `vector` extension is available (`CREATE EXTENSION vector;` works).
-- **Docker:** `docker compose up -d` in this folder starts one with pgvector on port 5432.
 - **Cloud (free tiers):** Supabase, Neon, or any managed Postgres that supports pgvector. Copy its connection string.
 
 ## 2. Setup (about 5 minutes)
@@ -46,16 +45,7 @@ Every upload and every answer comes with a **step-by-step trace** in the UI, so 
 ```bash
 git clone https://github.com/princegupta1131/rag-starter-kit.git
 cd rag-starter-kit
-```
-
-**Backend** (terminal 1)
-
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env               # Windows: copy .env.example .env
+make setup
 ```
 
 Open `backend/.env` and set your two values:
@@ -65,24 +55,17 @@ DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DBNAME
 GEMINI_API_KEY=your-key
 ```
 
-Check both work, then start the server:
+Then:
 
 ```bash
-python check_setup.py
-uvicorn app.main:app --reload --port 8000
-```
-
-Tables are created automatically on first start. API docs: <http://localhost:8000/docs>
-
-**Frontend** (terminal 2)
-
-```bash
-cd frontend
-npm install
-npm run dev
+make check     # tests the database + Gemini key
+make run       # starts backend (:8000) + frontend (:5173); Ctrl+C stops both
 ```
 
 Open <http://localhost:5173>. Both pills in the top-right should be green.
+Tables are created automatically on first start. API docs: <http://localhost:8000/docs>
+
+No `make` (Windows)? See the manual steps in the [Setup Guide](docs/SETUP_GUIDE.md#windows-no-make).
 
 ## 3. Try it
 
@@ -140,8 +123,9 @@ rag-starter-kit/
 │       └── features/
 │           ├── ingestion/            left panel  ↔ ingestion_service
 │           └── retrieval/            right panel ↔ retrieval_service
+├── docs/SETUP_GUIDE.md               short step-by-step setup
 ├── sample-docs/                      a practice document + questions
-└── docker-compose.yml                optional local Postgres + pgvector
+└── Makefile                          make setup / check / run
 ```
 
 Each `steps/stepN_*.py` file starts with a short explanation of **what** the step does and **why**.
@@ -189,7 +173,7 @@ Each `steps/stepN_*.py` file starts with a short explanation of **what** the ste
 | Symptom | Fix |
 |---|---|
 | `Missing DATABASE_URL, GEMINI_API_KEY` | You didn't create `backend/.env`. Run `cp .env.example .env` and fill it in |
-| `extension "vector" is not available` | Your Postgres doesn't have pgvector. Use Docker (`docker compose up -d`) or a cloud Postgres that has it |
+| `extension "vector" is not available` | Your Postgres doesn't have pgvector. Install it, or use a free Supabase / Neon database |
 | `permission denied to create extension` | Ask your DB admin to run `CREATE EXTENSION vector;` once, or use a DB you own |
 | `chunks.embedding is vector(…) but EMBED_DIM=…` | You changed `EMBED_DIM` after first start. Run `DROP TABLE chunks, documents;` and restart |
 | `429` / `RESOURCE_EXHAUSTED` | Free-tier rate limit. The app retries automatically; for big files wait a minute and retry |

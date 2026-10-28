@@ -53,6 +53,6 @@ if __name__ == "__main__":
     print("\nGemini")
     ok = check("embedding model", embedding_works) and ok
     ok = check("chat model", generation_works) and ok
-    print("\n🎉 All good. Start the server: uvicorn app.main:app --reload --port 8000\n" if ok
+    print("\n🎉 All good. Start the app: make run   (or: uvicorn app.main:app --reload --port 8000)\n" if ok
           else "\nFix the ❌ items above (see README → Troubleshooting).\n")
     sys.exit(0 if ok else 1)
