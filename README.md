@@ -7,6 +7,8 @@ Upload any documents, ask questions, get answers **grounded in your content with
 - **Frontend:** React (Vite), one page
 - **You configure only two things:** `DATABASE_URL` and `GEMINI_API_KEY`
 
+> **New here? Follow the simple [Setup Guide](docs/SETUP_GUIDE.md).**
+
 ```
 INGESTION · content in                                         (backend/app/ingestion_service)
  upload ─► 1 extract ─► 2 caption ─► 3 chunk ─► 4 embed ─► 5 store & activate
@@ -42,7 +44,7 @@ Every upload and every answer comes with a **step-by-step trace** in the UI, so 
 ## 2. Setup (about 5 minutes)
 
 ```bash
-git clone <this-repo-url> rag-starter-kit
+git clone https://github.com/princegupta1131/rag-starter-kit.git
 cd rag-starter-kit
 ```
 
