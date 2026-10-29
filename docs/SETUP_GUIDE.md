@@ -6,7 +6,7 @@
 - **Node.js** 22 (or 20.19+) → <https://nodejs.org/>
 - **Git** → <https://git-scm.com/downloads>
 - **Gemini API key** (free) → <https://aistudio.google.com/apikey>, or an OpenAI key
-- **A Postgres database** with pgvector (see Step 2)
+- **A Postgres database** with pgvector (see Step 2, or the [Database Setup guide](DATABASE_SETUP.md))
 
 ---
 
@@ -21,11 +21,14 @@ cd rag-starter-kit
 
 ## Step 2: Database
 
-Use any Postgres that has **pgvector**:
+Use any Postgres that has **pgvector**.
+
+**New to Postgres?** Follow the **[Database Setup guide](DATABASE_SETUP.md)**. It covers Mac, Windows,
+Linux and the cloud, with pgAdmin or the terminal, and ends with your database URL.
 
 | You have | Your database URL |
 |---|---|
-| Postgres on your computer | `postgresql://USER:PASSWORD@localhost:5432/rag_starter` |
+| Postgres with pgvector on your computer | `postgresql://USER:PASSWORD@localhost:5432/rag_starter` |
 | No Postgres | free project on [Supabase](https://supabase.com) or [Neon](https://neon.tech): copy the connection string they give you |
 
 The database and tables are created for you on the first `make check` or `make run`.
@@ -77,18 +80,9 @@ Open **<http://localhost:5173>**. Press **Ctrl + C** to stop.
 
 ## Step 6 (optional): See the data in pgAdmin
 
-Install [pgAdmin](https://www.pgadmin.org/download/), then connect it to the same database as your `DATABASE_URL`:
-
-```text
-postgresql://USER:PASSWORD@HOST:PORT/DATABASE
-```
-
-1. Right-click **Servers** → **Register** → **Server…**
-2. **General** tab → Name: `RAG Starter` (any name)
-3. **Connection** tab: fill in **Host**, **Port**, **Username** and **Password** from your URL
-   - Postgres on a Mac (Homebrew): Host `localhost`, Port `5432`, Username = your Mac username, no password
-   - Supabase / Neon: also set **Parameters** tab → **SSL mode** = `require`
-4. **Save**. Open **Databases** → your database (e.g. `rag_starter`) → **Schemas** → **public** → **Tables**
+Connect pgAdmin to the same database as your `DATABASE_URL`
+([Database Setup → step 2](DATABASE_SETUP.md#2-install-pgadmin) shows how).
+Then open **Databases** → your database (e.g. `rag_starter`) → **Schemas** → **public** → **Tables**.
 
 | Table | What's in it |
 |---|---|
@@ -151,8 +145,6 @@ npm run dev
 
 ## Problems?
 
-| Error | Fix |
-|---|---|
 `make check` tells you what's wrong and how to fix it. The common ones:
 
 | Error | Fix |

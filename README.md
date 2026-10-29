@@ -31,6 +31,8 @@ Open <http://localhost:5173>
 
 Step-by-step instructions (including Windows): **[Setup Guide](docs/SETUP_GUIDE.md)**
 
+New to Postgres? Install it with pgvector, using pgAdmin or the terminal: **[Database Setup](docs/DATABASE_SETUP.md)**
+
 ---
 
 ## Features
@@ -99,7 +101,7 @@ rag-starter-kit/
 │   ├── types.ts                    response types (mirror backend schemas)
 │   ├── shared/                     step trace, answer renderer
 │   └── features/                   collections/, ingestion/, retrieval/
-├── docs/                           setup guide, extending guide, hands-on exercises
+├── docs/                           setup, database setup, extending guide, hands-on exercises
 └── Makefile                        setup / check / run / test / lint
 ```
 
