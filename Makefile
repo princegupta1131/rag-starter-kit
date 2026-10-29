@@ -24,11 +24,13 @@ help:
 	@echo "make lint      ruff (Python) + TypeScript check"
 
 setup:
-	@if [ -z "$(PYTHON)" ]; then echo "❌ Python 3.10 or newer not found. Install it: https://www.python.org/downloads/"; exit 1; fi
+	@if [ -z "$(PYTHON)" ]; then echo "❌ Python 3.10 or newer not found (you have $$(python3 --version 2>&1))."; \
+		echo "   Install it: https://www.python.org/downloads/  (Mac: or brew install python@3.12), then make setup again"; exit 1; fi
 	@node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 22 || (a === 22 && b >= 12) || (a === 20 && b >= 19) ? 0 : 1)' 2>/dev/null || \
 		{ echo "❌ Node.js 22 needed (or 20.19+). Install it: https://nodejs.org/"; exit 1; }
 	@echo "Using $$($(PYTHON) --version) and Node $$(node --version)"
-	cd backend && $(PYTHON) -m venv .venv
+	@# make a new .venv if there is none, or it was made with a Python older than 3.10
+	@$(VENV)/python -c 'import sys; sys.exit(sys.version_info < (3, 10))' 2>/dev/null || $(PYTHON) -m venv --clear backend/.venv
 	$(VENV)/pip install -q --upgrade pip
 	$(VENV)/pip install -q -r backend/requirements-dev.txt
 	@if [ ! -f backend/.env ]; then cp backend/.env.example backend/.env; echo "Created backend/.env"; fi

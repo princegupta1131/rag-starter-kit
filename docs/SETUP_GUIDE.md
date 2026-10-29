@@ -17,14 +17,20 @@ git clone https://github.com/princegupta1131/rag-starter-kit.git
 cd rag-starter-kit
 ```
 
+No Git? On GitHub click **Code** → **Download ZIP**, unzip it, and `cd` into the folder (it's called
+`rag-starter-kit-main`).
+
+Run every command in this guide in **this main folder**, the one with the `Makefile`.
+You don't need to create a `.venv` or `pip install` yourself: `make setup` does it.
+
 ---
 
 ## Step 2: Database
 
 Use any Postgres that has **pgvector**.
 
-**New to Postgres?** Follow the **[Database Setup guide](DATABASE_SETUP.md)**. It covers Mac, Windows,
-Linux and the cloud, with pgAdmin or the terminal, and ends with your database URL.
+**New to Postgres?** Follow the **[Database Setup guide](DATABASE_SETUP.md)**: a Mac path, a Windows path,
+and one for people who already have Postgres and pgAdmin. Each ends with your `DATABASE_URL` line.
 
 | You have | Your database URL |
 |---|---|
@@ -42,7 +48,8 @@ To create the tables yourself instead, run the files in `backend/sql/migrations/
 make setup
 ```
 
-Open `backend/.env` and fill in these 2 lines:
+Open `backend/.env` (it's a hidden file: run `open -e backend/.env` on a Mac, `notepad backend\.env` on
+Windows) and fill in these 2 lines:
 
 ```env
 DATABASE_URL=your-database-url
@@ -81,7 +88,7 @@ Open **<http://localhost:5173>**. Press **Ctrl + C** to stop.
 ## Step 6 (optional): See the data in pgAdmin
 
 Connect pgAdmin to the same database as your `DATABASE_URL`
-([Database Setup → step 2](DATABASE_SETUP.md#2-install-pgadmin) shows how).
+([Database Setup → See it in pgAdmin](DATABASE_SETUP.md#see-it-in-pgadmin-optional-good-for-learning) shows how).
 Then open **Databases** → your database (e.g. `rag_starter`) → **Schemas** → **public** → **Tables**.
 
 | Table | What's in it |
@@ -150,7 +157,9 @@ npm run dev
 | Error | Fix |
 |---|---|
 | `make: command not found` | Mac: run `xcode-select --install`. Windows: use the steps above |
-| `Python 3.10 or newer not found` | Install Python from python.org, then `make setup` again |
+| `Python 3.10 or newer not found` | Macs come with Python 3.9, which is too old. Install Python from python.org (Mac: or `brew install python@3.12`), then `make setup` again |
+| `No rule to make target 'setup'` | You're in the wrong folder. `cd` into the main folder (the one with the `Makefile`) |
+| `No module named 'psycopg'` (or another module) | Don't run `python main.py`. Run `make setup` once, then `make run` |
 | `GEMINI_API_KEY is not set` | Put your key in `backend/.env` |
 | `still has the example USER:PASSWORD` | Put your real database user and password in `DATABASE_URL` |
 | `API key not valid` | Copy the key again, no spaces |
