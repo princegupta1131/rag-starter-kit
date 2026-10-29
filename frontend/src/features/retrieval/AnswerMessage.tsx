@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import AnswerText from '../../shared/AnswerText'
+import Logo from '../../shared/Logo'
 import StepTrace from '../../shared/StepTrace'
 import type { ChatResponse, ChatStatus } from '../../types'
 
@@ -27,7 +28,7 @@ export default function AnswerMessage({ id, text, response, error }: Props) {
 
   return (
     <div className="turn">
-      <span className={`avatar ${error ? 'bad' : ''}`} aria-hidden>◆</span>
+      {error ? <span className="avatar bad" aria-hidden>!</span> : <Logo size={30} className="avatar" />}
       <div className={`msg assistant ${error ? 'status-error' : `status-${response?.status}`}`}>
         {label && <span className={`badge ${error ? 'error' : response?.status}`}><span className="dot" aria-hidden />{label}</span>}
         <AnswerText text={text} sourceAnchor={response?.sources.length ? sourceId : undefined} />

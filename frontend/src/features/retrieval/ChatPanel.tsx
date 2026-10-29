@@ -1,19 +1,26 @@
-// RIGHT PANEL (retrieval_service): ask questions about the selected collection.
+// MAIN AREA (retrieval_service): ask questions about the selected collection.
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../../api/client'
 import type { ChatResponse, Collection, Turn } from '../../types'
+import Logo from '../../shared/Logo'
 import AnswerMessage from './AnswerMessage'
 
 type Message = Turn & { response?: ChatResponse; error?: boolean }
 
-export default function ChatPanel({ collection }: { collection: Collection }) {
+interface Props {
+  collection: Collection
+  onUpload?: () => void // opens the documents drawer
+}
+
+export default function ChatPanel({ collection, onUpload }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [question, setQuestion] = useState('')
   const [thinking, setThinking] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const list = useRef<HTMLDivElement>(null)
   const hasDocuments = collection.ready_count > 0
+  const empty = messages.length === 0
 
   // Scroll only the message list, never the page.
   useEffect(() => {
@@ -56,35 +63,39 @@ export default function ChatPanel({ collection }: { collection: Collection }) {
 
   const blocked = !hasDocuments ? 'Upload a document first' : thinking ? 'Wait for the answer' : null
 
-  return (
-    <section className="panel chat" aria-labelledby="ask-title">
-      <div className="panel-head">
-        <span className="panel-icon ai" aria-hidden>✦</span>
-        <div className="panel-title">
-          <h2 id="ask-title">Ask</h2>
-          <span className="muted">{collection.name}</span>
-        </div>
-        {messages.length > 0 && (
-          <button className="secondary small push-right" onClick={() => setMessages([])}>New chat</button>
-        )}
-      </div>
+  const composer = (
+    <form className="composer" onSubmit={submit}>
+      <input
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        placeholder={hasDocuments ? `Ask about the documents in ${collection.name}…` : 'Upload a document first'}
+        aria-label="Question"
+        disabled={!hasDocuments}
+      />
+      <button
+        className="send"
+        disabled={!!blocked || !question.trim()}
+        title={blocked ?? 'Ask'}
+        aria-label="Ask"
+      >
+        <span aria-hidden>↑</span>
+      </button>
+    </form>
+  )
 
+  return (
+    <section className={`chat ${empty ? 'is-empty' : ''}`} aria-label={`Ask ${collection.name}`}>
       <div className="messages" ref={list} aria-live="polite">
-        {messages.length === 0 && (
+        {empty && (
           <div className="chat-empty">
-            <span className="hero-icon" aria-hidden>✦</span>
+            <Logo size={56} className="hero-icon" />
             {hasDocuments ? (
               <>
-                <strong>Ask anything about the documents in {collection.name}.</strong>
+                <h2>Ask anything about the documents in {collection.name}.</h2>
                 <p>Answers cite their sources. Open “How this answer was made” to see each step.</p>
-                <ol className="flow" aria-label="How an answer is made">
-                  <li>Your question</li>
-                  <li>Search by meaning + keywords</li>
-                  <li>Answer with sources</li>
-                </ol>
+                {composer}
                 {suggestions.length > 0 && (
                   <div className="suggestions">
-                    <span className="field-label">Try</span>
                     {suggestions.map((s) => (
                       <button key={s} className="chip" onClick={() => ask(s)}>{s}</button>
                     ))}
@@ -93,48 +104,36 @@ export default function ChatPanel({ collection }: { collection: Collection }) {
               </>
             ) : (
               <>
-                <strong>No documents to ask yet.</strong>
-                <p>Answers only come from the documents in {collection.name}. Three steps to your first answer:</p>
-                <ol className="getting-started">
-                  <li className="current"><b>Upload a document</b><span>Drop a file or paste text in Upload</span></li>
-                  <li><b>Wait for READY</b><span>It's split into chunks and embedded</span></li>
-                  <li><b>Ask a question</b><span>The answer cites where it found each fact</span></li>
-                </ol>
+                <h2>No documents to ask yet.</h2>
+                <p>Answers only come from the documents in {collection.name}. Upload one to get started.</p>
+                {onUpload && <button className="primary big" onClick={onUpload}>Upload documents</button>}
               </>
             )}
           </div>
         )}
-        {messages.map((m, i) =>
-          m.role === 'user' ? (
-            <div key={i} className="msg user">{m.content}</div>
-          ) : (
-            <AnswerMessage key={i} id={`m${i}`} text={m.content} response={m.response} error={m.error} />
-          ),
-        )}
-        {thinking && (
-          <div className="turn" role="status">
-            <span className="avatar thinking-avatar" aria-hidden>◆</span>
-            <div className="msg assistant thinking">
-              <span className="thinking-label">Searching your documents and writing an answer…</span>
-              <span className="skeleton w80" />
-              <span className="skeleton w60" />
-            </div>
+        {!empty && (
+          <div className="thread">
+            {messages.map((m, i) =>
+              m.role === 'user' ? (
+                <div key={i} className="msg user">{m.content}</div>
+              ) : (
+                <AnswerMessage key={i} id={`m${i}`} text={m.content} response={m.response} error={m.error} />
+              ),
+            )}
+            {thinking && (
+              <div className="turn" role="status">
+                <Logo size={30} className="avatar thinking-avatar" />
+                <div className="msg assistant thinking">
+                  <span className="thinking-label">Searching your documents and writing an answer…</span>
+                  <span className="skeleton w80" />
+                  <span className="skeleton w60" />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      <form className="composer" onSubmit={submit}>
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder={hasDocuments ? 'Ask a question…' : 'Upload a document first'}
-          aria-label="Question"
-          disabled={!hasDocuments}
-        />
-        <button className="primary send" disabled={!!blocked || !question.trim()} title={blocked ?? undefined}>
-          Ask <span aria-hidden>↑</span>
-        </button>
-      </form>
+      {!empty && <div className="composer-dock">{composer}</div>}
     </section>
   )
 }
