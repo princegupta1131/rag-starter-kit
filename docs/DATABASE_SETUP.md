@@ -176,7 +176,7 @@ Database
   ✅ pgvector extension  (vector 0.8.2)
 ```
 
-Done. Continue with the [Setup Guide → Step 4](SETUP_GUIDE.md#step-4-run).
+Done. Continue with the [Setup Guide → Step 6](SETUP_GUIDE.md#step-6-start-the-app).
 
 ---
 
@@ -211,7 +211,7 @@ SELECT '[1,2,3]'::vector <=> '[-3,0,1]'::vector AS distance;  -- 1.0, unrelated
 ```
 
 After you upload a document, `backend/sql/explore.sql` has more queries to see the chunks and their
-embeddings ([Setup Guide → Step 6](SETUP_GUIDE.md#step-6-optional-see-the-data-in-pgadmin)).
+embeddings ([Setup Guide → see the data in pgAdmin](SETUP_GUIDE.md#optional-see-the-data-in-pgadmin)).
 
 ---
 

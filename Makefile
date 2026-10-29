@@ -8,7 +8,7 @@
 # Ports busy? make run BACKEND_PORT=8001 FRONTEND_PORT=5174
 
 # First Python 3.10+ found (macOS's built-in python3 is 3.9, too old)
-PYTHON ?= $(shell for p in python3.13 python3.12 python3.11 python3.10 python3; do \
+PYTHON ?= $(shell for p in python3.14 python3.13 python3.12 python3.11 python3.10 python3; do \
 	$$p -c 'import sys; sys.exit(sys.version_info < (3, 10))' 2>/dev/null && echo $$p && break; done)
 VENV          = backend/.venv/bin
 BACKEND_PORT  ?= 8000

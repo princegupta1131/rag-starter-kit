@@ -58,5 +58,8 @@ if __name__ == "__main__":
     llm_ok = check("embedding model", embedding_works)
     llm_ok = check("chat model", generation_works) and llm_ok
     ok = db_ok and llm_ok
-    print("\n🎉 All good. Start the app: make run\n" if ok else "\nFix the ❌ items above (see docs/SETUP_GUIDE.md).\n")
+    if ok:
+        print("\n🎉 All good. Start the app: make run (Windows: Setup Guide, Step 6)\n")
+    else:
+        print("\nFix the ❌ items above (see docs/SETUP_GUIDE.md).\n")
     sys.exit(0 if ok else 1)
