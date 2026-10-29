@@ -20,7 +20,8 @@ cd rag-starter-kit
 make setup
 ```
 
-Put your `DATABASE_URL` and `GEMINI_API_KEY` in `backend/.env`, then:
+Needs Python 3.10+ (Macs come with 3.9: install 3.12 from python.org) and Node 22.
+Wait until `make setup` says **Done**. Then put your `DATABASE_URL` and `GEMINI_API_KEY` in `backend/.env`, and run:
 
 ```bash
 make check

@@ -14,7 +14,7 @@ VENV          = backend/.venv/bin
 BACKEND_PORT  ?= 8000
 FRONTEND_PORT ?= 5173
 
-.PHONY: help setup check run backend frontend test lint
+.PHONY: help setup ready check run backend frontend test lint
 
 help:
 	@echo "make setup     install backend + frontend (first time only)"
@@ -33,21 +33,26 @@ setup:
 	@$(VENV)/python -c 'import sys; sys.exit(sys.version_info < (3, 10))' 2>/dev/null || $(PYTHON) -m venv --clear backend/.venv
 	$(VENV)/pip install -q --upgrade pip
 	$(VENV)/pip install -q -r backend/requirements-dev.txt
-	@if [ ! -f backend/.env ]; then cp backend/.env.example backend/.env; echo "Created backend/.env"; fi
+	@if [ ! -s backend/.env ]; then cp backend/.env.example backend/.env; echo "Created backend/.env"; fi
 	cd frontend && npm install --no-audit --no-fund
 	@echo ""
 	@echo "Done. Next: put DATABASE_URL and GEMINI_API_KEY in backend/.env, then run: make check"
 
-check:
+# stops check/run/test early if make setup hasn't finished (or used a Python older than 3.10)
+ready:
+	@$(VENV)/python -c 'import sys, fastapi, psycopg; sys.exit(sys.version_info < (3, 10))' 2>/dev/null && [ -d frontend/node_modules ] || \
+		{ echo "❌ Run make setup first, and wait until it says Done (no ❌)."; exit 1; }
+
+check: ready
 	cd backend && .venv/bin/python check_setup.py
 
-backend:
+backend: ready
 	cd backend && .venv/bin/python -m uvicorn app.main:app --reload --port $(BACKEND_PORT)
 
 frontend:
 	cd frontend && BACKEND_URL=http://localhost:$(BACKEND_PORT) npm run dev -- --port $(FRONTEND_PORT)
 
-run:
+run: ready
 	@echo "Backend  -> http://localhost:$(BACKEND_PORT)/docs"
 	@echo "Frontend -> http://localhost:$(FRONTEND_PORT)   (Ctrl+C stops both)"
 	@trap 'kill 0' INT TERM EXIT; \
@@ -55,9 +60,9 @@ run:
 	$(MAKE) --no-print-directory frontend & \
 	wait
 
-test:
+test: ready
 	cd backend && .venv/bin/python -m pytest -q
 
-lint:
+lint: ready
 	cd backend && .venv/bin/ruff check .
 	cd frontend && npm run typecheck

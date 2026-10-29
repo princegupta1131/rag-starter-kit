@@ -3,6 +3,8 @@
 ## What you need
 
 - **Python** 3.10+ → <https://www.python.org/downloads/>
+  Check with `python3 --version`. **Macs come with 3.9, which is too old**: install 3.12 from python.org
+  (or `brew install python@3.12`) even if you already have `python3`
 - **Node.js** 22 (or 20.19+) → <https://nodejs.org/>
 - **Git** → <https://git-scm.com/downloads>
 - **Gemini API key** (free) → <https://aistudio.google.com/apikey>, or an OpenAI key
@@ -48,8 +50,11 @@ To create the tables yourself instead, run the files in `backend/sql/migrations/
 make setup
 ```
 
-Open `backend/.env` (it's a hidden file: run `open -e backend/.env` on a Mac, `notepad backend\.env` on
-Windows) and fill in these 2 lines:
+Wait until it ends with **Done**. If it shows ❌, fix that first (it says how) and run `make setup` again:
+nothing else works until it says Done. `make setup` also creates `backend/.env` for you, so don't create it yourself.
+
+Open `backend/.env` from the main folder (it's a hidden file: run `open -e backend/.env` on a Mac,
+`notepad backend\.env` on Windows) and fill in these 2 lines:
 
 ```env
 DATABASE_URL=your-database-url
@@ -158,6 +163,7 @@ npm run dev
 |---|---|
 | `make: command not found` | Mac: run `xcode-select --install`. Windows: use the steps above |
 | `Python 3.10 or newer not found` | Macs come with Python 3.9, which is too old. Install Python from python.org (Mac: or `brew install python@3.12`), then `make setup` again |
+| `TypeError: unsupported operand type(s) for \|` | Your Python is 3.9. Install 3.12 from python.org, then `make setup` again |
 | `No rule to make target 'setup'` | You're in the wrong folder. `cd` into the main folder (the one with the `Makefile`) |
 | `No module named 'psycopg'` (or another module) | Don't run `python main.py`. Run `make setup` once, then `make run` |
 | `GEMINI_API_KEY is not set` | Put your key in `backend/.env` |
