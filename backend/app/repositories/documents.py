@@ -24,14 +24,15 @@ def find_by_hash(collection_id: UUID, content_hash: str) -> dict | None:
     return _row(row) if row else None
 
 
-def create(collection_id: UUID, filename: str, content_hash: str, embed_model: str) -> str:
+def create(collection_id: UUID, filename: str, content_hash: str, embed_model: str) -> str | None:
+    """Returns None if this collection already has a file with the same content."""
     with get_conn() as conn:
-        (new_id,) = conn.execute(
+        row = conn.execute(
             "INSERT INTO documents (collection_id, filename, content_hash, embed_model) "
-            "VALUES (%s, %s, %s, %s) RETURNING id",
+            "VALUES (%s, %s, %s, %s) ON CONFLICT (collection_id, content_hash) DO NOTHING RETURNING id",
             (collection_id, filename, content_hash, embed_model),
         ).fetchone()
-    return str(new_id)
+    return str(row[0]) if row else None
 
 
 def delete(document_id: UUID | str) -> bool:

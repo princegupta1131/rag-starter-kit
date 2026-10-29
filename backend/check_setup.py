@@ -1,7 +1,7 @@
 """
 Checks your backend/.env before you start:  make check   (or: python check_setup.py)
 
-  1. DATABASE_URL  -> can we connect, and is pgvector available?
+  1. DATABASE_URL  -> can we connect (creating the database if needed), and is pgvector available?
   2. LLM provider  -> can we embed text and generate an answer?
 """
 import sys
@@ -9,6 +9,7 @@ import sys
 import psycopg
 
 from app.config import settings
+from app.core.database import ensure_database, explain_db_error
 from app.providers import get_chat_model, get_embedder
 
 
@@ -17,14 +18,18 @@ def check(label: str, fn) -> bool:
         result = fn()
         print(f"  ✅ {label}{f'  ({result})' if result else ''}")
         return True
+    except psycopg.Error as e:
+        print(f"  ❌ {label}\n     {explain_db_error(e)}")
     except Exception as e:
-        print(f"  ❌ {label}\n     {e}")
-        return False
+        print(f"  ❌ {label}\n     {str(e).strip().splitlines()[0][:300]}")
+    return False
 
 
 def db_connects():
+    created = ensure_database()
     with psycopg.connect(settings.database_url, connect_timeout=10) as conn:
-        return conn.execute("SHOW server_version").fetchone()[0].split()[0]
+        version = "Postgres " + conn.execute("SHOW server_version").fetchone()[0].split()[0]
+    return f"{version}, database created" if created else version
 
 
 def pgvector_available():
@@ -47,10 +52,11 @@ def generation_works():
 
 if __name__ == "__main__":
     print("\nDatabase")
-    ok = check("connect to DATABASE_URL", db_connects)
-    ok = check("pgvector extension", pgvector_available) and ok
+    db_ok = check("connect to DATABASE_URL", db_connects)
+    db_ok = db_ok and check("pgvector extension", pgvector_available)
     print(f"\nLLM provider: {settings.llm_provider}")
-    ok = check("embedding model", embedding_works) and ok
-    ok = check("chat model", generation_works) and ok
+    llm_ok = check("embedding model", embedding_works)
+    llm_ok = check("chat model", generation_works) and llm_ok
+    ok = db_ok and llm_ok
     print("\n🎉 All good. Start the app: make run\n" if ok else "\nFix the ❌ items above (see docs/SETUP_GUIDE.md).\n")
     sys.exit(0 if ok else 1)

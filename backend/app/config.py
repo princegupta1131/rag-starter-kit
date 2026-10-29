@@ -96,11 +96,13 @@ def get_settings() -> Settings:
                 "   Copy backend/.env.example to backend/.env and fill it in.\n"
             )
         raise
+    problems = []
+    if "USER:PASSWORD" in loaded.database_url:
+        problems.append("DATABASE_URL still has the example USER:PASSWORD. Put your database user and password.")
     if loaded.api_key.strip() in PLACEHOLDER_KEYS:
-        sys.exit(
-            f"\n❌ {loaded.api_key_name} is not set.\n"
-            f"   Put your key in backend/.env (LLM_PROVIDER={loaded.llm_provider}).\n"
-        )
+        problems.append(f"{loaded.api_key_name} is not set. Put your key (LLM_PROVIDER={loaded.llm_provider}).")
+    if problems:
+        sys.exit("\n" + "".join(f"❌ {p}\n" for p in problems) + "   Edit backend/.env, then try again.\n")
     return loaded
 
 

@@ -29,13 +29,11 @@ router = APIRouter(prefix="/api/documents", tags=["ingestion"])
 
 
 @router.post("", response_model=UploadResponse)
-async def upload_files(
-    background: BackgroundTasks, collection_id: UUID = Form(...), files: list[UploadFile] = File(...)
-):
+def upload_files(background: BackgroundTasks, collection_id: UUID = Form(...), files: list[UploadFile] = File(...)):
     _require_collection(collection_id)
     results = []
     for upload in files:
-        data = await upload.read()
+        data = upload.file.read(_max_bytes() + 1)  # never hold more than the limit in memory
         results.append(_register(background, collection_id, upload.filename or "untitled.txt", data))
     return {"results": results}
 
@@ -72,24 +70,35 @@ def _require_collection(collection_id: UUID) -> None:
         raise NotFound("Collection not found")
 
 
+def _max_bytes() -> int:
+    return settings.max_upload_mb * 1024 * 1024
+
+
 def _register(background: BackgroundTasks, collection_id: UUID, filename: str, data: bytes) -> UploadResult:
     """Validate, skip duplicates within the collection, create the document row, queue the pipeline."""
     if Path(filename).suffix.lower() not in SUPPORTED:
         return UploadResult(filename=filename, status="rejected",
                             reason=f"Unsupported type. Use: {', '.join(sorted(SUPPORTED))}")
-    if len(data) > settings.max_upload_mb * 1024 * 1024:
+    if len(data) > _max_bytes():
         return UploadResult(filename=filename, status="rejected", reason=f"Larger than {settings.max_upload_mb} MB")
     if not data.strip():
         return UploadResult(filename=filename, status="rejected", reason="File is empty")
 
     content_hash = hashlib.sha256(data).hexdigest()
+    embed_model = get_embedder().name
     existing = documents_repo.find_by_hash(collection_id, content_hash)
-    if existing and existing["status"] != "failed":
-        return UploadResult(filename=filename, status="duplicate", id=existing["id"],
-                            reason=f"Already in this collection as '{existing['filename']}'")
-    if existing:  # an earlier failed attempt: replace it
+    if existing and existing["status"] != "failed" and existing["embed_model"] == embed_model:
+        return _duplicate(filename, existing)
+    if existing:  # failed before, or embedded with another model ("stale"): replace it
         documents_repo.delete(existing["id"])
 
-    document_id = documents_repo.create(collection_id, filename, content_hash, get_embedder().name)
+    document_id = documents_repo.create(collection_id, filename, content_hash, embed_model)
+    if document_id is None:  # the same file uploaded twice at the same moment
+        return _duplicate(filename, documents_repo.find_by_hash(collection_id, content_hash))
     background.add_task(run_ingestion, document_id, filename, data)
     return UploadResult(filename=filename, status="queued", id=document_id)
+
+
+def _duplicate(filename: str, existing: dict) -> UploadResult:
+    return UploadResult(filename=filename, status="duplicate", id=existing["id"],
+                        reason=f"Already in this collection as '{existing['filename']}'")

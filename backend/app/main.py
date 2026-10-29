@@ -11,13 +11,14 @@ Run: make run   (or: uvicorn app.main:app --reload --port 8000). API docs at /do
 import logging
 from contextlib import asynccontextmanager
 
+import psycopg
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.collections_service.api import router as collections_router
 from app.config import settings
-from app.core.database import close_pool, get_conn, open_pool
+from app.core.database import close_pool, ensure_database, explain_db_error, get_conn, open_pool
 from app.core.errors import register_error_handlers
 from app.core.logging_setup import setup_logging
 from app.core.migrations import run_migrations
@@ -32,7 +33,13 @@ log = logging.getLogger("app")
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     setup_logging()
-    run_migrations()
+    try:
+        if ensure_database():
+            log.info("created the database in DATABASE_URL")
+        run_migrations()
+    except psycopg.OperationalError as e:
+        log.error("can't use DATABASE_URL: %s  (details: make check)", explain_db_error(e))
+        raise SystemExit(1) from None
     open_pool()
     if interrupted := documents_repo.mark_interrupted():
         log.warning("%d document(s) were mid-ingestion at shutdown and are marked failed", interrupted)

@@ -34,8 +34,12 @@ export default function CollectionPicker({ collections, selected, onSelect, onCh
     if (!selected) return
     const docs = selected.document_count
     if (!confirm(`Delete "${selected.name}"${docs ? ` and its ${docs} document(s)` : ''}?`)) return
-    await api.deleteCollection(selected.id)
-    await onChanged()
+    try {
+      await api.deleteCollection(selected.id)
+      await onChanged()
+    } catch (err) {
+      alert(`Couldn't delete: ${err instanceof Error ? err.message : err}`)
+    }
   }
 
   if (creating || collections.length === 0) {

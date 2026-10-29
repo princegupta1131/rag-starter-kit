@@ -10,12 +10,12 @@ Status = Literal["answered", "cached", "not_found", "unverified", "blocked"]
 
 class Turn(BaseModel):
     role: Literal["user", "assistant"]
-    content: str
+    content: str = Field(max_length=8000)
 
 
 class ChatRequest(BaseModel):
     question: str
-    history: list[Turn] = Field(default_factory=list)
+    history: list[Turn] = Field(default_factory=list, max_length=50)
     collection_id: UUID | None = Field(default=None, description="Search one collection; omit to search all")
 
 

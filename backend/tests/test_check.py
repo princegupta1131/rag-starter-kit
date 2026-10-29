@@ -75,3 +75,16 @@ def test_sources_are_numbered_in_order_of_appearance():
     answer, sources, _, _ = check_answer("Meals [2]. Leave is 24 days [1]. Again [2].", CONTEXT, "q")
     assert answer == "Meals [1]. Leave is 24 days [2]. Again [1]."
     assert [(s["n"], s["filename"]) for s in sources] == [(1, "travel.pdf"), (2, "handbook.md")]
+
+
+def test_overlapping_chunks_quoting_the_same_sentence_become_one_source():
+    meal = "Meals are reimbursed up to 1,500 rupees per day."
+    context = [
+        {**CONTEXT[1], "document_id": "d2", "text": f"Travel rules. {meal} Submit receipts."},
+        {**CONTEXT[1], "document_id": "d2", "text": f"{meal} New employees get a laptop.", "similarity": 0.55},
+        CONTEXT[0],
+    ]
+    answer, sources, _, detail = check_answer("Up to 1,500 rupees [1][2]. Leave is 24 days [3].", context, "meal limit")
+    assert answer == "Up to 1,500 rupees [1]. Leave is 24 days [2]."
+    assert [(s["n"], s["document_id"]) for s in sources] == [(1, "d2"), (2, "d1")]
+    assert "merged 1" in detail

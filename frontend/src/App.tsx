@@ -79,6 +79,8 @@ export default function App() {
   )
 }
 
+const PROVIDER_LABELS: Record<string, string> = { gemini: 'Gemini', openai: 'OpenAI' }
+
 function HealthPills({ health, failed }: { health: Health | null; failed: boolean }) {
   if (failed) return <div className="pills"><span className="pill bad">Backend not reachable</span></div>
   if (!health) return <div className="pills"><span className="pill">checking…</span></div>
@@ -88,7 +90,7 @@ function HealthPills({ health, failed }: { health: Health | null; failed: boolea
     <div className="pills">
       <span className={`pill ${dbOk ? 'ok' : 'bad'}`} title={health.database}>Postgres</span>
       <span className={`pill ${keyOk ? 'ok' : 'bad'}`} title={`${health.chat_model} · ${health.embed_model}`}>
-        {health.provider === 'openai' ? 'OpenAI' : 'Gemini'}
+        {PROVIDER_LABELS[health.provider] ?? health.provider}
       </span>
     </div>
   )

@@ -66,5 +66,17 @@ def _is_transient(e: Exception) -> bool:
 
 
 def _short(e: Exception) -> str:
-    text = str(e).strip().splitlines()[0] if str(e).strip() else type(e).__name__
+    """The provider's own message (e.g. "API key not valid"), not the whole response dump."""
+    body = getattr(e, "body", None)  # OpenAI: the error object
+    message = getattr(e, "message", None)  # Gemini
+    if isinstance(body, dict) and isinstance(body.get("message"), str):
+        text = body["message"]
+    elif isinstance(message, str) and message.strip():
+        text = message
+    else:
+        text = str(e)
+    text = text.strip().splitlines()[0] if text.strip() else type(e).__name__
+    status = getattr(e, "status_code", None) or getattr(e, "code", None)
+    if isinstance(status, int) and str(status) not in text:
+        text = f"{status} {text}"
     return text[:300]

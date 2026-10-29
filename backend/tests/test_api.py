@@ -148,6 +148,20 @@ def test_documents_from_another_embedding_model_are_stale_and_skipped(client):
     assert client.get("/api/health").json()["stale_documents"] == 1
     assert ask(client, "How many days of paid annual leave per year?")["status"] == "not_found"
 
+    # "upload again" (as the UI says) re-embeds it with the current model
+    assert upload(client, hr)["status"] == "queued"
+    assert client.get("/api/health").json()["stale_documents"] == 0
+    assert ask(client, "How many days of paid annual leave per year?")["status"] == "answered"
+
+
+def test_replacing_a_document_clears_cached_answers(client):
+    hr = collection(client)
+    doc_id = upload(client, hr)["id"]
+    ask(client, "How many days of paid annual leave per year?", hr)
+    client.delete(f"/api/documents/{doc_id}")
+    upload(client, hr, "handbook-v2.txt", HANDBOOK.replace(b"24", b"25"))  # same size, new content
+    assert ask(client, "How many days of paid annual leave per year?", hr)["status"] != "cached"
+
 
 def test_error_format(client):
     assert client.post("/api/collections", json={"name": "Default"}).json()["error"]["code"] == "conflict"

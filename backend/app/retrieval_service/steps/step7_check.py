@@ -5,6 +5,7 @@ STEP 7 — CHECK & GATE: verify and tidy the answer before the user sees it.
   * citations like [1, 2]           -> split into [1][2]; ones that don't exist removed; repeats collapsed
   * no valid citation at all        -> with STRICT_CITATIONS=true, a safe fallback message
   * sources                         -> only the ones the answer cites, renumbered 1, 2, 3…, with clean snippets
+  * two chunks quoting one sentence -> merged into one source
 """
 import re
 
@@ -43,12 +44,32 @@ def check_answer(raw_answer: str, context: list[dict], question: str) -> tuple[s
     sources = [
         _source(new, context[old - 1], f"{question} {_sentences_citing(answer, new)}") for old, new in order.items()
     ]
+    answer, sources, merged = merge_same_passage(answer, sources)
     detail = f"cites {', '.join(f'[{n}]' for n in used)}"
     if invalid:
         detail += f"; removed invalid {', '.join(f'[{n}]' for n in invalid)}"
     if any(old != new for old, new in order.items()):
         detail += "; renumbered " + ", ".join(f"[{old}]→[{new}]" for old, new in order.items() if old != new)
+    if merged:
+        detail += f"; merged {merged} source(s) quoting the same passage"
     return answer, sources, "answered", detail
+
+
+def merge_same_passage(answer: str, sources: list[dict]) -> tuple[str, list[dict], int]:
+    """Overlapping chunks can quote the same sentence: show it once and point both citations at it."""
+    first: dict[tuple, int] = {}
+    alias = {s["n"]: first.setdefault((s["document_id"], _first_sentence(s["snippet"])), s["n"]) for s in sources}
+    merged = sum(1 for n, a in alias.items() if n != a)
+    if not merged:
+        return answer, sources, 0
+    answer = CITATION.sub(lambda m: f"[{alias.get(int(m.group(1)), int(m.group(1)))}]", answer)
+    answer, order = renumber(re.sub(r"(\[\d+\])(\s*\1)+", r"\1", answer))
+    kept = [{**s, "n": order[s["n"]]} for s in sources if alias[s["n"]] == s["n"]]
+    return answer, sorted(kept, key=lambda s: s["n"]), merged
+
+
+def _first_sentence(text: str) -> str:
+    return re.split(r"(?<=[.!?।])\s+", text.removeprefix("… "), maxsplit=1)[0]
 
 
 def renumber(answer: str) -> tuple[str, dict[int, int]]:

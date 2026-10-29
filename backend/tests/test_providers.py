@@ -38,6 +38,19 @@ def test_permanent_error_is_not_retried():
     assert len(attempts) == 1
 
 
+@pytest.mark.parametrize("error", [
+    type("GeminiError", (Exception,), {"code": 400, "message": "API key not valid."})("400 INVALID_ARGUMENT. {...}"),
+    type("OpenAIError", (Exception,), {"status_code": 401, "body": {"message": "API key not valid."}})("Error {...}"),
+])
+def test_provider_error_shows_the_message_not_the_dump(error):
+    def call():
+        raise error
+
+    with pytest.raises(ProviderError) as caught:
+        with_retry("x", call)
+    assert str(caught.value) in ("x: 400 API key not valid.", "x: 401 API key not valid.")
+
+
 def test_provider_defaults_follow_llm_provider():
     gemini = Settings(_env_file=None, database_url="postgresql://x/y", gemini_api_key="k",
                       chat_model="", embed_model="")
@@ -67,3 +80,15 @@ def test_postgres_url_from_sqlalchemy_is_accepted():
 def test_tests_cannot_reach_the_internet():
     with pytest.raises(RuntimeError, match="internet"):
         socket.create_connection(("8.8.8.8", 443), timeout=1)
+
+
+def test_database_errors_are_one_readable_line():
+    from app.core.database import explain_db_error
+
+    libpq = (
+        'connection failed: connection to server at "127.0.0.1", port 5432 failed: '
+        'FATAL:  password authentication failed for user "me"\nMultiple connection attempts failed...'
+    )
+    assert explain_db_error(Exception(libpq)) == (
+        'password authentication failed for user "me". Wrong user or password in DATABASE_URL.'
+    )

@@ -169,6 +169,8 @@ This kit includes the basics. Before serving real users, also consider:
 | Rule-based guard | A safety classifier for your domain |
 | Tests with fake providers | An evaluation set of real questions and expected answers |
 
+More design limits and where to change them: [Extending → Known limits](docs/EXTENDING.md#known-limits).
+
 ---
 
 ## Training

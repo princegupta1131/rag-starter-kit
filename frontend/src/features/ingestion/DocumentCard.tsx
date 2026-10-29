@@ -10,13 +10,21 @@ export default function DocumentCard({ doc, onDeleted }: { doc: DocumentInfo; on
   const [chunks, setChunks] = useState<Chunk[] | null>(null)
 
   async function toggleChunks() {
-    setChunks(chunks ? null : await api.listChunks(doc.id))
+    try {
+      setChunks(chunks ? null : await api.listChunks(doc.id))
+    } catch (err) {
+      alert(`Couldn't load chunks: ${err instanceof Error ? err.message : err}`)
+    }
   }
 
   async function remove() {
     if (!confirm(`Delete "${doc.filename}"?`)) return
-    await api.deleteDocument(doc.id)
-    onDeleted()
+    try {
+      await api.deleteDocument(doc.id)
+      onDeleted()
+    } catch (err) {
+      alert(`Couldn't delete: ${err instanceof Error ? err.message : err}`)
+    }
   }
 
   return (

@@ -74,12 +74,12 @@ def keyword_search(
 def corpus_fingerprint(collection_id: UUID | None) -> str:
     """Changes whenever searchable content changes; used as part of the answer cache key."""
     with get_conn() as conn:
-        docs, chunks = conn.execute(
-            "SELECT count(*), coalesce(sum(num_chunks), 0) FROM documents "
+        (ids_hash,) = conn.execute(
+            "SELECT coalesce(md5(string_agg(id::text, ',' ORDER BY id)), 'empty') FROM documents "
             "WHERE status = 'ready' AND (%s::uuid IS NULL OR collection_id = %s::uuid)",
             (collection_id, collection_id),
         ).fetchone()
-    return f"{collection_id or 'all'}:{docs}:{chunks}"
+    return f"{collection_id or 'all'}:{ids_hash}"
 
 
 def _params(vector: list[float], embed_model: str, collection_id: UUID | None, limit: int) -> dict:

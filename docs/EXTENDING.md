@@ -50,6 +50,19 @@ Then add the call to `frontend/src/api/client.ts` and its types to `frontend/src
 
 `ingestion_service/pipeline.py: run_ingestion(document_id, filename, data)` is a plain function.
 Call it from a Celery/RQ worker instead of `background.add_task(...)` in `ingestion_service/api.py`.
+For large files, save the upload to storage (S3, disk) first and pass the worker a path, not the bytes.
+
+## Known limits
+
+Kept simple on purpose (see also "Going to production" in the README). Change these when you need them:
+
+| Limit today | When it matters | What to change |
+|---|---|---|
+| One `LLM_PROVIDER` for chat and embeddings | Claude (no embeddings API) or Ollama (no key) | Split into `CHAT_PROVIDER` + `EMBED_PROVIDER` in `config.py` and `providers/__init__.py` |
+| On startup, unfinished uploads are marked failed | Several servers or `--workers N` | Only fail uploads untouched for ~10 minutes |
+| Search is filtered by `collection_id` only | Users/tenants, tags, dates | Pass a filters object from `pipeline.py` down to `repositories/chunks.py` and into the cache key |
+| `MIN_SIMILARITY=0.50` was tuned on Gemini | OpenAI or other embeddings | Test a few questions and adjust it in `.env` |
+| `TEXT_SEARCH_LANGUAGE` is fixed when tables are created | Changing language later | Start with an empty database |
 
 ## Rules
 
