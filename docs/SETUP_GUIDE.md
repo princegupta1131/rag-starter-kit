@@ -29,6 +29,7 @@ New to the terminal? Read this once. It saves a lot of time.
 |---|---|
 | **Python** (3.10 or newer) | <https://www.python.org/downloads/> → the yellow **Download** button → run the installer |
 | **Node.js** | <https://nodejs.org/> → download the **LTS** version → run the installer |
+| **pgAdmin** (to see the database) | <https://www.pgadmin.org/download/> → pick Mac or Windows → run the installer |
 | **Gemini API key** (free) | <https://aistudio.google.com/apikey> → **Create API key** → copy it into a note for later |
 
 - **Mac:** install Python even if you already have `python3`. The one that comes with the Mac (3.9) is too old
@@ -47,6 +48,11 @@ Mac still shows `3.9`? Close the terminal and open a new one.
 ---
 
 ## Step 2: Database
+
+The app stores your documents in **Postgres** with **pgvector** (the add-on that searches by meaning).
+All you need from this step is **one line**, your `DATABASE_URL`. The app creates the database and tables itself.
+
+Pick **one**: Mac, Windows, or "Already have Postgres".
 
 ### Mac
 
@@ -74,7 +80,23 @@ We use a free cloud database, so there's nothing to install.
    `postgresql://neondb_owner:AbC123@ep-cool-river-123456.us-east-2.aws.neon.tech/neondb?sslmode=require`
 3. Your database line is `DATABASE_URL=` followed by that string. Copy it into your note
 
-Already have Postgres and pgAdmin, or want more options? See the [Database Setup guide](DATABASE_SETUP.md).
+### Already have Postgres and pgAdmin
+
+Use your own Postgres if it has pgvector (check in Step 8). Your database line is built from the
+username, password, host and port you use in pgAdmin:
+
+```text
+DATABASE_URL=postgresql://USERNAME:PASSWORD@HOST:PORT/rag_starter
+```
+
+Example: username `postgres`, password `mypass123`, on your computer (`localhost`, port `5432`):
+
+```text
+DATABASE_URL=postgresql://postgres:mypass123@localhost:5432/rag_starter
+```
+
+(Password has `@ # / :` in it? Those break the line: change the password to letters and numbers.)
+Other cases (Linux, Supabase, making the tables yourself): [more database options](DATABASE_SETUP.md).
 
 ---
 
@@ -192,32 +214,58 @@ Now open **<http://localhost:5173>** in your browser.
 3. Wait until it shows **READY**
 4. Ask: *How many days of annual leave do I get?* The answer says 24 days, with a source
 
-🎉 You're set up.
+🎉 The app works. One more step: look at your data in the database.
 
 ---
 
-## Next time
+## Step 8: See your tables in pgAdmin
 
-Open a terminal, go into the main folder (tip 6), then run Step 6 again. Steps 1 to 5 are one-time only.
+This is where you look inside the database: the documents, the chunks and their embeddings.
 
----
+**Connect pgAdmin** (once):
 
-## Optional: see the data in pgAdmin
+1. Open pgAdmin. Right-click **Servers** → **Register** → **Server…**
+2. **General** tab → Name: `RAG Starter`
+3. **Connection** tab, fill in:
 
-Connect [pgAdmin](https://www.pgadmin.org/download/) to your database
-([how](DATABASE_SETUP.md#see-it-in-pgadmin-optional-good-for-learning)), then open **Databases** →
-your database → **Schemas** → **public** → **Tables**:
+| Field | Mac | Windows (Neon) | Already have Postgres |
+|---|---|---|---|
+| Host name/address | `localhost` | the part between `@` and `/neondb`, e.g. `ep-cool-river-123456.us-east-2.aws.neon.tech` | yours |
+| Port | `5432` | `5432` | yours |
+| Maintenance database | `postgres` | `neondb` | `postgres` |
+| Username | your Mac username (run `whoami`) | `neondb_owner` | yours |
+| Password | leave empty | the part between `neondb_owner:` and `@`, e.g. `AbC123` | yours |
+
+4. Windows (Neon) only: **Parameters** tab → **SSL mode** = `require`
+5. **Save**
+
+**See the tables:** open **RAG Starter** → **Databases** → `rag_starter` (Neon: `neondb`) →
+**Schemas** → **public** → **Tables**. Don't see them? Right-click **Tables** → **Refresh**.
 
 | Table | What's in it |
 |---|---|
 | `collections` | Your knowledge bases |
 | `documents` | One row per uploaded file, with its status and ingestion steps |
 | `chunks` | The pieces of text, their embedding (768 numbers) and keywords |
-| `schema_migrations` | Which SQL migrations have run |
+| `schema_migrations` | Which database changes have run |
 
-Right-click a table → **View/Edit Data** → **All Rows** to see it. For ready-made queries (chunks,
-embeddings, a meaning search, a keyword search), open **Tools** → **Query Tool**, open
-`backend/sql/explore.sql`, select one query and press **F5**. They only read, nothing is changed.
+Right-click a table → **View/Edit Data** → **All Rows** to see what's in it.
+
+**Run the ready-made queries:** click `rag_starter` → **Tools** → **Query Tool** → **Open File** icon →
+`backend/sql/explore.sql` (in the main folder). Select one query (from its comment to its `;`) and
+press **F5**. They show the chunks, the embeddings, a meaning search and a keyword search. They only
+read, nothing is changed.
+
+Check pgvector is on: in the Query Tool run
+`SELECT extversion FROM pg_extension WHERE extname = 'vector';`. You should see a version like `0.8.2`.
+
+🎉 You're set up.
+
+---
+
+## Next time
+
+Open a terminal, go into the main folder (tip 6), then run Step 6 again. The other steps are one-time only.
 
 ---
 

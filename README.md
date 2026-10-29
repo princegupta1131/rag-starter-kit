@@ -14,6 +14,12 @@ get answers **from your documents, with sources**. Use it to learn RAG, or as th
 
 ## Quick start
 
+### 👉 New here? Follow the **[Setup Guide](docs/SETUP_GUIDE.md)**
+
+Step by step for **Mac and Windows**: tools, database, the app and pgAdmin, in about 20 minutes.
+
+Already know Python, Node and Postgres? The short version:
+
 ```bash
 git clone https://github.com/princegupta1131/rag-starter-kit.git
 cd rag-starter-kit
@@ -28,11 +34,7 @@ make check
 make run
 ```
 
-Open <http://localhost:5173>
-
-Step-by-step instructions (including Windows): **[Setup Guide](docs/SETUP_GUIDE.md)**
-
-New to Postgres? Install it with pgvector, using pgAdmin or the terminal: **[Database Setup](docs/DATABASE_SETUP.md)**
+Open <http://localhost:5173>. The database must be Postgres with pgvector ([options](docs/DATABASE_SETUP.md)).
 
 ---
 
@@ -102,7 +104,7 @@ rag-starter-kit/
 │   ├── types.ts                    response types (mirror backend schemas)
 │   ├── shared/                     step trace, answer renderer
 │   └── features/                   collections/, ingestion/, retrieval/
-├── docs/                           setup, database setup, extending guide, hands-on exercises
+├── docs/                           setup guide, more database options, extending guide, hands-on exercises
 └── Makefile                        setup / check / run / test / lint
 ```
 
