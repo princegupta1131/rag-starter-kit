@@ -75,6 +75,38 @@ Open **<http://localhost:5173>**. Press **Ctrl + C** to stop.
 
 ---
 
+## Step 6 (optional): See the data in pgAdmin
+
+Install [pgAdmin](https://www.pgadmin.org/download/), then connect it to the same database as your `DATABASE_URL`:
+
+```text
+postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+```
+
+1. Right-click **Servers** → **Register** → **Server…**
+2. **General** tab → Name: `RAG Starter` (any name)
+3. **Connection** tab: fill in **Host**, **Port**, **Username** and **Password** from your URL
+   - Postgres on a Mac (Homebrew): Host `localhost`, Port `5432`, Username = your Mac username, no password
+   - Supabase / Neon: also set **Parameters** tab → **SSL mode** = `require`
+4. **Save**. Open **Databases** → your database (e.g. `rag_starter`) → **Schemas** → **public** → **Tables**
+
+| Table | What's in it |
+|---|---|
+| `collections` | Your knowledge bases |
+| `documents` | One row per uploaded file, with its status and ingestion steps |
+| `chunks` | The pieces of text, their embedding (768 numbers) and keywords |
+| `schema_migrations` | Which SQL migrations have run |
+
+Right-click a table → **View/Edit Data** → **All Rows** to see it.
+
+**Ready-made queries:** click the database, open **Tools** → **Query Tool**, and open
+`backend/sql/explore.sql`. Select one query and press **F5**. They show the chunks, the embeddings,
+a meaning search and a keyword search. They only read, nothing is changed.
+
+Don't see your database? Right-click **Databases** → **Refresh**, and check that the port matches your `DATABASE_URL`.
+
+---
+
 ## Next time
 
 ```bash

@@ -91,6 +91,7 @@ rag-starter-kit/
 │   │   ├── ingestion_service/      /api/documents   (steps/step1 … step5)
 │   │   └── retrieval_service/      /api/chat        (steps/step1 … step7, prompts/)
 │   ├── sql/migrations/             numbered SQL files, applied on startup
+│   ├── sql/explore.sql             read-only queries to look inside the database (pgAdmin)
 │   ├── tests/                      unit + API tests (no API key needed)
 │   └── .env.example                all settings
 ├── frontend/src/
