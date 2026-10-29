@@ -26,43 +26,58 @@ export default function AnswerMessage({ id, text, response, error }: Props) {
   const sourceId = (n: number) => `${id}-source-${n}`
 
   return (
-    <div className={`msg assistant ${error ? 'status-error' : `status-${response?.status}`}`}>
-      {label && <span className={`badge ${error ? 'error' : response?.status}`}>{label}</span>}
-      <AnswerText text={text} sourceAnchor={response?.sources.length ? sourceId : undefined} />
+    <div className="turn">
+      <span className={`avatar ${error ? 'bad' : ''}`} aria-hidden>◆</span>
+      <div className={`msg assistant ${error ? 'status-error' : `status-${response?.status}`}`}>
+        {label && <span className={`badge ${error ? 'error' : response?.status}`}><span className="dot" aria-hidden />{label}</span>}
+        <AnswerText text={text} sourceAnchor={response?.sources.length ? sourceId : undefined} />
+        {error && <p className="hint">Check the backend terminal for details, then ask again.</p>}
 
-      {response && response.sources.length > 0 && (
-        <div className="sources">
-          <h4>Sources</h4>
-          <ol>
-            {response.sources.map((s) => (
-              <li key={s.n} id={sourceId(s.n)}>
-                <span className="cite">{s.n}</span>
-                <div>
-                  <div className="source-title">
-                    {s.filename}{s.page ? `, page ${s.page}` : ''}
-                    <span className="muted"> · match {Math.round(s.similarity * 100)}%</span>
-                  </div>
-                  <p className="snippet">{s.snippet}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+        {response && response.sources.length > 0 && (
+          <div className="sources">
+            <h4>Sources <span className="count">{response.sources.length}</span></h4>
+            <ol>
+              {response.sources.map((s) => {
+                const match = Math.round(s.similarity * 100)
+                return (
+                  <li key={s.n} id={sourceId(s.n)}>
+                    <div className="source-title">
+                      <span className="cite">{s.n}</span>
+                      <span className="source-name" title={s.filename}>{s.filename}{s.page ? `, page ${s.page}` : ''}</span>
+                    </div>
+                    <p className="snippet">{s.snippet}</p>
+                    <div className="source-match">
+                      <span className="meter" aria-hidden><span style={{ width: `${match}%` }} /></span>
+                      match {match}%
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+          </div>
+        )}
 
-      {response && response.trace.length > 0 && (
-        <>
-          <button className="link" onClick={() => setShowTrace(!showTrace)} aria-expanded={showTrace}>
-            {showTrace ? '▾' : '▸'} How this answer was made
-          </button>
-          {showTrace && (
-            <div className="trace-box">
-              {response.search_query && <p className="muted">Search query: <em>{response.search_query}</em></p>}
-              <StepTrace steps={response.trace} />
-            </div>
-          )}
-        </>
-      )}
+        {response && response.trace.length > 0 && (
+          <div className="trace-box">
+            <button className="fold" onClick={() => setShowTrace(!showTrace)} aria-expanded={showTrace}>
+              <span className="chev" aria-hidden />
+              How this answer was made
+              <span className="fold-meta">{response.trace.length} steps</span>
+            </button>
+            {showTrace && (
+              <>
+                {response.search_query && (
+                  <p className="query">
+                    <span className="field-label">Search query</span>
+                    <em>{response.search_query}</em>
+                  </p>
+                )}
+                <StepTrace steps={response.trace} />
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

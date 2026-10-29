@@ -32,13 +32,14 @@ export default function CollectionPicker({ collections, selected, onSelect, onCh
 
   async function remove() {
     if (!selected) return
+    setError(null)
     const docs = selected.document_count
-    if (!confirm(`Delete "${selected.name}"${docs ? ` and its ${docs} document(s)` : ''}?`)) return
+    if (!confirm(`Delete "${selected.name}"${docs ? ` and its ${docs} document(s)` : ''}? This can't be undone.`)) return
     try {
       await api.deleteCollection(selected.id)
       await onChanged()
     } catch (err) {
-      alert(`Couldn't delete: ${err instanceof Error ? err.message : err}`)
+      setError(`Couldn't delete: ${err instanceof Error ? err.message : err}`)
     }
   }
 
@@ -53,25 +54,35 @@ export default function CollectionPicker({ collections, selected, onSelect, onCh
           maxLength={80}
           onChange={(e) => setName(e.target.value)}
         />
-        <button className="primary" disabled={!name.trim()}>Create</button>
+        <button className="primary" disabled={!name.trim()} title={name.trim() ? undefined : 'Type a name first'}>
+          Create
+        </button>
         {collections.length > 0 && (
-          <button type="button" className="link" onClick={() => { setCreating(false); setError(null) }}>Cancel</button>
+          <button type="button" className="ghost" onClick={() => { setCreating(false); setError(null) }}>Cancel</button>
         )}
-        {error && <span className="error-text">{error}</span>}
+        {error && <span className="error-text" role="alert">{error}</span>}
       </form>
     )
   }
 
   return (
     <div className="collection-picker">
-      <label htmlFor="collection" className="muted">Collection</label>
+      <label htmlFor="collection" className="field-label">Collection</label>
       <select id="collection" value={selected?.id ?? ''} onChange={(e) => onSelect(e.target.value)}>
         {collections.map((c) => (
-          <option key={c.id} value={c.id}>{c.name} ({c.ready_count})</option>
+          <option key={c.id} value={c.id}>{c.name} · {c.ready_count} ready</option>
         ))}
       </select>
-      <button type="button" className="link" onClick={() => setCreating(true)}>+ New</button>
-      <button type="button" className="link danger" onClick={remove}>Delete</button>
+      <button type="button" className="secondary" onClick={() => setCreating(true)}>+ New</button>
+      <button
+        type="button"
+        className="ghost danger"
+        onClick={remove}
+        title={selected ? `Delete the "${selected.name}" collection` : undefined}
+      >
+        Delete
+      </button>
+      {error && <span className="error-text" role="alert">{error}</span>}
     </div>
   )
 }
