@@ -188,10 +188,10 @@ Running a workshop with this repo? See the **[hands-on exercises](docs/HANDS_ON.
 
 | Page | What it explains |
 |---|---|
-| [`docs/explainers/rag-ingestion-lab.html`](docs/explainers/rag-ingestion-lab.html) | Part 1, how a document is prepared, as 5 missions: x-ray the file, slice it into cards, the meaning galaxy, the arrow duel, save and race the index (pgvector) |
-| [`docs/explainers/rag-retrieval-lab.html`](docs/explainers/rag-retrieval-lab.html) | Part 2, how a question is answered, as 9 checkpoints: the guard, the cache, the rewrite, meaning space, meaning vs words, the podium, the evidence bar, the open-book answer, the fake citation |
+| [`docs/explainers/rag-ingestion-lab.html`](docs/explainers/rag-ingestion-lab.html) | Part 1, the ingestion pipeline in 5 steps: parsing, chunking, embedding, cosine similarity, vector store (pgvector + HNSW) |
+| [`docs/explainers/rag-retrieval-lab.html`](docs/explainers/rag-retrieval-lab.html) | Part 2, the retrieval pipeline in 9 stages: input guardrail, response cache, query rewriting, query embedding, hybrid search, RRF, similarity threshold, grounded generation, citation validation |
 
-Both follow one example (the sample handbook and the question "Can I carry over unused holidays?"). Trainees guess first, then play to find out, and every score in them is real.
+Each step shows a general example (the sample HR handbook, with real scores you can play with) and a medical example (an antenatal care guideline, illustrative).
 
 ## License
 

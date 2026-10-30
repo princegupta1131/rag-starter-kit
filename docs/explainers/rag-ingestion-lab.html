@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* One deliberate night-sky look for both labs.
-   Blue = the document, amber = the question, green = exact words, coral = stopped. */
+   Blue = the document, amber = the query, green = exact keywords, coral = stopped, pink = the medical example. */
 :root {
   --space: #070b16;
   --panel: #0f1628;
@@ -28,6 +28,8 @@
   --kw-soft: rgb(78 224 143 / 14%);
   --bad: #ff8a7a;
   --bad-soft: rgb(255 138 122 / 14%);
+  --med: #f2a6ff;
+  --med-soft: rgb(242 166 255 / 12%);
   --gold: #ffd36b; --silver: #c9d3e6; --bronze: #e0a273;
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
@@ -130,6 +132,19 @@ a.part:hover { border-color: var(--star); color: var(--ink); }
 @keyframes spark { to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; } }
 
 /* why / science / kit */
+/* plain-words line under each hook, and the general + medical example pair */
+.plain { color: var(--ink-2); font-size: 16.5px; padding: 0 4px; }
+.plain b { color: var(--ink); }
+.examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .examples { grid-template-columns: minmax(0, 1fr); } }
+.ex { border-radius: 16px; padding: 14px 16px; font-size: 15.5px; color: var(--ink-2); border: 1px solid var(--line); }
+.ex small { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 700 12px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.ex.gen { background: linear-gradient(135deg, rgb(91 140 255 / 10%), transparent 70%); } .ex.gen small { color: var(--star); }
+.ex.med { background: linear-gradient(135deg, var(--med-soft), transparent 70%); border-color: rgb(242 166 255 / 28%); } .ex.med small { color: var(--med); }
+.ex .tag { font-size: 10px; padding: 2px 8px; letter-spacing: 0.08em; }
+.ex b { color: var(--ink); }
+.med-text { color: var(--med); }
+.two-ex { margin-top: 4px; }
 .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 860px) { .facts { grid-template-columns: minmax(0, 1fr); } }
 .facts > div { display: block; background: var(--panel-2); border-radius: 16px; padding: 14px 16px; color: var(--ink-2); font-size: 15.5px; }
@@ -293,42 +308,45 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
 <canvas id="bg" aria-hidden="true"></canvas>
 
 <header class="wrap hero">
-  <span class="eyebrow">RAG Starter Kit · Lab 1 of 2 · Ingestion</span>
-  <h1>How does an AI <em>read</em> your documents?</h1>
-  <p class="lead">Before anyone asks anything, the handbook is prepared once: read, sliced, turned into numbers, and saved. Five missions, one real handbook. Play each one, and unlock five discoveries.</p>
+  <span class="eyebrow">RAG Starter Kit · Lab 1 of 2 · Ingestion pipeline</span>
+  <h1>The ingestion pipeline: from <em>file</em> to vectors</h1>
+  <p class="lead">Before any query is answered, each uploaded document runs through this pipeline once: <b>parse → chunk → embed → store</b>. Run each step on a real document and inspect its real output.</p>
   <div class="story">
-    <div class="card"><small>The document</small><b class="d-text">Greenleaf handbook</b><span class="note">Hours, leave, expenses, laptops, passwords. 352 words.</span></div>
+    <div class="card"><small>Source document</small><b class="d-text">Greenleaf HR handbook</b><span class="note">Hours, leave, expenses, laptops, passwords. 352 words.</span></div>
     <span class="op" aria-hidden="true">+</span>
-    <div class="card"><small>Later, Priya asks</small><b class="q-text">"Can I carry over unused holidays?"</b><span class="note">The handbook never says "holidays".</span></div>
+    <div class="card"><small>Later, a user asks</small><b class="q-text">"Can I carry over unused holidays?"</b><span class="note">No chunk contains the word "holidays".</span></div>
     <span class="op" aria-hidden="true">=</span>
-    <div class="card"><small>The goal</small><b class="k-text">"Yes, up to 5 days."</b><span class="note">Found in the handbook, source shown.</span></div>
+    <div class="card"><small>Expected answer</small><b class="k-text">"Yes, up to 5 days."</b><span class="note">Grounded in the document, with a citation.</span></div>
   </div>
-  <div class="parts"><span class="part on">Lab 1 · Prepare the document</span><a class="part" href="rag-retrieval-lab.html">Lab 2 · Answer the question →</a></div>
+  <p class="note two-ex">Every step shows the same idea on two documents: a <b>general</b> one (an HR handbook, the real data you play with) and a <b class="med-text">medical</b> one (an antenatal care guideline, illustrative).</p>
+  <div class="parts"><span class="part on">Lab 1 · Ingestion pipeline</span><a class="part" href="rag-retrieval-lab.html">Lab 2 · Retrieval pipeline →</a></div>
 </header>
 
-<nav class="rail" aria-label="Missions"><div class="wrap"><ol id="rail-list"></ol><span class="score" id="score"></span></div></nav>
+<nav class="rail" aria-label="Pipeline steps"><div class="wrap"><ol id="rail-list"></ol><span class="score" id="score"></span></div></nav>
 
 <main class="wrap">
 
   <!-- 1 READ -->
-  <section class="mission" id="s1" data-short="Read">
-    <div class="m-head"><span class="m-num">01</span><div class="t"><span class="term">Extraction</span><h2>X-ray the file</h2></div></div>
-    <p class="hook">A file is full of hidden junk the AI can't use. What's really inside one?</p>
+  <section class="mission" id="s1" data-short="Parse">
+    <div class="m-head"><span class="m-num">01</span><div class="t"><span class="term">Ingestion · step 1</span><h2>Parsing: extract plain text</h2></div></div>
+    <p class="hook">A .docx or .pdf is mostly markup and layout commands. What does the parser keep for the next step?</p>
+    <p class="plain"><b>In plain words:</b> the parser opens the file and keeps only the text, plus page numbers as metadata. Everything else (XML tags, fonts, layout commands) is dropped.</p>
     <div class="play">
-      <div class="play-top"><span class="instr"><b>Drag the scanner</b> down the file, or press Scan.</span><span class="tag real">Real handbook text</span></div>
+      <div class="play-top"><span class="instr"><b>Drag the parser line</b> down the raw file, or press Run parser.</span><span class="tag real">Real handbook text</span></div>
       <div class="row" role="group" aria-label="File type" id="fmt">
-        <button class="btn" data-fmt="docx" aria-pressed="true">Word file</button>
-        <button class="btn" data-fmt="pdf" aria-pressed="false">PDF file</button>
-        <button class="btn" data-fmt="md" aria-pressed="false">Markdown file</button>
+        <button class="btn" data-fmt="docx" aria-pressed="true">.docx (Word XML)</button>
+        <button class="btn" data-fmt="pdf" aria-pressed="false">.pdf (content stream)</button>
+        <button class="btn" data-fmt="md" aria-pressed="false">.md (Markdown)</button>
       </div>
-      <div class="xray" id="xray"><div class="beam" id="beam"></div><div id="lines"></div><span class="page-chip" id="page-chip">page 1 remembered</span></div>
-      <div class="row"><button class="btn go" id="scan">Scan the file</button><span class="meter">junk removed <b id="junk">0</b> characters · words kept <b id="kept">0</b></span></div>
+      <div class="xray" id="xray"><div class="beam" id="beam"></div><div id="lines"></div><span class="page-chip" id="page-chip">metadata: page 1</span></div>
+      <div class="row"><button class="btn go" id="scan">Run parser</button><span class="meter">markup stripped <b id="junk">0</b> chars · words kept <b id="kept">0</b></span></div>
     </div>
-    <div class="locked">Scan the whole file to unlock this discovery.</div>
+    <div class="locked">Parse the whole file to see the takeaway.</div>
     <div class="aha" hidden></div>
+    <div class="examples"><div class="ex gen"><small>General example · HR handbook</small><p>The handbook .docx becomes clean paragraphs: "Every full-time employee receives 24 days of paid annual leave…", tagged page 1.</p></div><div class="ex med"><small>Medical example · antenatal care guideline <span class="tag sim">Illustrative</span></small><p>An antenatal care (ANC) guideline PDF has a danger-signs <b>table</b> and a <b>scanned</b> referral form. The table is flattened into rows of text (sign → action); the scanned page needs OCR first, or it parses as empty and can never be found.</p></div></div>
     <div class="facts">
-      <div class="why"><h3>Why?</h3>The search and the AI understand only words. Symbols like <code>##</code> or Word's hidden XML are noise. The page number lets an answer say "see page 3".</div>
-      <div class="sci"><h3>The science, simply</h3>No AI here, just careful reading. One exception: a picture is described in words by a vision model, so a chart or a photo becomes searchable text.</div>
+      <div class="why"><h3>Why?</h3>Embedding models and the LLM take plain text. Markup like <code>##</code> or Word's XML is noise that would pollute the vectors. The page number is kept as <b>metadata</b>, so a citation can say "page 3".</div>
+      <div class="sci"><h3>How it works</h3>No model here: a format-specific parser (<code>pypdf</code> for PDF, <code>python-docx</code> for Word) pulls out the text. One exception: images are captioned by a vision model (image-to-text), so a chart or photo becomes searchable text.</div>
       <div class="kit"><h3>In the kit</h3><code>ingestion_service/steps/step1_extract.py</code> reads PDF, Word, TXT, Markdown, CSV, JSON and HTML. Images: <code>step2_caption.py</code>.</div>
     </div>
     <details class="deeper"><summary>Go deeper: what can go wrong</summary><div>
@@ -338,156 +356,164 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
   </section>
 
   <!-- 2 CUT -->
-  <section class="mission" id="s2" data-short="Cut">
-    <div class="m-head"><span class="m-num">02</span><div class="t"><span class="term">Chunking</span><h2>Slice the handbook into cards</h2></div></div>
-    <p class="hook">Too small and a card loses its context. Too big and it's about everything. Can you find the sweet spot?</p>
+  <section class="mission" id="s2" data-short="Chunk">
+    <div class="m-head"><span class="m-num">02</span><div class="t"><span class="term">Ingestion · step 2</span><h2>Chunking: split text into overlapping chunks</h2></div></div>
+    <p class="hook">Too small a chunk loses its context; too large a chunk mixes several topics into one embedding. Which chunk size retrieves best?</p>
+    <p class="plain"><b>In plain words:</b> the chunker cuts the text into small pieces (chunks) of about 200 words, so later we can send the LLM only the piece it needs.</p>
     <div class="play">
-      <div class="play-top"><span class="instr"><b>Pick a card size</b> and press Slice. Try at least two sizes.</span><span class="tag real">Real text · the kit's exact rules</span></div>
-      <div class="row" role="group" aria-label="Card size">
-        <button class="btn" data-size="60" aria-pressed="false">Small · 60 words</button>
-        <button class="btn" data-size="200" aria-pressed="true">Kit · 200 words</button>
-        <button class="btn" data-size="400" aria-pressed="false">Big · 400 words</button>
-        <label class="meter"><input type="checkbox" id="ov" checked> overlap: repeat up to 40 words</label>
-        <button class="btn go" id="slice">✂ Slice!</button>
+      <div class="play-top"><span class="instr"><b>Pick a chunk size</b> and run the chunker. Try at least two sizes.</span><span class="tag real">Real text · the kit's exact rules</span></div>
+      <div class="row" role="group" aria-label="Chunk size">
+        <button class="btn" data-size="60" aria-pressed="false">60 words</button>
+        <button class="btn" data-size="200" aria-pressed="true">200 words · kit default</button>
+        <button class="btn" data-size="400" aria-pressed="false">400 words</button>
+        <label class="meter"><input type="checkbox" id="ov" checked> overlap: up to 40 words</label>
+        <button class="btn go" id="slice">✂ Run chunker</button>
       </div>
       <div class="split">
-        <div class="panel"><small>The handbook</small><div class="paper" id="paper"></div></div>
-        <div class="panel"><small id="fan-title">Index cards</small><div class="fan" id="fan"><p class="note">Press Slice to cut.</p></div></div>
+        <div class="panel"><small>Parsed text (split into sentences)</small><div class="paper" id="paper"></div></div>
+        <div class="panel"><small id="fan-title">Chunks</small><div class="fan" id="fan"><p class="note">Run the chunker to see the chunks.</p></div></div>
       </div>
       <div class="gauges">
-        <div class="gauge"><span>Focus: one topic per card</span><span class="track"><i id="g-focus" style="width: 0; background: var(--star);"></i></span></div>
-        <div class="gauge"><span>Context: enough words around it</span><span class="track"><i id="g-ctx" style="width: 0; background: var(--q);"></i></span></div>
+        <div class="gauge"><span>Precision: one topic per chunk</span><span class="track"><i id="g-focus" style="width: 0; background: var(--star);"></i></span></div>
+        <div class="gauge"><span>Context: words around each fact</span><span class="track"><i id="g-ctx" style="width: 0; background: var(--q);"></i></span></div>
       </div>
       <p class="verdict" id="verdict" aria-live="polite"></p>
-      <p class="instr" id="challenge" hidden>Bonus: <b>tap the card</b> that answers "Can I carry over unused holidays?"</p>
+      <p class="instr" id="challenge" hidden>Bonus: <b>tap the chunk</b> that answers "Can I carry over unused holidays?"</p>
     </div>
-    <div class="locked">Slice with two different sizes to unlock this discovery.</div>
+    <div class="locked">Chunk with two different sizes to see the takeaway.</div>
     <div class="aha" hidden></div>
+    <div class="examples"><div class="ex gen"><small>General example · HR handbook</small><p>The handbook becomes 2 chunks. The carry-over rule sits in one chunk with the rest of the leave section.</p></div><div class="ex med"><small>Medical example · antenatal care guideline <span class="tag sim">Illustrative</span></small><p>"Danger signs: severe headache, blurred vision, swelling of face and hands" and "Refer immediately to the nearest facility" must stay in the <b>same chunk</b>. If a boundary splits them, retrieval returns the symptom without the action. The overlap protects this.</p></div></div>
     <div class="facts">
-      <div class="why"><h3>Why?</h3>One summary of a whole manual would be a blur of every topic. Small cards let the search hand the AI <b>exactly</b> the paragraph about leave.</div>
-      <div class="sci"><h3>The science, simply</h3>Smaller card = sharper meaning, less context. Bigger card = more context, mixed topics. The <b class="q-text">overlap</b> (amber) repeats the end of the previous card, so a sentence at the border is never lost.</div>
+      <div class="why"><h3>Why?</h3>One embedding for a whole manual would average every topic together. Smaller chunks let retrieval pass the LLM <b>exactly</b> the paragraph about leave, and keep the prompt short.</div>
+      <div class="sci"><h3>How it works</h3>Smaller chunk = sharper embedding, less context. Bigger chunk = more context, mixed topics. The <b class="q-text">overlap</b> (amber) repeats the end of the previous chunk, so a sentence at the boundary is never lost.</div>
       <div class="kit"><h3>In the kit</h3><code>step3_chunk.py</code>. In <code>backend/.env</code>: <code>CHUNK_SIZE_WORDS=200</code>, <code>CHUNK_OVERLAP_WORDS=40</code>. A sentence is never cut in half.</div>
     </div>
     <details class="deeper"><summary>Go deeper: exactly how the kit cuts</summary><div>
-      <p>1. Split the text into sentences. 2. Add whole sentences to a card until the next one would pass 200 words. 3. Start the next card with the last sentences of the previous one, up to 40 words. 4. Skip exact duplicate cards, like repeated headers. With these rules the real handbook becomes 2 cards in the database, of 199 and 185 words (they also include the title and the "try asking" list that this demo leaves out).</p>
+      <p>1. Split the text into sentences. 2. Add whole sentences to a chunk until the next one would pass 200 words. 3. Start the next chunk with the last sentences of the previous one, up to 40 words. 4. Skip exact duplicate chunks, like repeated headers. With these rules the real handbook becomes 2 chunks in the database, of 199 and 185 words (they also include the title and the "try asking" list that this demo leaves out).</p>
     </div></details>
   </section>
 
   <!-- 3 UNDERSTAND -->
-  <section class="mission" id="s3" data-short="Understand">
-    <div class="m-head"><span class="m-num">03</span><div class="t"><span class="term">Embedding</span><h2>Turn meaning into a place in space</h2></div></div>
-    <p class="hook">Priya says "holidays". The handbook says "unused days". How can a computer know they mean the same?</p>
+  <section class="mission" id="s3" data-short="Embed">
+    <div class="m-head"><span class="m-num">03</span><div class="t"><span class="term">Ingestion · step 3</span><h2>Embedding: turn each chunk into a vector</h2></div></div>
+    <p class="hook">The query says "holidays"; the chunk says "unused days". How does retrieval match them with no shared keyword?</p>
+    <p class="plain"><b>In plain words:</b> an embedding model turns each chunk into a list of 768 numbers (a vector). Chunks with similar meaning get similar vectors, even with different words.</p>
     <div class="play">
-      <div class="play-top"><span class="instr"><b>Feed card 1</b> to the embedding model.</span><span class="tag real">Real 768 numbers</span></div>
+      <div class="play-top"><span class="instr"><b>Embed chunk 1</b> with the embedding model.</span><span class="tag real">Real 768-dim vector</span></div>
       <div class="machine">
         <div class="feed" id="feed"></div>
         <div class="core" id="core">gemini-<br>embedding<br>-001</div>
-        <div><canvas id="strip" aria-label="768 numbers as coloured cells: blue positive, pink negative"></canvas><p class="readout" id="readout">0 / 768 numbers</p></div>
+        <div><canvas id="strip" aria-label="768 dimensions as coloured cells: blue positive, pink negative"></canvas><p class="readout" id="readout">0 / 768 dimensions</p></div>
       </div>
-      <div class="row"><button class="btn go" id="feed-btn">Feed the model</button><span class="note" id="feed-note">Then hover or tap the cells: which number means "leave"?</span></div>
+      <div class="row"><button class="btn go" id="feed-btn">Embed chunk 1</button><span class="note" id="feed-note">Then hover or tap a cell: which dimension means "leave"?</span></div>
     </div>
     <div class="play">
-      <div class="play-top"><span class="instr">These numbers are <b>coordinates</b>. Every handbook sentence is a star. Pick a question, <b>tap the star you think answers it</b>, then launch.</span><span class="tag real">Real scores</span></div>
+      <div class="play-top"><span class="instr">A vector is a point in vector space (drawn here in 2-D). Each dot is one embedded handbook sentence. Pick a query, <b>tap the dot you expect as its nearest neighbour</b>, then run the search.</span><span class="tag real">Real scores</span></div>
       <div class="deck" role="group" aria-label="Pick a question" id="deck"></div>
-      <div class="stage"><canvas id="sky" aria-label="A sky of handbook sentences as stars; a question flies in as a comet"></canvas>
+      <div class="stage"><canvas id="sky" aria-label="Embedded handbook sentences as points in vector space; the query vector moves to its nearest neighbour"></canvas>
         <div class="hud" aria-live="polite"><span id="prompt"></span><span class="count" id="counter" hidden></span></div></div>
       <div class="row">
-        <button class="btn go" id="launch">Launch the question</button>
-        <button class="btn kw" id="kw" aria-pressed="false">Keyword flashlight: off</button>
+        <button class="btn go" id="launch">Embed query + search</button>
+        <button class="btn kw" id="kw" aria-pressed="false">Keyword match: off</button>
       </div>
       <div class="reveal" aria-live="polite">
-        <div class="rv guess hide" id="r-guess"><small>Your guess</small><span class="big" id="g-score">?</span><p id="g-text">Tap a star before launching.</p></div>
-        <div class="rv model hide" id="r-model"><small>The model's pick</small><span class="big" id="m-score">?</span><p id="m-text"></p></div>
-        <div class="rv hide" id="r-why"><small>The surprise</small><span class="big" id="w-big">?</span><p id="w-text"></p></div>
+        <div class="rv guess hide" id="r-guess"><small>Your guess</small><span class="big" id="g-score">?</span><p id="g-text">Tap a dot before searching.</p></div>
+        <div class="rv model hide" id="r-model"><small>Top-1 by cosine</small><span class="big" id="m-score">?</span><p id="m-text"></p></div>
+        <div class="rv hide" id="r-why"><small>Why it matters</small><span class="big" id="w-big">?</span><p id="w-text"></p></div>
       </div>
-      <p class="note">The sky is a 2-D picture of a 768-dimension space: the constellations and every score come from real embeddings of the handbook.</p>
+      <p class="note">The map is a 2-D projection of the 768-dimension space: the topic clusters and every score come from real embeddings of the handbook.</p>
     </div>
-    <div class="locked">Launch a question to unlock this discovery.</div>
+    <div class="locked">Run a search to see the takeaway.</div>
     <div class="aha" hidden></div>
+    <div class="examples"><div class="ex gen"><small>General example · HR handbook</small><p>"Can I carry over unused holidays?" lands next to "Up to 5 unused days can be carried over" (0.80), with almost no shared words.</p></div><div class="ex med"><small>Medical example · antenatal care guideline <span class="tag sim">Illustrative</span></small><p>"Bad headache and blurry eyes" lands next to "severe headache, blurred vision… signs of pre-eclampsia", though the user never typed the medical term. A Hindi query about the same symptoms lands in the same spot.</p></div></div>
     <div class="facts">
-      <div class="why"><h3>Why?</h3>People don't use the document's words. Coordinates for <b>meaning</b> let "holidays" find "unused days", even across languages.</div>
-      <div class="sci"><h3>The science, simply</h3>A neural network trained on billions of examples: texts that mean the same were <b>pulled closer</b>, unrelated ones <b>pushed apart</b>, until closeness in numbers became closeness in meaning.</div>
-      <div class="kit"><h3>In the kit</h3><code>step4_embed.py</code> sends each card to Gemini's <code>gemini-embedding-001</code>. <code>EMBED_DIM=768</code>.</div>
+      <div class="why"><h3>Why?</h3>Users rarely type the document's exact words. <b>Semantic search</b> over embeddings lets "holidays" match "unused days", even across languages.</div>
+      <div class="sci"><h3>How it works</h3>A transformer trained with contrastive learning: pairs with the same meaning are <b>pulled closer</b>, unrelated pairs <b>pushed apart</b>, until vector distance tracks semantic distance.</div>
+      <div class="kit"><h3>In the kit</h3><code>step4_embed.py</code> sends each chunk to Gemini's <code>gemini-embedding-001</code>. <code>EMBED_DIM=768</code>.</div>
     </div>
     <details class="deeper"><summary>Go deeper: inside the model</summary><div>
-      <p><b>1. Tokens:</b> the text is split into word pieces the model knows (carri · ed · over · unused · days). <b>2. Attention:</b> a transformer reads all the pieces together, so each word is understood in context: "leave" next to "annual" means time off, not "leave the room". <b>3. One vector:</b> everything is pooled into one list of 768 numbers for the whole card.</p>
+      <p><b>1. Tokens:</b> the text is split into word pieces the model knows (carri · ed · over · unused · days). <b>2. Attention:</b> a transformer reads all the pieces together, so each word is understood in context: "leave" next to "annual" means time off, not "leave the room". <b>3. One vector:</b> everything is pooled (pooled) into one 768-dim vector for the whole chunk.</p>
       <p>No single number means "leave". Meaning is spread over all 768, like a fingerprint.</p>
     </div></details>
   </section>
 
   <!-- 4 COMPARE -->
-  <section class="mission" id="s4" data-short="Compare">
-    <div class="m-head"><span class="m-num">04</span><div class="t"><span class="term">Cosine similarity</span><h2>The arrow duel</h2></div></div>
-    <p class="hook">Each list of 768 numbers is an arrow. Two texts mean the same when their arrows point the same way. Can you guess the angle?</p>
+  <section class="mission" id="s4" data-short="Similarity">
+    <div class="m-head"><span class="m-num">04</span><div class="t"><span class="term">Ingestion · step 4</span><h2>Cosine similarity: score two vectors</h2></div></div>
+    <p class="hook">Every embedding is a vector. Similar meaning = small angle = cosine near 1. Can you estimate the score?</p>
+    <p class="plain"><b>In plain words:</b> cosine similarity is one score for how close two vectors point. Near 1 = same meaning; with this model, unrelated text still scores around 0.5.</p>
     <div class="play">
       <div class="play-top"><span class="instr" id="duel-instr"></span><span class="tag real">Real scores, real angles</span></div>
       <div class="duel">
-        <canvas id="duel" aria-label="Drag to turn the amber arrow; the score is the cosine of the angle"></canvas>
+        <canvas id="duel" aria-label="Drag the query vector; the score is the cosine of the angle"></canvas>
         <div style="display: grid; gap: 12px;">
           <div class="pair"><div class="a" id="pa"></div><div class="b" id="pb"></div></div>
-          <div><span class="lbl">Your arrow's score</span><span class="bigscore" id="live">0.50</span><div class="mini" id="live-mini"></div></div>
-          <div class="row"><button class="btn go" id="lock">Lock in my guess</button><button class="btn" id="next" hidden>Next round →</button></div>
+          <div><span class="lbl">cos θ of your vector</span><span class="bigscore" id="live">0.50</span><div class="mini" id="live-mini"></div></div>
+          <div class="row"><button class="btn go" id="lock">Submit estimate</button><button class="btn" id="next" hidden>Next round →</button></div>
         </div>
       </div>
       <p class="result-line" id="result" aria-live="polite"></p>
       <div class="rounds" id="rounds"></div>
     </div>
-    <div class="locked">Play all 4 rounds to unlock this discovery.</div>
+    <div class="locked">Score all 4 pairs to see the takeaway.</div>
     <div class="aha" hidden></div>
+    <div class="examples"><div class="ex gen"><small>General example · HR handbook</small><p>vacation ↔ holiday 0.88 · query ↔ carry-over rule 0.80 · ↔ sick leave 0.64 · ↔ password rules 0.53.</p></div><div class="ex med"><small>Medical example · antenatal care guideline <span class="tag sim">Illustrative</span></small><p>"blurry eyes" ↔ "blurred vision" scores high; "eye drops for an infection" shares the word "eye" but has a different intent, so it scores lower. Never trust one score alone: <b>rank</b> the results.</p></div></div>
     <div class="facts">
-      <div class="why"><h3>Why?</h3>We need one number that says "how close is this card to the question?", so every card can be ranked and the best ones picked.</div>
-      <div class="sci"><h3>The science, simply</h3>Cosine looks only at <b>direction</b>, not length. Drag your arrow longer or shorter: the score doesn't move. A short question and a long paragraph can point the same way.</div>
+      <div class="why"><h3>Why?</h3>Retrieval needs one number per chunk, "how close is this chunk to the query?", so chunks can be ranked and the top-k picked.</div>
+      <div class="sci"><h3>How it works</h3>Cosine measures <b>direction</b> only, not magnitude. Drag your vector longer or shorter: the score doesn't change. A short query and a long chunk can point the same way.</div>
       <div class="kit"><h3>In the kit</h3>Postgres does it: <code>1 - (embedding &lt;=&gt; question)</code> in <code>repositories/chunks.py</code>. <code>&lt;=&gt;</code> is pgvector's cosine distance.</div>
     </div>
     <details class="deeper"><summary>Go deeper: the formula, with 4 numbers</summary><div>
-      <p><b>cosine = (A · B) / (|A| × |B|)</b>. Multiply the two lists number by number, add it all up, and divide by the two lengths:</p>
+      <p><b>cosine = (A · B) / (|A| × |B|)</b>. The dot product of the two vectors, divided by the product of their norms (lengths):</p>
       <div class="scroll-x"><table class="t" id="calc"></table></div>
-      <p>Real vectors do the same with 768 numbers. Gemini's vectors here aren't length 1 (this one is 0.59), and that's fine: cosine ignores length.</p>
+      <p>Real vectors do the same with 768 numbers. Gemini's vectors here aren't unit-normalised (this one has norm 0.59), and that's fine: cosine ignores magnitude.</p>
     </div></details>
   </section>
 
   <!-- 5 SAVE -->
-  <section class="mission" id="s5" data-short="Save">
-    <div class="m-head"><span class="m-num">05</span><div class="t"><span class="term">Postgres + pgvector</span><h2>Save it, then race to find it</h2></div></div>
-    <p class="hook">With 10 million cards, checking every one for each question is far too slow. How does the database find the closest one in milliseconds?</p>
+  <section class="mission" id="s5" data-short="Store">
+    <div class="m-head"><span class="m-num">05</span><div class="t"><span class="term">Ingestion · step 5</span><h2>Vector store: pgvector + HNSW index</h2></div></div>
+    <p class="hook">At 10 million chunks, a full scan per query is too slow. How does an ANN index return the nearest chunk in milliseconds?</p>
+    <p class="plain"><b>In plain words:</b> each chunk is saved as one row in Postgres. The HNSW index lets the database find the nearest vectors fast, without comparing against every row.</p>
     <div class="play">
-      <div class="play-top"><span class="instr"><b>Save the 2 real cards</b> into Postgres.</span><span class="tag real">Real database rows</span></div>
+      <div class="play-top"><span class="instr"><b>INSERT the 2 real chunks</b> into the <code>chunks</code> table.</span><span class="tag real">Real database rows</span></div>
       <div class="vault">
         <div class="pcs" id="pcs"></div>
         <svg class="db-glow" id="db" viewBox="0 0 120 130" width="130" aria-hidden="true"><ellipse cx="60" cy="18" rx="50" ry="14" fill="none" stroke="#5b8cff" stroke-width="3"/><path d="M10 18v90c0 8 22 14 50 14s50-6 50-14V18M10 63c0 8 22 14 50 14s50-6 50-14" fill="none" stroke="#5b8cff" stroke-width="3"/><text x="60" y="100" text-anchor="middle" fill="#8fb4ff" style="font: 700 11px JetBrains Mono, monospace">pgvector</text></svg>
       </div>
-      <button class="btn go" id="save" style="justify-self: start;">Save to Postgres</button>
+      <button class="btn go" id="save" style="justify-self: start;">INSERT into Postgres</button>
       <div class="scroll-x"><table class="t rows" id="rows"></table></div>
     </div>
     <div class="play">
-      <div class="play-top"><span class="instr"><b>Tap a map</b> to drop a question, then start the race.</span><span class="tag sim">Simulation</span></div>
-      <div class="row" role="group" aria-label="How many cards">
-        <button class="btn" data-n="300" aria-pressed="true">300 cards</button>
-        <button class="btn" data-n="3000" aria-pressed="false">3,000 cards</button>
-        <button class="btn go" id="race">Start the race</button>
+      <div class="play-top"><span class="instr"><b>Tap a panel</b> to place the query vector, then run both searches.</span><span class="tag sim">Simulation</span></div>
+      <div class="row" role="group" aria-label="Number of vectors">
+        <button class="btn" data-n="300" aria-pressed="true">300 vectors</button>
+        <button class="btn" data-n="3000" aria-pressed="false">3,000 vectors</button>
+        <button class="btn go" id="race">Run both searches</button>
       </div>
       <div class="race">
-        <div class="lane slow"><header><b>Check every card</b><span><span class="cnt" id="c-exact">0</span> checks</span></header><canvas id="exact"></canvas><span class="flag" id="f-exact"></span></div>
-        <div class="lane fast"><header><b>Use the index (HNSW)</b><span><span class="cnt" id="c-hnsw">0</span> checks</span></header><canvas id="hnsw"></canvas><span class="flag" id="f-hnsw"></span></div>
+        <div class="lane slow"><header><b>Exact kNN (full scan)</b><span><span class="cnt" id="c-exact">0</span> distance calcs</span></header><canvas id="exact"></canvas><span class="flag" id="f-exact"></span></div>
+        <div class="lane fast"><header><b>ANN search (HNSW index)</b><span><span class="cnt" id="c-hnsw">0</span> distance calcs</span></header><canvas id="hnsw"></canvas><span class="flag" id="f-hnsw"></span></div>
       </div>
     </div>
-    <div class="locked">Finish a race to unlock this discovery.</div>
+    <div class="locked">Run both searches to see the takeaway.</div>
     <div class="aha" hidden></div>
+    <div class="examples"><div class="ex gen"><small>General example · HR handbook</small><p>2 rows in the <code>chunks</code> table: content, embedding vector(768) and tsv.</p></div><div class="ex med"><small>Medical example · antenatal care guideline <span class="tag sim">Illustrative</span></small><p>You'd add <b>metadata columns</b> such as guideline version and language, then filter <code>WHERE version = '2024'</code> so an outdated protocol is never retrieved.</p></div></div>
     <div class="facts">
-      <div class="why"><h3>Why?</h3>Everything in one row: words for the answer, numbers for meaning search, keywords for exact-word search. Normal SQL still works for filters and deletes.</div>
-      <div class="sci"><h3>The science, simply</h3>The <b>HNSW index</b> links each point to its neighbours, like highways. A search starts on a few far-apart points and hops towards the question instead of checking everything.</div>
+      <div class="why"><h3>Why?</h3>One row per chunk: <code>content</code> for the prompt, <code>embedding</code> for vector search, <code>tsv</code> for full-text search. Plain SQL still works for filters and deletes.</div>
+      <div class="sci"><h3>How it works</h3><b>HNSW</b> (Hierarchical Navigable Small World) is a graph index: each vector links to its nearest neighbours. A search enters at a sparse upper layer and greedily hops towards the query instead of scanning every row.</div>
       <div class="kit"><h3>In the kit</h3>Table and index: <code>backend/sql/migrations/001_init.sql</code>. Saving: <code>step5_store.py</code>. See the rows yourself in pgAdmin (Setup Guide, Step 8).</div>
     </div>
     <details class="deeper"><summary>Go deeper: the SQL behind it</summary><div>
-      <pre class="sql"><span class="c">-- turn on pgvector, store 768 numbers per card, and the keywords</span>
+      <pre class="sql"><span class="c">-- turn on pgvector: a 768-dim vector per chunk, plus a full-text tsvector</span>
 <span class="k">CREATE EXTENSION IF NOT EXISTS</span> vector;
 embedding  vector(768),
 tsv        tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED
 
-<span class="c">-- the index that makes meaning search fast</span>
+<span class="c">-- the ANN index for vector search</span>
 <span class="k">CREATE INDEX</span> ON chunks <span class="k">USING hnsw</span> (embedding vector_cosine_ops);
 
-<span class="c">-- meaning search: the 20 cards closest to the question</span>
+<span class="c">-- vector search: top 20 chunks by cosine similarity</span>
 <span class="k">SELECT</span> content, 1 - (embedding <span class="k">&lt;=&gt;</span> :question) <span class="k">AS</span> similarity
 <span class="k">FROM</span> chunks <span class="k">ORDER BY</span> embedding <span class="k">&lt;=&gt;</span> :question <span class="k">LIMIT</span> 20;</pre>
       <p>HNSW is approximate: it can very rarely miss the single best match, which is why the kit fetches 20 candidates, not 1.</p>
@@ -495,10 +521,10 @@ tsv        tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED
   </section>
 
   <section class="summary">
-    <h2>What we have now</h2>
-    <p class="lead">Every card of the handbook is saved with its <b class="d-text">words</b>, its <b class="q-text">meaning as 768 numbers</b>, and its <b class="k-text">keywords</b>. This happens once, at upload.</p>
-    <div class="parts"><a class="part on" href="rag-retrieval-lab.html">Next: Lab 2 · Priya asks her question →</a></div>
-    <footer class="src">Real data: the sample handbook embedded with gemini-embedding-001 (768 numbers); similarity scores computed from those vectors; rows read from the kit's Postgres database. The race is a simulation of how an HNSW index searches.</footer>
+    <h2>Ingestion output</h2>
+    <p class="lead">Every chunk is now a row with its <b class="d-text">content</b>, its <b class="q-text">embedding (768-dim vector)</b> and its <b class="k-text">tsv (full-text index)</b>. This runs once per upload.</p>
+    <div class="parts"><a class="part on" href="rag-retrieval-lab.html">Next: Lab 2 · Retrieval pipeline →</a></div>
+    <footer class="src">Real data: the sample handbook embedded with gemini-embedding-001 (768 dimensions); similarity scores computed from those vectors; rows read from the kit's Postgres database. The race is a simulation of how an HNSW index searches.</footer>
   </section>
 </main>
 
@@ -538,7 +564,7 @@ addEventListener("resize", drawBackground); drawBackground();
 const MISSIONS = $$(".mission");
 $("#rail-list").innerHTML = MISSIONS.map((m, i) => `<li><a href="#${m.id}" data-for="${m.id}"><i>${i + 1}</i><span>${esc(m.dataset.short)}</span></a></li>`).join("");
 const found = new Set();
-function updateScore() { $("#score").innerHTML = `${found.size}/${MISSIONS.length} <b>discoveries</b>`; }
+function updateScore() { $("#score").innerHTML = `${found.size}/${MISSIONS.length} <b>steps done</b>`; }
 updateScore();
 const railIO = new IntersectionObserver((entries) => entries.forEach((e) => {
   if (!e.isIntersecting) return;
@@ -551,7 +577,7 @@ MISSIONS.forEach((m) => railIO.observe(m));
 /* a discovery: show the "aha" card for a mission, with a burst of sparks the first time */
 function discover(id, html) {
   const box = $(`#${id} .aha`), first = !found.has(id);
-  box.innerHTML = `<small>Discovery unlocked</small><p>${html}</p>`;
+  box.innerHTML = `<small>Key takeaway</small><p>${html}</p>`;
   box.hidden = false; $(`#${id} .locked`)?.remove();
   if (!first) return;
   found.add(id); updateScore();
@@ -642,7 +668,7 @@ function Galaxy(canvas, opts) {
     });
     if (q && kwOn && kwHits.size === 0) {
       ctx.fillStyle = "rgba(255,138,122,0.95)"; ctx.font = `700 ${W < 600 ? 14 : 16}px IBM Plex Sans, sans-serif`; ctx.textAlign = "center";
-      ctx.fillText("Keyword search: no star contains these words", W / 2, H * 0.1 + 40);
+      ctx.fillText("Keyword match: no sentence contains these query terms", W / 2, H * 0.1 + 40);
     }
     if (phase === "explode" || phase === "fly") {
       const t = (now - t0) / 1000, [lx, ly] = P(...land), [sx, sy] = P(0.5, 0.95);
@@ -664,7 +690,7 @@ function Galaxy(canvas, opts) {
       const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, 26 * pulse); g.addColorStop(0, "rgba(255,181,71,0.9)"); g.addColorStop(1, "rgba(255,181,71,0)");
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, ly, 26 * pulse, 0, 7); ctx.fill();
       ctx.fillStyle = "#fff4dc"; ctx.beginPath(); ctx.arc(lx, ly, 6, 0, 7); ctx.fill();
-      ctx.fillStyle = "#ffb547"; ctx.font = "700 13px IBM Plex Sans, sans-serif"; ctx.textAlign = "center"; ctx.fillText("the question", lx, ly - 16);
+      ctx.fillStyle = "#ffb547"; ctx.font = "700 13px IBM Plex Sans, sans-serif"; ctx.textAlign = "center"; ctx.fillText("query vector", lx, ly - 16);
     }
   }
   function starAt(ev) {
@@ -709,7 +735,7 @@ function setBeam(y) {
   $("#page-chip").classList.toggle("on", all);
   if (all && !scanned) {
     scanned = true;
-    discover("s1", `The AI never sees <code>##</code>, <code>&lt;w:t&gt;</code> or <code>Tj</code>. Every file type, however messy, becomes the same <b>plain words</b>, plus the page number so an answer can point back to it.`);
+    discover("s1", `The LLM never sees <code>##</code>, <code>&lt;w:t&gt;</code> or <code>Tj</code>. The parser normalises every format to the same <b>plain text</b>, plus <b>page metadata</b> so an answer can cite where it came from.`);
   }
 }
 const xray = $("#xray");
@@ -759,22 +785,22 @@ async function slice() {
     const body = c.idx.map((i, j) => (j < c.carried ? `<mark>${esc(sents[i])}</mark>` : esc(sents[i]))).join(" ");
     return { topics, words, body, answers: c.idx.some((i) => /carried over/.test(sents[i])) };
   });
-  $("#fan-title").textContent = `${cards.length} index card${cards.length === 1 ? "" : "s"}`;
-  $("#fan").innerHTML = cards.map((c, i) => `<button class="icard fly" style="animation-delay: ${reduce ? 0 : 120 + i * 90}ms" data-ok="${c.answers}"><header><span>Card ${i + 1}</span><span>${c.words} words</span></header><span class="topics">${c.topics.map((t) => `<span>${esc(t)}</span>`).join("")}</span><span class="body">${c.body}</span></button>`).join("");
+  $("#fan-title").textContent = `${cards.length} chunk${cards.length === 1 ? "" : "s"}`;
+  $("#fan").innerHTML = cards.map((c, i) => `<button class="icard fly" style="animation-delay: ${reduce ? 0 : 120 + i * 90}ms" data-ok="${c.answers}"><header><span>Chunk ${i + 1}</span><span>${c.words} words</span></header><span class="topics">${c.topics.map((t) => `<span>${esc(t)}</span>`).join("")}</span><span class="body">${c.body}</span></button>`).join("");
   $$("#fan .icard").forEach((b) => (b.onclick = () => {
     b.classList.remove("wrong"); void b.offsetWidth;
-    if (b.dataset.ok === "true") { b.classList.add("right"); $("#verdict").innerHTML = b.querySelector(".topics").children.length > 1 ? `<b>Found it</b>, but this card also talks about ${b.querySelector(".topics").children.length - 1} other topic${b.querySelector(".topics").children.length > 2 ? "s" : ""}. Its meaning is a mix.` : `<b>Found it!</b> A focused card: its meaning is clearly "leave".`; }
+    if (b.dataset.ok === "true") { b.classList.add("right"); $("#verdict").innerHTML = b.querySelector(".topics").children.length > 1 ? `<b>Found it</b>, but this chunk also covers ${b.querySelector(".topics").children.length - 1} other topic${b.querySelector(".topics").children.length > 2 ? "s" : ""}. Its embedding is a mix.` : `<b>Found it!</b> A focused chunk: its embedding is clearly about "leave".`; }
     else b.classList.add("wrong");
   }));
   const avg = cards.reduce((a, c) => a + c.topics.length, 0) / cards.length;
   $("#g-focus").style.width = `${Math.min(100, 100 / avg)}%`;
   $("#g-ctx").style.width = `${Math.min(100, (cards.reduce((a, c) => a + c.words, 0) / cards.length) / 2.2)}%`;
-  $("#verdict").innerHTML = size <= 60 ? `<b>${cards.length} small cards</b>, about ${avg.toFixed(1)} topic each: very focused, but a card like "any extra unused days expire on 31 March" can lose what it's about.`
-    : size >= 400 ? `<b>${cards.length} big card${cards.length > 1 ? "s" : ""}</b> covering ${Math.round(avg)} topics: all the context, but the meaning is a blur of leave, travel, laptops and passwords.`
-    : `<b>${cards.length} cards</b> of about 200 words, ${avg.toFixed(1)} topics each: the kit's balance between focused and complete.`;
+  $("#verdict").innerHTML = size <= 60 ? `<b>${cards.length} small chunks</b>, about ${avg.toFixed(1)} topic each: very focused, but a chunk like "any extra unused days expire on 31 March" can lose what it's about.`
+    : size >= 400 ? `<b>${cards.length} big chunk${cards.length > 1 ? "s" : ""}</b> covering ${Math.round(avg)} topics: all the context, but the embedding blends leave, travel, laptops and passwords.`
+    : `<b>${cards.length} chunks</b> of about 200 words, ${avg.toFixed(1)} topics each: the kit's balance between focused and complete.`;
   $("#challenge").hidden = false;
   triedSizes.add(size);
-  if (triedSizes.size >= 2) discover("s2", `There's no perfect size, only a trade-off. Small cards are <b>focused</b> but lose context; big cards keep context but <b>blur</b> many topics into one meaning. The kit uses <b>200 words with a 40-word overlap</b>.`);
+  if (triedSizes.size >= 2) discover("s2", `There's no perfect chunk size, only a trade-off. Small chunks give <b>precise</b> matches but lose context; large chunks keep context but <b>blend</b> many topics into one embedding. The kit uses <b>200 words with a 40-word overlap</b>.`);
 }
 $$("[data-size]").forEach((b) => (b.onclick = () => { size = +b.dataset.size; $$("[data-size]").forEach((x) => x.setAttribute("aria-pressed", x === b)); slice(); }));
 $("#slice").onclick = slice; $("#ov").onchange = () => { if ($("#fan .icard")) slice(); };
@@ -801,65 +827,65 @@ addEventListener("resize", drawStrip); drawStrip();
 $("#feed-btn").onclick = () => {
   $("#core").classList.add("on"); $("#feed-btn").disabled = true;
   $$("#feed span").forEach((s, i) => setTimeout(() => s.classList.add("eaten"), reduce ? 0 : i * 28));
-  tween(1700, (p) => { filled = Math.round(768 * ease(p)); drawStrip(); $("#readout").textContent = `${filled} / 768 numbers`; }, () => {
-    $("#core").classList.remove("on"); $("#feed-btn").disabled = false; $("#feed-btn").textContent = "Feed it again";
-    $("#readout").innerHTML = `768 / 768 numbers. Hover or tap a cell.`;
+  tween(1700, (p) => { filled = Math.round(768 * ease(p)); drawStrip(); $("#readout").textContent = `${filled} / 768 dimensions`; }, () => {
+    $("#core").classList.remove("on"); $("#feed-btn").disabled = false; $("#feed-btn").textContent = "Embed again";
+    $("#readout").innerHTML = `768 / 768 dimensions. Hover or tap a cell.`;
   });
   setTimeout(() => $$("#feed span").forEach((s) => s.classList.remove("eaten")), reduce ? 0 : 3200);
 };
 function cellAt(e) { const r = strip.getBoundingClientRect(), cw = r.width / 48, c = Math.floor((e.clientX - r.left) / cw), rw = Math.floor((e.clientY - r.top) / cw); return c >= 0 && c < 48 && rw >= 0 && rw < 16 ? rw * 48 + c : -1; }
 strip.addEventListener("pointermove", (e) => {
   if (filled < 768) return; hoverCell = cellAt(e); drawStrip();
-  if (hoverCell >= 0) $("#readout").innerHTML = `number <b>#${hoverCell + 1}</b> = ${VEC[hoverCell] >= 0 ? "+" : ""}${VEC[hoverCell].toFixed(4)}. Means "leave"? <b>No single number does.</b>`;
+  if (hoverCell >= 0) $("#readout").innerHTML = `dimension <b>#${hoverCell + 1}</b> = ${VEC[hoverCell] >= 0 ? "+" : ""}${VEC[hoverCell].toFixed(4)}. Means "leave"? <b>No single dimension does.</b>`;
 });
 
 /* ---------- 3b. the meaning galaxy ---------- */
 const QUESTIONS = [
-  { id: "q_carry", tag: "Priya's question" }, { id: "q_laptop", tag: "A worried employee" },
-  { id: "q_hindi", tag: "Asked in Hindi" }, { id: "q_stock", tag: "A tricky one" },
+  { id: "q_carry", tag: "Sample query" }, { id: "q_laptop", tag: "Another topic" },
+  { id: "q_hindi", tag: "Cross-lingual (Hindi)" }, { id: "q_stock", tag: "Out of scope" },
 ];
 let gq = "q_carry", kwOn = false;
 const sky = Galaxy($("#sky"), {
   guessing: true,
-  onGuess: (id) => { $("#prompt").innerHTML = `You picked <b>"${esc(STARS[id].label)}"</b>. Now press <b>Launch</b>.`; $("#r-guess").classList.remove("hide"); $("#g-score").textContent = "?"; $("#g-text").textContent = `"${text(id)}"`; },
-  onStatus: (s) => { $("#counter").hidden = false; $("#prompt").innerHTML = s === "embed" ? "Turning the question into <b>768 numbers</b>…" : "Flying to the closest meaning…"; },
-  onCount: (n) => ($("#counter").textContent = `${n} / 768 numbers`),
+  onGuess: (id) => { $("#prompt").innerHTML = `You picked <b>"${esc(STARS[id].label)}"</b>. Now press <b>Embed query + search</b>.`; $("#r-guess").classList.remove("hide"); $("#g-score").textContent = "?"; $("#g-text").textContent = `"${text(id)}"`; },
+  onStatus: (s) => { $("#counter").hidden = false; $("#prompt").innerHTML = s === "embed" ? "Embedding the query into a <b>768-dim vector</b>…" : "Nearest-neighbour search…"; },
+  onCount: (n) => ($("#counter").textContent = `${n} / 768 dimensions`),
   onDone: (scores) => {
-    const best = scores[0]; $("#counter").textContent = "768 / 768 numbers";
-    $("#prompt").innerHTML = gq === "q_stock" ? "It drifted into <b>empty space</b>: nothing here is about this." : `Landed in <b>${STARS[best.id].group.toLowerCase()}</b>, next to <b>"${esc(STARS[best.id].label)}"</b>.`;
+    const best = scores[0]; $("#counter").textContent = "768 / 768 dimensions";
+    $("#prompt").innerHTML = gq === "q_stock" ? "<b>No close neighbour</b>: nothing in the corpus is about this." : `Nearest neighbour: <b>"${esc(STARS[best.id].label)}"</b> (cluster: ${STARS[best.id].group.toLowerCase()}).`;
     $("#r-model").classList.remove("hide"); $("#m-score").textContent = best.c.toFixed(2); $("#m-text").textContent = `"${text(best.id)}"`;
     if (sky.guess) {
       $("#g-score").textContent = DATA.cos[gq][sky.guess].toFixed(2);
-      $("#g-text").innerHTML = sky.guess === best.id ? `Spot on! You thought like the model: "${esc(text(sky.guess))}"` : `"${esc(text(sky.guess))}". Close in topic, but the model found a better match.`;
+      $("#g-text").innerHTML = sky.guess === best.id ? `Correct! Your pick is the top-1 result: "${esc(text(sky.guess))}"` : `"${esc(text(sky.guess))}". Same cluster, but another sentence has a higher cosine score.`;
     }
     $("#r-why").classList.remove("hide");
     const n = sharedWords(gq, best.id);
-    if (gq === "q_stock") { $("#w-big").textContent = "no home"; $("#w-text").textContent = `Even the closest star is only ${best.c.toFixed(2)}. In the kit, the AI then answers "couldn't find this" instead of inventing a number.`; }
-    else if (gq === "q_hindi") { $("#w-big").textContent = "0 shared words"; $("#w-text").textContent = "Different language, same meaning. Turn on the keyword flashlight: not one star lights up."; }
-    else { $("#w-big").textContent = `${n} shared word${n === 1 ? "" : "s"}`; $("#w-text").textContent = "The model matched the meaning, not the letters. A plain text search for these words would struggle."; }
-    discover("s3", `The model doesn't compare letters, it compares <b>places in meaning space</b>. "Holidays" lands next to "unused days", and a Hindi question lands next to the English leave rule, with <b>zero shared words</b>.`);
+    if (gq === "q_stock") { $("#w-big").textContent = "no match"; $("#w-text").textContent = `Even the top-1 result is only ${best.c.toFixed(2)}. In the kit, the LLM then returns NOT_FOUND ("couldn't find this") instead of inventing a number.`; }
+    else if (gq === "q_hindi") { $("#w-big").textContent = "0 shared words"; $("#w-text").textContent = "Cross-lingual match: different language, same neighbourhood in vector space. Turn on Keyword match: not one sentence lights up."; }
+    else { $("#w-big").textContent = `${n} shared word${n === 1 ? "" : "s"}`; $("#w-text").textContent = "A semantic match, not a keyword match. A full-text search for these terms would struggle."; }
+    discover("s3", `Retrieval compares <b>vectors</b>, not strings. "Holidays" lands next to "unused days", and a Hindi query lands next to the English leave rule, with <b>zero shared keywords</b>.`);
   },
 });
 function pickQ(id) {
   gq = id; sky.setQuestion(id);
   $$(".qcard").forEach((c) => c.setAttribute("aria-pressed", c.dataset.q === id));
-  $("#prompt").innerHTML = `Where will <b>"${esc(text(id))}"</b> land? <b>Tap a star.</b>`;
+  $("#prompt").innerHTML = `Which sentence is the nearest neighbour of <b>"${esc(text(id))}"</b>? <b>Tap a dot.</b>`;
   $("#counter").hidden = true; $("#launch").disabled = false;
   ["r-guess", "r-model", "r-why"].forEach((x) => $("#" + x).classList.add("hide"));
-  $("#g-score").textContent = "?"; $("#g-text").textContent = "Tap a star before launching.";
+  $("#g-score").textContent = "?"; $("#g-text").textContent = "Tap a dot before searching.";
 }
 $("#deck").innerHTML = QUESTIONS.map((x) => `<button class="qcard" data-q="${x.id}" aria-pressed="false"><small>${x.tag}</small><b>"${esc(text(x.id))}"</b></button>`).join("");
 $$(".qcard").forEach((c) => (c.onclick = () => pickQ(c.dataset.q)));
 $("#launch").onclick = () => { if (sky.phase === "done") pickQ(gq); $(".stage").scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); $("#launch").disabled = true; setTimeout(() => sky.launch(), reduce ? 0 : 350); setTimeout(() => ($("#launch").disabled = false), reduce ? 0 : 3200); };
-$("#kw").onclick = () => { kwOn = !kwOn; sky.setKw(kwOn); $("#kw").setAttribute("aria-pressed", kwOn); $("#kw").textContent = kwOn ? "Keyword flashlight: on (green = exact words)" : "Keyword flashlight: off"; };
+$("#kw").onclick = () => { kwOn = !kwOn; sky.setKw(kwOn); $("#kw").setAttribute("aria-pressed", kwOn); $("#kw").textContent = kwOn ? "Keyword match: on (green = shares a query term)" : "Keyword match: off"; };
 pickQ("q_carry");
 
 /* ---------- 4. the arrow duel: real scores, real angles ---------- */
 const ROUNDS = [
   { a: "w_vacation", b: "w_holiday", aL: '"vacation days"', bL: '"holiday"' },
-  { a: "carry", b: "q_carry", bL: "Priya's question" },
-  { a: "sick", b: "q_carry", bL: "Priya's question" },
-  { a: "2fa", b: "q_carry", bL: "Priya's question" },
+  { a: "carry", b: "q_carry", bL: "Sample query" },
+  { a: "sick", b: "q_carry", bL: "Sample query" },
+  { a: "2fa", b: "q_carry", bL: "Sample query" },
 ].map((r) => ({ ...r, c: DATA.cos[r.b][r.a] }));
 const duel = $("#duel"), dx = duel.getContext("2d");
 let round = 0, ang = 60, len = 0.8, locked = false, reveal = 0, points = 0; const results = [];
@@ -893,12 +919,12 @@ function drawDuel() {
   dx.strokeStyle = "#b9c4dc"; dx.lineWidth = 1.5; dx.beginPath(); dx.arc(ox, oy, 34, -ang * Math.PI / 180, 0); dx.stroke();
   dx.fillStyle = "#b9c4dc"; dx.font = "600 12px JetBrains Mono, monospace"; dx.textAlign = "left"; dx.fillText(`${Math.round(ang)}°`, ox + 40, oy - 8);
   $("#live").textContent = cosOf(ang).toFixed(2);
-  $("#live-mini").textContent = `angle ${Math.round(ang)}° · arrow length ${len.toFixed(2)} (try changing it)`;
+  $("#live-mini").textContent = `angle ${Math.round(ang)}° · vector norm ${len.toFixed(2)} (try changing it)`;
 }
 function setRound() {
   const r = ROUNDS[round]; locked = false; reveal = 0; ang = 70; len = 0.8;
-  $("#duel-instr").innerHTML = `Round <b>${round + 1} of ${ROUNDS.length}</b>: <b>drag the amber arrow</b> to how close you think these two meanings are.`;
-  $("#pa").innerHTML = `<b class="d-text">${r.aL || "Handbook"}</b>${r.aL ? "" : `: "${esc(text(r.a))}"`}`;
+  $("#duel-instr").innerHTML = `Pair <b>${round + 1} of ${ROUNDS.length}</b>: <b>drag the amber query vector</b> to the angle you expect between these two embeddings.`;
+  $("#pa").innerHTML = `<b class="d-text">${r.aL || "Chunk"}</b>${r.aL ? "" : `: "${esc(text(r.a))}"`}`;
   $("#pb").innerHTML = `<b class="q-text">${r.bL}</b>${r.b.startsWith("q_") ? `: "${esc(text(r.b))}"` : ""}`;
   $("#lock").hidden = false; $("#next").hidden = true; $("#result").textContent = ""; drawDuel();
   showRounds();
@@ -915,35 +941,35 @@ $("#lock").onclick = () => {
   const r = ROUNDS[round], mine = cosOf(ang), pts = Math.max(0, Math.round(100 - Math.abs(mine - r.c) * 400));
   locked = true; results.push(pts); points += pts; $("#lock").hidden = true; showRounds();
   tween(900, (p) => { reveal = p; drawDuel(); }, () => {
-    $("#result").innerHTML = `You said <b class="q-text">${mine.toFixed(2)}</b>, the model says <b>${r.c.toFixed(2)}</b> (${Math.round(Math.acos(r.c) * 180 / Math.PI)}°). <b>+${pts}</b> points.`;
+    $("#result").innerHTML = `Your estimate <b class="q-text">${mine.toFixed(2)}</b>, actual cosine <b>${r.c.toFixed(2)}</b> (${Math.round(Math.acos(r.c) * 180 / Math.PI)}°). <b>+${pts}</b> points.`;
     if (round < ROUNDS.length - 1) $("#next").hidden = false;
-    else { discover("s4", `Same meaning = small angle = score near <b>1</b>. And the surprise: the password/2FA sentence has nothing to do with holidays, yet it still scores <b>${ROUNDS[3].c.toFixed(2)}</b>, not 0. With this model, "unrelated" sits around 0.5. That's why the kit <b>ranks</b> cards and uses a bar of 0.50.`); }
+    else { discover("s4", `Same meaning = small angle = cosine near <b>1</b>. The surprise: the password/2FA sentence is unrelated to holidays, yet scores <b>${ROUNDS[3].c.toFixed(2)}</b>, not 0. With this embedding model, "unrelated" sits around 0.5, so scores only mean something <b>relative to each other</b>. That's why the kit <b>ranks</b> results and uses a threshold of 0.50.`); }
   });
 };
 $("#next").onclick = () => { round++; setRound(); };
 addEventListener("resize", duelSize); duelSize(); setRound();
 const a4 = [0.2, 0.1, 0.4, 0.3], b4 = [0.25, 0.05, 0.35, 0.3];
 const dot4 = a4.reduce((s, v, i) => s + v * b4[i], 0), la4 = Math.hypot(...a4), lb4 = Math.hypot(...b4);
-$("#calc").innerHTML = `<tr><th>number</th><th>A (card)</th><th>B (question)</th><th>A × B</th></tr>` +
+$("#calc").innerHTML = `<tr><th>number</th><th>A (chunk)</th><th>B (query)</th><th>A × B</th></tr>` +
   a4.map((v, i) => `<tr><td>${i + 1}</td><td class="d-text">${v.toFixed(2)}</td><td class="q-text">${b4[i].toFixed(2)}</td><td>${(v * b4[i]).toFixed(4)}</td></tr>`).join("") +
-  `<tr><td>add up</td><td>length ${la4.toFixed(3)}</td><td>length ${lb4.toFixed(3)}</td><td>${dot4.toFixed(4)}</td></tr>` +
+  `<tr><td>sum</td><td>norm ${la4.toFixed(3)}</td><td>norm ${lb4.toFixed(3)}</td><td>${dot4.toFixed(4)}</td></tr>` +
   `<tr><td colspan="3">cosine = ${dot4.toFixed(4)} / (${la4.toFixed(3)} × ${lb4.toFixed(3)})</td><td class="k-text"><b>${(dot4 / (la4 * lb4)).toFixed(3)}</b></td></tr>`;
 
 /* ---------- 5a. save the real rows ---------- */
 const kwList = DATA.chunk0_tsv.split(" ").filter((x) => /^'\p{L}/u.test(x)).slice(0, 6).map((x) => x.split(":")[0].replace(/'/g, "")).join(", ");
 const preview = (c) => esc(c.text.replace(/#+\s*/g, "").replace(/\s+/g, " ").slice(0, 80));
-$("#pcs").innerHTML = DATA.chunks.map((c, i) => `<div class="pc"><b>Card ${i + 1}</b> · ${c.words} words · "${preview(c)}…"</div>`).join("");
-const HEAD = `<tr><th>#</th><th>content (words)</th><th>embedding (meaning)</th><th>tsv (keywords)</th></tr>`;
+$("#pcs").innerHTML = DATA.chunks.map((c, i) => `<div class="pc"><b>Chunk ${i + 1}</b> · ${c.words} words · "${preview(c)}…"</div>`).join("");
+const HEAD = `<tr><th>#</th><th>content (text)</th><th>embedding vector(768)</th><th>tsv (full-text)</th></tr>`;
 $("#rows").innerHTML = HEAD;
 $("#save").onclick = async () => {
   $("#save").disabled = true; $("#rows").innerHTML = HEAD;
   for (const [i, c] of DATA.chunks.entries()) {
     $$("#pcs .pc")[i].classList.add("in"); $("#db").classList.add("on");
     await sleep(700);
-    $("#rows").insertAdjacentHTML("beforeend", `<tr class="new"><td>${i + 1}</td><td>${preview(c)}… <span class="note">(${c.words} words)</span></td><td class="n">${i === 0 ? `[${VEC.slice(0, 3).map((v) => v.toFixed(3)).join(", ")}, …]` : "[… 768 numbers …]"}</td><td class="k">${i === 0 ? esc(kwList) + ", …" : "…"}</td></tr>`);
+    $("#rows").insertAdjacentHTML("beforeend", `<tr class="new"><td>${i + 1}</td><td>${preview(c)}… <span class="note">(${c.words} words)</span></td><td class="n">${i === 0 ? `[${VEC.slice(0, 3).map((v) => v.toFixed(3)).join(", ")}, …]` : "[… 768 floats …]"}</td><td class="k">${i === 0 ? esc(kwList) + ", …" : "…"}</td></tr>`);
     $("#db").classList.remove("on");
   }
-  await sleep(1200); $$("#pcs .pc").forEach((p) => p.classList.remove("in")); $("#save").disabled = false; $("#save").textContent = "Save again";
+  await sleep(1200); $$("#pcs .pc").forEach((p) => p.classList.remove("in")); $("#save").disabled = false; $("#save").textContent = "INSERT again";
 };
 
 /* ---------- 5b. the race: check everything vs hop along the index ---------- */
@@ -973,7 +999,7 @@ function drawLane(c, st = {}) {
   if (st.path?.length > 1) { x.strokeStyle = "#4ee08f"; x.lineWidth = 3; x.beginPath(); st.path.forEach((i, k) => (k ? x.lineTo(X(pts[i]), Y(pts[i])) : x.moveTo(X(pts[i]), Y(pts[i])))); x.stroke(); }
   if (st.best >= 0) { x.strokeStyle = "#4ee08f"; x.lineWidth = 3; x.beginPath(); x.arc(X(pts[st.best]), Y(pts[st.best]), 9, 0, 7); x.stroke(); }
   x.fillStyle = "#ffb547"; x.beginPath(); x.arc(query.x * W, query.y * H, 7, 0, 7); x.fill();
-  x.fillStyle = "#fff4dc"; x.font = "700 13px IBM Plex Sans, sans-serif"; x.textAlign = "left"; x.fillText("question", Math.min(W - 64, query.x * W + 11), query.y * H + 4);
+  x.fillStyle = "#fff4dc"; x.font = "700 13px IBM Plex Sans, sans-serif"; x.textAlign = "left"; x.fillText("query", Math.min(W - 64, query.x * W + 11), query.y * H + 4);
 }
 function resetRace() { Object.values(lanes).forEach((c) => laneSize(c)); drawLane(lanes.exact); drawLane(lanes.hnsw, { links: true, upper: true }); $("#c-exact").textContent = 0; $("#c-hnsw").textContent = 0; $$(".flag").forEach((f) => f.classList.remove("on")); }
 function hnswSearch() {
@@ -997,11 +1023,11 @@ function race() {
     const hs = new Set(h.seenOrder.slice(0, kh)), hp = h.path.filter((i) => hs.has(i));
     drawLane(lanes.hnsw, { links: true, upper: true, seen: hs, path: hp, best: kh === h.seenOrder.length ? h.cur : -1 });
     $("#c-exact").textContent = ke; $("#c-hnsw").textContent = kh;
-    if (!doneH && kh === h.seenOrder.length) { doneH = true; $("#f-hnsw").textContent = `🏁 Done in ${kh} checks`; $("#f-hnsw").classList.add("on"); }
+    if (!doneH && kh === h.seenOrder.length) { doneH = true; $("#f-hnsw").textContent = `🏁 Done: ${kh} distance calcs`; $("#f-hnsw").classList.add("on"); }
     if (ke < N) return requestAnimationFrame(tick);
-    $("#f-exact").textContent = `Done in ${N.toLocaleString()} checks`; $("#f-exact").classList.add("on"); racing = false;
+    $("#f-exact").textContent = `Done: ${N.toLocaleString()} distance calcs`; $("#f-exact").classList.add("on"); racing = false;
     const same = h.cur === truth;
-    discover("s5", `The index checked <b>${h.seenOrder.length}</b> cards instead of <b>${N.toLocaleString()}</b> and found ${same ? "the same closest card" : "a card almost as close"}. Try 3,000 cards: the gap grows. With 10 million rows, that's the difference between seconds and <b>milliseconds</b>.`);
+    discover("s5", `HNSW computed <b>${h.seenOrder.length}</b> distances instead of <b>${N.toLocaleString()}</b> and found ${same ? "the same nearest neighbour" : "a neighbour almost as close (that's the \"approximate\" in ANN)"}. Try 3,000 vectors: the gap grows. At 10 million rows, that's seconds vs <b>milliseconds</b>.`);
   };
   requestAnimationFrame(tick);
 }
