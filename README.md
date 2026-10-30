@@ -104,7 +104,7 @@ rag-starter-kit/
 │   ├── types.ts                    response types (mirror backend schemas)
 │   ├── shared/                     step trace, answer renderer
 │   └── features/                   collections/, ingestion/, retrieval/
-├── docs/                           setup guide, more database options, extending guide, hands-on exercises
+├── docs/                           setup guide, more database options, extending guide, hands-on, explainers/
 └── Makefile                        setup / check / run / test / lint
 ```
 
@@ -182,6 +182,15 @@ More design limits and where to change them: [Extending → Known limits](docs/E
 ## Training
 
 Running a workshop with this repo? See the **[hands-on exercises](docs/HANDS_ON.md)**.
+
+**Interactive explainers** (open the file in your browser, after cloning or downloading the repo):
+
+| Page | What it explains |
+|---|---|
+| [`docs/explainers/rag-ingestion-lab.html`](docs/explainers/rag-ingestion-lab.html) | How a document becomes searchable: extract, chunk, embed (768 numbers), cosine similarity, pgvector and the HNSW index |
+| [`docs/explainers/rag-retrieval-lab.html`](docs/explainers/rag-retrieval-lab.html) | How a question becomes a grounded answer: guard, cache, rewrite, meaning and keyword search, rank fusion, evidence gate, citations |
+
+Every number in them is real: the sample handbook embedded with `gemini-embedding-001`, and Postgres keyword ranks.
 
 ## License
 
