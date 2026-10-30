@@ -181,7 +181,8 @@ More design limits and where to change them: [Extending → Known limits](docs/E
 
 ## Training
 
-Running a workshop with this repo? See the **[hands-on exercises](docs/HANDS_ON.md)**.
+Running a workshop with this repo? See the **[hands-on exercises](docs/HANDS_ON.md)** and the
+**[trainer notes](docs/TRAINER_NOTES.md)**: what to say and click at each step, a session plan, and answers to common questions.
 
 **Interactive explainers** (open the file in your browser, after cloning or downloading the repo):
 
