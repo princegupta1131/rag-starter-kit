@@ -196,6 +196,11 @@ footer.src { color: var(--muted); font-size: 13px; }
 .hud b { color: var(--q); }
 .hud [hidden] { display: none; }
 .hud .count { font: 700 13px var(--mono); color: var(--star); }
+.dot-info { margin-top: 10px; border: 1px solid var(--line); border-left: 3px solid var(--star); border-radius: 12px; background: var(--panel-2); padding: 12px 14px; font-size: 15px; }
+.dot-info.empty { color: var(--muted); border-left-color: var(--line); }
+.dot-info .lbl { margin-bottom: 4px; }
+.dot-info .txt { font-size: 16px; color: var(--ink); margin-bottom: 6px; }
+.dot-info .meta { font: 600 13px/1.6 var(--mono); color: var(--ink-2); overflow-wrap: anywhere; font-variant-ligatures: none; }
 .reveal { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 860px) { .reveal { grid-template-columns: minmax(0, 1fr); } }
 .rv { background: rgb(7 11 22 / 55%); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; transition: opacity 300ms, filter 300ms; }
@@ -206,6 +211,39 @@ footer.src { color: var(--muted); font-size: 13px; }
 .rv.hide { opacity: 0.25; filter: blur(2px); }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
+/* pipeline map */
+.pmap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 5fr); gap: 10px; }
+@media (max-width: 860px) { .pmap { grid-template-columns: minmax(0, 1fr); } }
+.pmap-g { border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; background: var(--panel); opacity: 0.6; }
+.pmap-g.on { opacity: 1; border-color: rgb(255 181 71 / 45%); }
+.pmap-g small { display: block; font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.pmap-g.on small { color: var(--q); }
+.pmap-g ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pmap-g li { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 92px; }
+.pmap-g li + li::before { content: "→"; color: var(--muted); font-weight: 700; }
+.pmap-g a { flex: 1; display: grid; gap: 1px; text-decoration: none; color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; }
+.pmap-g a:hover { border-color: var(--q); }
+.pmap-g a b { font-size: 14px; }
+.pmap-g a span { font-size: 12px; color: var(--muted); line-height: 1.3; }
+
+/* presenter mode */
+.pnote { display: none; border: 1px dashed var(--q); border-radius: 14px; background: rgb(255 181 71 / 8%); padding: 12px 14px; font-size: 15px; gap: 6px; }
+.presenting .pnote { display: grid; }
+.pnote small { font: 700 11px var(--mono); letter-spacing: 0.08em; color: var(--q); }
+.pnote small b { color: var(--ink); }
+.pnote .p-line { font-weight: 700; color: var(--ink); }
+.pbar { position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); z-index: 30; display: flex; gap: 8px; }
+.pbar .btn { padding: 8px 14px; font-size: 14px; background: rgb(15 22 40 / 92%); backdrop-filter: blur(8px); }
+@media (max-width: 760px) { .pbar .btn { padding: 7px 11px; font-size: 13px; } .pbar .btn span { display: none; } }
+dialog.revise { width: min(760px, calc(100% - 24px)); max-height: 86vh; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--ink); padding: 18px; }
+dialog.revise::backdrop { background: rgb(3 6 14 / 72%); }
+.revise .rv-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 18px; }
+.revise ol { padding-left: 0; list-style: none; display: grid; gap: 12px; margin: 12px 0; }
+.revise li { border-left: 3px solid var(--q); padding-left: 12px; font-size: 15px; display: grid; gap: 3px; }
+.revise .p-line { color: var(--ink-2); }
+.revise .rv-intro { font-size: 15px; color: var(--ink-2); }
+.revise .rv-key { font-size: 15px; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 10px; }
 
 /* ---------- page 2 only ---------- */
 .follow { display: grid; gap: 10px; padding-top: 8px; }
@@ -235,6 +273,12 @@ textarea.try:focus { border-color: var(--q); outline: none; }
 .verdict-box { border-radius: 14px; padding: 10px 14px; font-weight: 600; }
 .verdict-box.ok { background: var(--kw-soft); color: var(--kw); } .verdict-box.no { background: var(--bad-soft); color: var(--bad); }
 .verdict-box:empty { display: none; }
+.rag-out { border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); padding: 14px 16px; display: grid; gap: 8px; min-height: 150px; align-content: start; }
+.rag-out small { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.rag-ans { font-size: 19px; font-weight: 600; min-height: 1.6em; }
+.rag-src { font: 600 13px var(--mono); color: var(--star); }
+.rag-src:empty { display: none; }
+.rag-toggle .btn[data-rag="on"][aria-pressed="true"] { border-color: var(--kw); color: var(--kw); box-shadow: 0 0 0 3px rgb(78 224 143 / 18%); }
 
 /* 2. cache */
 .pipe { display: flex; height: 38px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: #050810; }
@@ -330,6 +374,7 @@ button.cite { border: 1px solid var(--star); cursor: pointer; }
   <span class="eyebrow">RAG Starter Kit · Lab 2 of 2 · Retrieval pipeline</span>
   <h1>The retrieval pipeline: from query to <em>grounded</em> answer</h1>
   <p class="lead">The document is indexed (Lab 1). Now a user query runs through <b>9 pipeline stages</b> in about 4 seconds. Pick a query, run each stage, and inspect its real output.</p>
+  <div class="pmap" id="pmap"></div>
   <div class="story">
     <div class="card"><small>User query</small><b class="q-text">"Can I carry over unused holidays?"</b><span class="note">No chunk contains the word "holidays".</span></div>
     <span class="op" aria-hidden="true">→</span>
@@ -345,6 +390,14 @@ button.cite { border: 1px solid var(--star); cursor: pointer; }
 <nav class="rail" aria-label="Pipeline stages"><div class="wrap"><ol id="rail-list"></ol><span class="score" id="score"></span></div></nav>
 
 <main class="wrap">
+  <div class="play" id="ragswitch">
+    <div class="play-top"><span class="instr"><b>Why RAG?</b> Ask the same question with RAG <b>off</b>, then <b>on</b>.</span><span class="tag sim">RAG-off answers are illustrative</span></div>
+    <div class="row" role="group" aria-label="Question"><button class="btn" data-rq="q_leave" aria-pressed="true"></button><button class="btn" data-rq="q_stock" aria-pressed="false"></button></div>
+    <div class="row rag-toggle" role="group" aria-label="RAG"><button class="btn" data-rag="off" aria-pressed="true">RAG off · LLM alone</button><button class="btn" data-rag="on" aria-pressed="false">RAG on · LLM + your documents</button></div>
+    <div class="rag-out" id="rag-out"><small id="rag-who"></small><p class="rag-ans" id="rag-ans"></p><p class="rag-src" id="rag-src"></p><div class="verdict-box" id="rag-verdict"></div></div>
+    <p class="note"><b>RAG off:</b> the LLM answers from memory and has never seen your handbook. <b>RAG on:</b> it first retrieves your own chunks and answers only from them. The 9 stages below are how "on" works.</p>
+  </div>
+
   <div class="phase">A · Query processing</div>
 
   <!-- 1 GUARD -->
@@ -665,7 +718,20 @@ const sharedWords = (a, b) => [...wordsOf(text(a))].filter((w) => wordsOf(text(b
 
 function Galaxy(canvas, opts) {
   const ctx = canvas.getContext("2d");
-  let W = 0, H = 0, q = null, guess = null, phase = "idle", t0 = 0, kwOn = false, hover = null, particles = [], scores = [], visible = true;
+  let W = 0, H = 0, q = null, guess = null, phase = "idle", t0 = 0, kwOn = false, hover = null, picked = null, particles = [], scores = [], visible = true;
+  // click any dot: show the sentence it embeds, how it is stored, and its score for the current query
+  const info = document.createElement("div"); info.className = "dot-info empty"; info.setAttribute("aria-live", "polite");
+  info.innerHTML = "<b>Click any dot</b> to see the sentence it embeds and its cosine score for the query.";
+  canvas.closest(".stage").after(info);
+  function showInfo() {
+    if (!picked) return;
+    const s = STARS[picked], sv = DATA.sample_vector.id === picked ? DATA.sample_vector : null, rank = scores.findIndex((x) => x.id === picked) + 1;
+    const vec = sv && `768 numbers: [${sv.first12.slice(0, 4).map((v) => v.toFixed(4)).join(", ")}, …], norm ${sv.norm.toFixed(2)}`;
+    info.className = "dot-info";
+    info.innerHTML = `<span class="lbl">Embedded text · ${esc(s.group.toLowerCase())}</span><p class="txt">"${esc(text(picked))}"</p>
+      <p class="meta">stored as: 1 vector of ${sv ? esc(vec) : "768 numbers"} · ${esc(DATA.model)}</p>` +
+      (q ? `<p class="meta">cosine with <span class="q-text">"${esc(text(q))}"</span> = <b class="k-text">${DATA.cos[q][picked].toFixed(2)}</b> · rank ${rank} of ${scores.length}</p>` : "");
+  }
   const DUST = Array.from({ length: 200 }, () => ({ x: rnd(), y: rnd(), r: rnd() * 1.2 + 0.2, t: rnd() * 6 }));
   const P = (x, y) => [x * W, y * H];
   function size() {
@@ -676,6 +742,7 @@ function Galaxy(canvas, opts) {
   function setQuestion(id) {
     q = id; guess = null; phase = opts.guessing ? "guess" : "ready"; particles = [];
     scores = Object.keys(STARS).map((s) => ({ id: s, c: DATA.cos[id][s] })).sort((a, b) => b.c - a.c);
+    showInfo();
   }
   function launch() {
     if (!q || phase === "explode" || phase === "fly") return;
@@ -716,7 +783,7 @@ function Galaxy(canvas, opts) {
       g.addColorStop(0, lit ? "rgba(78,224,143,0.9)" : isBest ? "rgba(143,180,255,0.95)" : `rgba(143,180,255,${0.5 * tw})`); g.addColorStop(1, "rgba(91,140,255,0)");
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 4.5, 0, 7); ctx.fill();
       ctx.fillStyle = lit ? "#4ee08f" : "#eaf1ff"; ctx.beginPath(); ctx.arc(x, y, R * 0.55, 0, 7); ctx.fill();
-      if (guess === s.id || (hover === s.id && phase === "guess")) { ctx.strokeStyle = "#ffb547"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, R + 7, 0, 7); ctx.stroke(); }
+      if (guess === s.id || hover === s.id || picked === s.id) { ctx.strokeStyle = guess === s.id || phase === "guess" ? "#ffb547" : "#8fb4ff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, R + 7, 0, 7); ctx.stroke(); }
       ctx.font = `${isBest ? 700 : 500} ${W < 600 ? 11 : 13}px IBM Plex Sans, sans-serif`; ctx.textAlign = "center";
       ctx.fillStyle = isBest ? "#ffffff" : lit ? "#4ee08f" : "rgba(220,228,245,0.85)";
       const half = ctx.measureText(s.label).width / 2;
@@ -755,11 +822,67 @@ function Galaxy(canvas, opts) {
     Object.values(STARS).forEach((s) => { const [sx, sy] = P(s.x, s.y), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = s.id; } });
     return best;
   }
-  canvas.addEventListener("pointermove", (e) => { hover = starAt(e); canvas.style.cursor = hover && phase === "guess" ? "pointer" : "default"; });
-  canvas.addEventListener("click", (e) => { const s = starAt(e); if (s && phase === "guess") { guess = s; opts.onGuess?.(s); } });
+  canvas.addEventListener("pointermove", (e) => { hover = starAt(e); canvas.style.cursor = hover ? "pointer" : "default"; });
+  canvas.addEventListener("click", (e) => { const s = starAt(e); if (!s) return; picked = s; showInfo(); if (phase === "guess") { guess = s; opts.onGuess?.(s); } });
   new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
   addEventListener("resize", size); size(); requestAnimationFrame(draw);
   return { setQuestion, launch, setKw: (on) => (kwOn = on), get phase() { return phase; }, get guess() { return guess; } };
+}
+
+/* ---------- the pipeline map: both labs on one strip, each box jumps to its step ---------- */
+const PIPE = [
+  { lab: 1, id: "s1", t: "Parse", d: "file → text" },
+  { lab: 1, id: "s2", t: "Chunk", d: "text → pieces" },
+  { lab: 1, id: "s3", t: "Embed", d: "piece → 768 numbers" },
+  { lab: 1, id: "s4", t: "Score", d: "how close? (cosine)" },
+  { lab: 1, id: "s5", t: "Store", d: "rows + HNSW index" },
+  { lab: 2, id: "s1", t: "Check", d: "guardrail, cache, rewrite" },
+  { lab: 2, id: "s4", t: "Embed query", d: "question → vector" },
+  { lab: 2, id: "s5", t: "Search", d: "meaning + keywords" },
+  { lab: 2, id: "s7", t: "Filter", d: "good enough?" },
+  { lab: 2, id: "s8", t: "Answer", d: "LLM + citations" },
+];
+const LAB_FILE = { 1: "rag-ingestion-lab.html", 2: "rag-retrieval-lab.html" };
+const num = (id) => +id.slice(1);
+// the map box a step belongs to: the last box of this lab that starts at or before it
+const pipeNode = (lab, id) => PIPE.filter((n) => n.lab === lab && num(n.id) <= num(id)).pop();
+function pipeMap(lab) {
+  const group = (l, title) => `<div class="pmap-g ${l === lab ? "on" : ""}"><small>${title}</small><ol>` +
+    PIPE.filter((n) => n.lab === l).map((n) => `<li><a href="${l === lab ? "#" + n.id : LAB_FILE[l]}"><b>${n.t}</b><span>${n.d}</span></a></li>`).join("") + `</ol></div>`;
+  $("#pmap").innerHTML = group(1, "Once per upload · Lab 1") + group(2, "Every question · Lab 2");
+}
+
+/* ---------- presenter mode: what to say and click, per step, only while it is on ---------- */
+function initPresenter(lab, notes, intro) {
+  const store = { get: () => { try { return localStorage.getItem("rag-lab-presenter") === "1"; } catch { return false; } }, set: (v) => { try { localStorage.setItem("rag-lab-presenter", v ? "1" : "0"); } catch {} } };
+  const crumb = (id) => { const here = pipeNode(lab, id); return PIPE.filter((n) => n.lab === lab).map((n) => (n === here ? `<b>${n.t}</b>` : n.t)).join(" → "); };
+  Object.entries(notes).forEach(([id, n]) => {
+    const host = document.getElementById(id); if (!host) return;
+    const d = document.createElement("div"); d.className = "pnote";
+    d.innerHTML = `<small>🎤 Presenter notes${host.classList.contains("mission") ? ` · ${crumb(id)}` : ""}</small><p class="p-line">${n.line}</p><p><b>Say:</b> “${n.say}”</p><p><b>Click:</b> ${n.click}</p>`;
+    const head = host.querySelector(".m-head, .play-top"); head ? head.after(d) : host.prepend(d);
+  });
+  const bar = document.createElement("div"); bar.className = "pbar";
+  bar.innerHTML = `<button class="btn" id="p-toggle" aria-pressed="false" aria-label="Presenter notes">🎤<span> Presenter notes</span></button><button class="btn" id="p-revise" aria-label="Revise">📋<span> Revise</span></button>`;
+  document.body.append(bar);
+  const dlg = document.createElement("dialog"); dlg.className = "revise";
+  const items = MISSIONS.map((m, i) => notes[m.id] && `<li><b>${i + 1}. ${esc(m.querySelector("h2").textContent)}</b><p class="p-line">${notes[m.id].line}</p><p><b>Say:</b> “${notes[m.id].say}”</p></li>`).filter(Boolean).join("");
+  dlg.innerHTML = `<div class="rv-head"><b>Revise: Lab ${lab} in one page</b><button class="btn" id="p-close">Close</button></div>${intro}<ol>${items}</ol><p class="rv-key">The one sentence to repeat all session: <b>"Keyword search matches letters. Meaning search matches ideas."</b></p>`;
+  document.body.append(dlg);
+  const set = (on) => { document.body.classList.toggle("presenting", on); $("#p-toggle").setAttribute("aria-pressed", on); store.set(on); };
+  $("#p-toggle").onclick = () => set(!document.body.classList.contains("presenting"));
+  $("#p-revise").onclick = () => dlg.showModal();
+  $("#p-close").onclick = () => dlg.close();
+  dlg.addEventListener("click", (e) => e.target === dlg && dlg.close());
+  set(store.get());
+  // arrow keys move between steps while presenting
+  addEventListener("keydown", (e) => {
+    if (!document.body.classList.contains("presenting") || dlg.open || e.target.closest("input, textarea, select, [contenteditable]")) return;
+    const dir = e.key === "ArrowRight" || e.key === "PageDown" ? 1 : e.key === "ArrowLeft" || e.key === "PageUp" ? -1 : 0;
+    if (!dir) return;
+    const cur = MISSIONS.findIndex((m) => m.id === $(".rail a.here")?.dataset.for), next = MISSIONS[Math.max(0, Math.min(MISSIONS.length - 1, (cur < 0 ? -1 : cur) + dir))];
+    e.preventDefault(); next.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+  });
 }
 
 
@@ -1084,6 +1207,62 @@ function setQ(id) {
 $("#deck").innerHTML = QS.map(([id, tag]) => `<button class="qcard" data-q="${id}" aria-pressed="false"><small>${tag}</small><b>"${esc(text(id))}"</b></button>`).join("");
 $$("#deck .qcard").forEach((c) => (c.onclick = () => setQ(c.dataset.q)));
 jumpSize(); setQ("q_carry");
+
+/* ---------- why RAG: the same question with RAG off and on ---------- */
+const RAG = {
+  q_leave: { off: { a: "Most companies offer around 20 days of paid annual leave per year, depending on your country and contract.", v: "✗ A generic guess. It has never seen Greenleaf's handbook. The real answer is 24 days.", ok: false },
+             on: { a: "Every full-time employee receives 24 days of paid annual leave per calendar year [1].", src: () => `[1] Greenleaf handbook · Leave · similarity ${DATA.cos.q_leave.leave.toFixed(2)}`, v: "✓ Taken from your own document, with a citation.", ok: true } },
+  q_stock: { off: { a: "Greenleaf Co. shares are trading at around ₹1,240, up 2% this week.", v: "✗ Made up. Greenleaf is a made-up company; there is no stock price.", ok: false },
+             on: { a: "I couldn't find this in the uploaded documents.", src: () => `best chunk: learning budget · similarity ${DATA.cos.q_stock.learning.toFixed(2)} (similar, but no answer in it)`, v: "✓ Honest. The handbook doesn't cover it, so RAG says so instead of guessing.", ok: true } },
+};
+let ragQ = "q_leave", ragMode = "off", ragRun = 0;
+async function ragShow() {
+  const r = RAG[ragQ][ragMode], run = ++ragRun;
+  $("#rag-who").textContent = ragMode === "off" ? "LLM alone · answers from memory" : "LLM + retrieved chunks · the 9 stages below";
+  $("#rag-src").textContent = ""; $("#rag-verdict").textContent = ""; $("#rag-verdict").className = "verdict-box";
+  await typeInto($("#rag-ans"), r.a, 1100);
+  if (run !== ragRun) return;
+  $("#rag-src").textContent = r.src ? r.src() : "";
+  $("#rag-verdict").className = `verdict-box ${r.ok ? "ok" : "no"}`; $("#rag-verdict").textContent = r.v;
+}
+$$("[data-rq]").forEach((b) => { b.textContent = `"${text(b.dataset.rq)}"`; b.onclick = () => { ragQ = b.dataset.rq; $$("[data-rq]").forEach((x) => x.setAttribute("aria-pressed", x === b)); ragShow(); }; });
+$$("[data-rag]").forEach((b) => (b.onclick = () => { ragMode = b.dataset.rag; $$("[data-rag]").forEach((x) => x.setAttribute("aria-pressed", x === b)); ragShow(); }));
+ragShow();
+
+/* ---------- the pipeline map and presenter notes ---------- */
+pipeMap(2);
+initPresenter(2, {
+  ragswitch: { line: "Open with this: why RAG exists.",
+        say: "Without RAG, the LLM guesses from memory: 20 days, or even a stock price for a company that doesn't exist. With RAG it reads our own handbook first: 24 days, with the source. And when the handbook has no answer, it says so.",
+        click: "Show <b>RAG off</b> on the leave question, then <b>RAG on</b>. Repeat with the stock price question." },
+  s1: { line: "Check the question before spending money on it.",
+        say: "Simple rules, no AI: not empty, under 1,000 characters, no prompt-injection patterns. A rejected question costs nothing.",
+        click: "<b>Run validation</b> on the sample, then try <b>Prompt injection</b>." },
+  s2: { line: "If the same question was just answered, reuse the answer.",
+        say: "The key is the question plus a fingerprint of the documents. Upload a new file and the fingerprint changes, so an old answer is never reused.",
+        click: "<b>Send</b>, <b>Send</b> again (instant), <b>Upload a new document</b>, <b>Send</b> (slow again)." },
+  s3: { line: "Turn a follow-up like 'until when?' into a full question.",
+        say: "'Until when?' alone finds nothing. A small LLM call uses the chat history to rewrite it. Only the search uses the rewrite; the answer still sees the user's own words.",
+        click: "<b>Search the raw query</b>, then <b>Rewrite with the LLM</b>." },
+  s4: { line: "Turn the question into 768 numbers, with the same model as the chunks.",
+        say: "Same model means the same map, so the question lands next to the chunks that mean the same thing: the carry-over rule at 0.80.",
+        click: "<b>Embed the query</b>." },
+  s5: { line: "Search two ways at once: by meaning (vectors) and by exact words (tsv).",
+        say: "Meaning search catches synonyms and other languages; keyword search catches exact names and codes. Each covers the other's blind spot.",
+        click: "<b>Run both retrievers</b>. Then switch to the Hindi query: keyword search finds 0, meaning search still works." },
+  s6: { line: "Merge the two result lists by rank, not by score.",
+        say: "The two scores use different scales, so we can't add them. Each list gives 1/(60 + rank); a chunk ranked high in both lists wins.",
+        click: "<b>Compute RRF scores</b>." },
+  s7: { line: "If even the best chunk is a weak match, stop and don't call the LLM.",
+        say: "Below 0.50 the kit answers 'couldn't find this' without an LLM call. But similar isn't the same as answered: the stock question passes at 0.55, so stage 8 is the second safety net.",
+        click: "<b>Test top-1 score</b>, drag the threshold above it, then <b>Reset to kit default 0.50</b>." },
+  s8: { line: "The LLM answers only from the retrieved chunks, and cites them.",
+        say: "The rules: use only this context, cite every fact, reply in the user's language, and say NOT_FOUND if the answer isn't there. That's what stops made-up answers.",
+        click: "<b>Generate answer</b>. Then switch to the stock query to show NOT_FOUND." },
+  s9: { line: "Remove any citation that points to a chunk the LLM never saw.",
+        say: "Plain code, no AI: every [n] must match a real retrieved chunk. Fake ones are removed before the user sees them.",
+        click: "Click the fake citation, <b>Run citation validation</b>, then <b>Replay the trace</b>." },
+}, `<p class="rv-intro">Lab 2 runs <b>for every question</b>: check → embed → search → filter → answer. Start with the <b>RAG off / on</b> switch, then trace the sample query through all 9 stages.</p><p class="rv-intro"><b>Opening line:</b> “Without RAG, the LLM guesses from memory: 20 days, or even a stock price for a company that doesn't exist. With RAG it reads our own handbook first: 24 days, with the source. And when the handbook has no answer, it says so.”</p>`);
 </script>
 </body>
 </html>

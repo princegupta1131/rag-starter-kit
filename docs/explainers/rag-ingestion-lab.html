@@ -196,6 +196,11 @@ footer.src { color: var(--muted); font-size: 13px; }
 .hud b { color: var(--q); }
 .hud [hidden] { display: none; }
 .hud .count { font: 700 13px var(--mono); color: var(--star); }
+.dot-info { margin-top: 10px; border: 1px solid var(--line); border-left: 3px solid var(--star); border-radius: 12px; background: var(--panel-2); padding: 12px 14px; font-size: 15px; }
+.dot-info.empty { color: var(--muted); border-left-color: var(--line); }
+.dot-info .lbl { margin-bottom: 4px; }
+.dot-info .txt { font-size: 16px; color: var(--ink); margin-bottom: 6px; }
+.dot-info .meta { font: 600 13px/1.6 var(--mono); color: var(--ink-2); overflow-wrap: anywhere; font-variant-ligatures: none; }
 .reveal { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 860px) { .reveal { grid-template-columns: minmax(0, 1fr); } }
 .rv { background: rgb(7 11 22 / 55%); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; transition: opacity 300ms, filter 300ms; }
@@ -206,6 +211,39 @@ footer.src { color: var(--muted); font-size: 13px; }
 .rv.hide { opacity: 0.25; filter: blur(2px); }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
+/* pipeline map */
+.pmap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 5fr); gap: 10px; }
+@media (max-width: 860px) { .pmap { grid-template-columns: minmax(0, 1fr); } }
+.pmap-g { border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; background: var(--panel); opacity: 0.6; }
+.pmap-g.on { opacity: 1; border-color: rgb(255 181 71 / 45%); }
+.pmap-g small { display: block; font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.pmap-g.on small { color: var(--q); }
+.pmap-g ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pmap-g li { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 92px; }
+.pmap-g li + li::before { content: "→"; color: var(--muted); font-weight: 700; }
+.pmap-g a { flex: 1; display: grid; gap: 1px; text-decoration: none; color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; }
+.pmap-g a:hover { border-color: var(--q); }
+.pmap-g a b { font-size: 14px; }
+.pmap-g a span { font-size: 12px; color: var(--muted); line-height: 1.3; }
+
+/* presenter mode */
+.pnote { display: none; border: 1px dashed var(--q); border-radius: 14px; background: rgb(255 181 71 / 8%); padding: 12px 14px; font-size: 15px; gap: 6px; }
+.presenting .pnote { display: grid; }
+.pnote small { font: 700 11px var(--mono); letter-spacing: 0.08em; color: var(--q); }
+.pnote small b { color: var(--ink); }
+.pnote .p-line { font-weight: 700; color: var(--ink); }
+.pbar { position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); z-index: 30; display: flex; gap: 8px; }
+.pbar .btn { padding: 8px 14px; font-size: 14px; background: rgb(15 22 40 / 92%); backdrop-filter: blur(8px); }
+@media (max-width: 760px) { .pbar .btn { padding: 7px 11px; font-size: 13px; } .pbar .btn span { display: none; } }
+dialog.revise { width: min(760px, calc(100% - 24px)); max-height: 86vh; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--ink); padding: 18px; }
+dialog.revise::backdrop { background: rgb(3 6 14 / 72%); }
+.revise .rv-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 18px; }
+.revise ol { padding-left: 0; list-style: none; display: grid; gap: 12px; margin: 12px 0; }
+.revise li { border-left: 3px solid var(--q); padding-left: 12px; font-size: 15px; display: grid; gap: 3px; }
+.revise .p-line { color: var(--ink-2); }
+.revise .rv-intro { font-size: 15px; color: var(--ink-2); }
+.revise .rv-key { font-size: 15px; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 10px; }
 
 /* ---------- page 1 only ---------- */
 /* 1. x-ray */
@@ -276,6 +314,49 @@ footer.src { color: var(--muted); font-size: 13px; }
 .rounds span { font: 700 13px var(--mono); padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
 .rounds span.done { border-color: var(--kw); color: var(--kw); }
 .result-line { font-size: 16px; min-height: 26px; }
+.hnsw-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: center; }
+@media (max-width: 760px) { .hnsw-grid { grid-template-columns: minmax(0, 1fr); } }
+.hnsw-svg { width: 100%; max-width: 520px; height: auto; display: block; margin: 0 auto; }
+.hnsw-svg .hn-lbl { font: 700 13px var(--mono); fill: var(--ink-2); }
+.hnsw-svg .hn-tag { font: 700 12px var(--mono); fill: var(--ink-2); }
+.hnsw-svg .hn-ok { fill: var(--kw); } .hnsw-svg .hn-q { fill: var(--q); }
+.hnsw-steps { padding-left: 22px; display: grid; gap: 10px; font-size: 15px; }
+.two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 14px; }
+@media (max-width: 760px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+.cmp { border-radius: 12px; padding: 12px 14px; font-size: 15px; border: 1px solid var(--line); }
+.cmp small { display: block; font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.cmp.bad-c { background: var(--bad-soft); } .cmp.bad-c small { color: var(--bad); }
+.cmp.ok-c { background: var(--kw-soft); } .cmp.ok-c small { color: var(--kw); }
+.hnsw-how .note { margin-top: 12px; }
+.cut-slider { display: grid; gap: 6px; font-size: 15px; }
+.cut-slider input { width: 100%; accent-color: var(--q); }
+.cmp mark.q { background: var(--q-soft); color: var(--q); border-radius: 4px; padding: 0 2px; }
+.cmp mark.k { background: var(--kw-soft); color: var(--kw); border-radius: 4px; padding: 0 2px; }
+.cmp .faded { opacity: 0.45; }
+.cmp .cut-mark { color: var(--bad); font-weight: 700; }
+.cmp .cut-verdict { font-weight: 700; margin-top: 8px; }
+.race-read { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); padding: 12px 14px; font-size: 15px; display: grid; gap: 8px; }
+.race-read .lbl { margin-bottom: 0; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink-2); }
+.legend li { display: flex; align-items: center; gap: 7px; }
+.legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; }
+.legend i.ln { width: 18px; height: 0; border-radius: 0; border-top: 2px solid rgb(91 140 255 / 55%); }
+.legend i.ring { width: 12px; height: 12px; border: 2.5px solid var(--kw); }
+.tsv-box { margin-top: 14px; border: 1px solid var(--line); border-left: 3px solid var(--kw); border-radius: 12px; background: var(--panel-2); padding: 12px 14px; font-size: 15px; display: grid; gap: 8px; }
+.tsv-box .lbl { margin-bottom: 0; }
+.tsv-ex { background: var(--panel-3); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+.tsv-ex small { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tsv-ex p { margin-bottom: 6px; overflow-wrap: anywhere; }
+.hn-name { border: 1px solid var(--line); border-left: 3px solid var(--q); border-radius: 12px; background: var(--q-soft); padding: 10px 14px; margin-bottom: 14px; font-size: 15px; }
+.hn-name > b { color: var(--q); font-size: 16px; }
+.hn-name ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 3px; }
+.cosmath { margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); padding: 14px 16px; }
+.cosmath .cm-intro { font-size: 15px; color: var(--ink-2); margin-bottom: 10px; }
+.cosmath ol { padding-left: 22px; display: grid; gap: 10px; }
+.cosmath li { font-size: 15px; }
+.cosmath .eq { display: block; margin-top: 3px; font: 600 14px/1.55 var(--mono); color: var(--ink); font-variant-ligatures: none; overflow-wrap: anywhere; }
+.cosmath .ans { color: var(--q); }
+.cosmath .real { color: var(--kw); }
 .result-line b { color: var(--kw); }
 
 /* 5. save + race */
@@ -311,6 +392,7 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
   <span class="eyebrow">RAG Starter Kit · Lab 1 of 2 · Ingestion pipeline</span>
   <h1>The ingestion pipeline: from <em>file</em> to vectors</h1>
   <p class="lead">Before any query is answered, each uploaded document runs through this pipeline once: <b>parse → chunk → embed → store</b>. Run each step on a real document and inspect its real output.</p>
+  <div class="pmap" id="pmap"></div>
   <div class="story">
     <div class="card"><small>Source document</small><b class="d-text">Greenleaf HR handbook</b><span class="note">Hours, leave, expenses, laptops, passwords. 352 words.</span></div>
     <span class="op" aria-hidden="true">+</span>
@@ -380,6 +462,11 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
       <p class="verdict" id="verdict" aria-live="polite"></p>
       <p class="instr" id="challenge" hidden>Bonus: <b>tap the chunk</b> that answers "Can I carry over unused holidays?"</p>
     </div>
+    <div class="play" id="cutdemo">
+      <div class="play-top"><span class="instr"><b>What a bad cut does to the answer.</b> Question: <b class="q-text">"Until when can I carry over unused days?"</b></span><span class="tag real">Real handbook text</span></div>
+      <label class="cut-slider"><span>Naive splitter: cut every <b id="cut-n">25</b> words, ignoring sentences, no overlap. <b>Drag it.</b></span><input type="range" id="cut-range" min="10" max="60" value="25"></label>
+      <div class="two-col"><div class="cmp" id="cut-naive"></div><div class="cmp ok-c" id="cut-kit"></div></div>
+    </div>
     <div class="locked">Chunk with two different sizes to see the takeaway.</div>
     <div class="aha" hidden></div>
     <div class="examples"><div class="ex gen"><small>General example · HR handbook</small><p>The handbook becomes 2 chunks. The carry-over rule sits in one chunk with the rest of the leave section.</p></div><div class="ex med"><small>Medical example · antenatal care guideline <span class="tag sim">Illustrative</span></small><p>"Danger signs: severe headache, blurred vision, swelling of face and hands" and "Refer immediately to the nearest facility" must stay in the <b>same chunk</b>. If a boundary splits them, retrieval returns the symptom without the action. The overlap protects this.</p></div></div>
@@ -405,10 +492,10 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
         <div class="core" id="core">gemini-<br>embedding<br>-001</div>
         <div><canvas id="strip" aria-label="768 dimensions as coloured cells: blue positive, pink negative"></canvas><p class="readout" id="readout">0 / 768 dimensions</p></div>
       </div>
-      <div class="row"><button class="btn go" id="feed-btn">Embed chunk 1</button><span class="note" id="feed-note">Then hover or tap a cell: which dimension means "leave"?</span></div>
+      <div class="row"><button class="btn go" id="feed-btn">Embed chunk 1</button><span class="note" id="feed-note"><b>1 square = 1 number.</b> <b>Whole grid = 1 vector</b> = the meaning of the whole chunk 1. Like GPS: latitude alone doesn't tell you the city, latitude + longitude together do. Here it's 768 numbers instead of 2.</span></div>
     </div>
     <div class="play">
-      <div class="play-top"><span class="instr">A vector is a point in vector space (drawn here in 2-D). Each dot is one embedded handbook sentence. Pick a query, <b>tap the dot you expect as its nearest neighbour</b>, then run the search.</span><span class="tag real">Real scores</span></div>
+      <div class="play-top"><span class="instr">A vector is a point in vector space (drawn here in 2-D). Each dot is one embedded handbook sentence. Pick a query, <b>tap the dot you expect as its nearest neighbour</b>, then run the search. Tap any dot to read the sentence it embeds.</span><span class="tag real">Real scores</span></div>
       <div class="deck" role="group" aria-label="Pick a question" id="deck"></div>
       <div class="stage"><canvas id="sky" aria-label="Embedded handbook sentences as points in vector space; the query vector moves to its nearest neighbour"></canvas>
         <div class="hud" aria-live="polite"><span id="prompt"></span><span class="count" id="counter" hidden></span></div></div>
@@ -454,6 +541,11 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
       </div>
       <p class="result-line" id="result" aria-live="polite"></p>
       <div class="rounds" id="rounds"></div>
+      <div class="cosmath">
+        <span class="lbl">How this cos θ is calculated (updates as you drag)</span>
+        <p class="cm-intro">The canvas is an embedding with only 2 numbers instead of 768. <b class="d-text">Blue = chunk vector A</b>, <b class="q-text">amber = query vector B</b>.</p>
+        <ol id="cm-steps"></ol>
+      </div>
     </div>
     <div class="locked">Score all 4 pairs to see the takeaway.</div>
     <div class="aha" hidden></div>
@@ -464,7 +556,7 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
       <div class="kit"><h3>In the kit</h3>Postgres does it: <code>1 - (embedding &lt;=&gt; question)</code> in <code>repositories/chunks.py</code>. <code>&lt;=&gt;</code> is pgvector's cosine distance.</div>
     </div>
     <details class="deeper"><summary>Go deeper: the formula, with 4 numbers</summary><div>
-      <p><b>cosine = (A · B) / (|A| × |B|)</b>. The dot product of the two vectors, divided by the product of their norms (lengths):</p>
+      <p><b>cosine = (A · B) / (|A| × |B|)</b>. The dot product of the two vectors, divided by the product of their norms (lengths). Here with 4 numbers per vector: multiply each pair and add (dot product), square-and-add each column then take the root (norms), divide.</p>
       <div class="scroll-x"><table class="t" id="calc"></table></div>
       <p>Real vectors do the same with 768 numbers. Gemini's vectors here aren't unit-normalised (this one has norm 0.59), and that's fine: cosine ignores magnitude.</p>
     </div></details>
@@ -474,7 +566,7 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
   <section class="mission" id="s5" data-short="Store">
     <div class="m-head"><span class="m-num">05</span><div class="t"><span class="term">Ingestion · step 5</span><h2>Vector store: pgvector + HNSW index</h2></div></div>
     <p class="hook">At 10 million chunks, a full scan per query is too slow. How does an ANN index return the nearest chunk in milliseconds?</p>
-    <p class="plain"><b>In plain words:</b> each chunk is saved as one row in Postgres. The HNSW index lets the database find the nearest vectors fast, without comparing against every row.</p>
+    <p class="plain"><b>In plain words:</b> each chunk is saved as one row in Postgres. To find the chunks closest to a query, the database could compare the query with every row, but that gets slow as rows grow. The <b>HNSW index</b> is a graph built ahead of time that links each vector to its nearest neighbours. A search hops along those links towards the query and checks only a tiny fraction of the rows.</p>
     <div class="play">
       <div class="play-top"><span class="instr"><b>INSERT the 2 real chunks</b> into the <code>chunks</code> table.</span><span class="tag real">Real database rows</span></div>
       <div class="vault">
@@ -483,9 +575,100 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
       </div>
       <button class="btn go" id="save" style="justify-self: start;">INSERT into Postgres</button>
       <div class="scroll-x"><table class="t rows" id="rows"></table></div>
+      <div class="tsv-box">
+        <span class="lbl">What is the tsv column?</span>
+        <p><b>tsv = text search vector</b> (Postgres type <code>tsvector</code>). Postgres builds it from the content by itself. It keeps only the <b>keywords</b>: small words like <i>to, the, can, over</i> are dropped, and each word is cut to its root (<i>carried → carri</i>, <i>days → day</i>). The number is where the word sits in the text.</p>
+        <div class="tsv-ex"><small>content</small><p>"Up to 5 unused days can be carried over to the next year; any extra unused days expire on 31 March."</p>
+          <small>tsv</small><p class="mono k-text" id="tsv-ex"></p></div>
+        <p><b>Used for keyword search:</b> the query "carry over unused days" becomes <code>carri &amp; unus &amp; day</code> and matches this row. The <b>embedding</b> finds the same meaning; the <b>tsv</b> finds the same words.</p>
+      </div>
+    </div>
+    <div class="play hnsw-how">
+      <div class="play-top"><span class="instr"><b>How the HNSW index finds the nearest vector</b> without checking every row.</span><span class="tag sim">Diagram</span></div>
+      <div class="hn-name"><b>HNSW = Hierarchical Navigable Small World</b>
+        <ul><li><b>Hierarchical:</b> layers. Few vectors at the top, every vector at the bottom.</li>
+        <li><b>Navigable:</b> each vector is linked to its nearest vectors, so you can walk from one to the next.</li>
+        <li><b>Small World:</b> any vector is only a few hops away.</li></ul></div>
+      <div class="hnsw-grid">
+        <div><svg class="hnsw-svg" viewBox="0 0 400 350" role="img" aria-label="Three HNSW layers: the search enters at the top layer, hops to the closest vector, drops down a layer and repeats until the bottom layer gives the nearest vector">
+<defs><marker id="hn-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffb547"/></marker></defs>
+<rect x="6" y="32" width="388" height="96" rx="12" fill="#0f1628" stroke="#24304b"/>
+<text x="16" y="52" class="hn-lbl">Layer 2 · few vectors, long links</text>
+<line x1="58" y1="74" x2="198" y2="90" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="198" y1="90" x2="338" y2="76" stroke="#3a4a72" stroke-width="1.5"/>
+<rect x="6" y="142" width="388" height="96" rx="12" fill="#0f1628" stroke="#24304b"/>
+<text x="16" y="162" class="hn-lbl">Layer 1 · more vectors</text>
+<line x1="58" y1="184" x2="114" y2="188" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="114" y1="188" x2="198" y2="200" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="198" y1="200" x2="254" y2="202" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="254" y1="202" x2="338" y2="186" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="338" y1="186" x2="366" y2="200" stroke="#3a4a72" stroke-width="1.5"/>
+<rect x="6" y="252" width="388" height="96" rx="12" fill="#0f1628" stroke="#24304b"/>
+<text x="16" y="272" class="hn-lbl">Layer 0 · every vector</text>
+<line x1="30" y1="308" x2="58" y2="294" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="58" y1="294" x2="86" y2="312" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="86" y1="312" x2="114" y2="298" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="114" y1="298" x2="142" y2="314" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="142" y1="314" x2="170" y2="296" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="170" y1="296" x2="198" y2="310" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="198" y1="310" x2="226" y2="294" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="226" y1="294" x2="254" y2="312" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="254" y1="312" x2="282" y2="306" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="282" y1="306" x2="310" y2="316" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="310" y1="316" x2="338" y2="296" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="338" y1="296" x2="366" y2="310" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="30" y1="308" x2="86" y2="312" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="114" y1="298" x2="170" y2="296" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="170" y1="296" x2="226" y2="294" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="226" y1="294" x2="282" y2="306" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="282" y1="306" x2="338" y2="296" stroke="#3a4a72" stroke-width="1.5"/>
+<line x1="338" y1="84" x2="338" y2="176" stroke="#ffb547" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#hn-arr)"/>
+<line x1="254" y1="210" x2="254" y2="302" stroke="#ffb547" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#hn-arr)"/>
+<line x1="66.9" y1="75.0" x2="189.1" y2="89.0" stroke="#ffb547" stroke-width="3" marker-end="url(#hn-arr)"/>
+<line x1="207.0" y1="89.1" x2="329.0" y2="76.9" stroke="#ffb547" stroke-width="3" marker-end="url(#hn-arr)"/>
+<line x1="329.2" y1="187.7" x2="262.8" y2="200.3" stroke="#ffb547" stroke-width="3" marker-end="url(#hn-arr)"/>
+<line x1="262.8" y1="310.1" x2="273.2" y2="307.9" stroke="#ffb547" stroke-width="3" marker-end="url(#hn-arr)"/>
+<circle cx="58" cy="74" r="5" fill="#8fb4ff"/>
+<circle cx="198" cy="90" r="5" fill="#8fb4ff"/>
+<circle cx="338" cy="76" r="5" fill="#8fb4ff"/>
+<circle cx="58" cy="184" r="5" fill="#8fb4ff"/>
+<circle cx="114" cy="188" r="5" fill="#8fb4ff"/>
+<circle cx="198" cy="200" r="5" fill="#8fb4ff"/>
+<circle cx="254" cy="202" r="5" fill="#8fb4ff"/>
+<circle cx="338" cy="186" r="5" fill="#8fb4ff"/>
+<circle cx="366" cy="200" r="5" fill="#8fb4ff"/>
+<circle cx="30" cy="308" r="5" fill="#8fb4ff"/>
+<circle cx="58" cy="294" r="5" fill="#8fb4ff"/>
+<circle cx="86" cy="312" r="5" fill="#8fb4ff"/>
+<circle cx="114" cy="298" r="5" fill="#8fb4ff"/>
+<circle cx="142" cy="314" r="5" fill="#8fb4ff"/>
+<circle cx="170" cy="296" r="5" fill="#8fb4ff"/>
+<circle cx="198" cy="310" r="5" fill="#8fb4ff"/>
+<circle cx="226" cy="294" r="5" fill="#8fb4ff"/>
+<circle cx="254" cy="312" r="5" fill="#8fb4ff"/>
+<circle cx="282" cy="306" r="7" fill="#4ee08f"/>
+<circle cx="310" cy="316" r="5" fill="#8fb4ff"/>
+<circle cx="338" cy="296" r="5" fill="#8fb4ff"/>
+<circle cx="366" cy="310" r="5" fill="#8fb4ff"/>
+<text x="58" y="96" class="hn-tag" text-anchor="middle">entry</text>
+<text x="282" y="332" class="hn-tag hn-ok" text-anchor="middle">nearest</text>
+<path d="M300 279l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5z" fill="#ffb547"/><text x="310" y="290" class="hn-tag hn-q">query</text>
+</svg></div>
+        <ol class="hnsw-steps">
+          <li><b>Build once:</b> when chunks are saved, each vector is linked to its nearest vectors.</li>
+          <li><b>Start</b> at the top layer.</li>
+          <li><b>Jump</b> to the linked vector closest to the query.</li>
+          <li><b>Go down</b> a layer and repeat. The bottom layer gives the nearest vector.</li>
+        </ol>
+      </div>
+      <div class="two-col">
+        <div class="cmp bad-c"><small>Without an index (full scan)</small><p>Postgres computes the distance to <b>every row</b>. 10 million chunks = 10 million cosine calculations for each query.</p></div>
+        <div class="cmp ok-c"><small>With the HNSW index</small><p>Postgres computes distances only along the hops: typically <b>a few thousand</b>, even at 10 million rows.</p></div>
+      </div>
+      <p class="note"><b>Example:</b> query "Can I carry over unused holidays?". The top layer jumps to the <b>leave</b> area, the next layer to <b>"carry over 5 unused days"</b>. Done in a few jumps; the laptop, travel and security chunks are never checked.</p>
     </div>
     <div class="play">
-      <div class="play-top"><span class="instr"><b>Tap a panel</b> to place the query vector, then run both searches.</span><span class="tag sim">Simulation</span></div>
+      <div class="play-top"><span class="instr">Press <b>Run both searches</b>: the same query, searched two ways. (Optional: tap inside a panel to move the query.)</span><span class="tag sim">Simulation</span></div>
       <div class="row" role="group" aria-label="Number of vectors">
         <button class="btn" data-n="300" aria-pressed="true">300 vectors</button>
         <button class="btn" data-n="3000" aria-pressed="false">3,000 vectors</button>
@@ -495,13 +678,24 @@ table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
         <div class="lane slow"><header><b>Exact kNN (full scan)</b><span><span class="cnt" id="c-exact">0</span> distance calcs</span></header><canvas id="exact"></canvas><span class="flag" id="f-exact"></span></div>
         <div class="lane fast"><header><b>ANN search (HNSW index)</b><span><span class="cnt" id="c-hnsw">0</span> distance calcs</span></header><canvas id="hnsw"></canvas><span class="flag" id="f-hnsw"></span></div>
       </div>
+      <div class="race-read">
+        <span class="lbl">How to read this</span>
+        <ul class="legend">
+          <li><i style="background:#3e5a9e"></i>1 dot = 1 chunk vector in the table</li>
+          <li><i style="background:#ffb547"></i>dot checked (distance computed)</li>
+          <li><i style="background:#c9d3e6"></i>top-layer starting points</li>
+          <li><i class="ln"></i>links between nearest vectors (the HNSW graph)</li>
+          <li><i class="ring"></i>nearest vector found</li>
+        </ul>
+        <p><b>Left, no index:</b> Postgres checks every dot one by one, so the counter climbs to the total. <b>Right, HNSW:</b> it first checks only the white top-layer dots, starts from the closest one, then follows the links towards the query (green line), checking just the dots along the way. Both usually end on the same nearest vector, but the right side does far fewer checks.</p>
+      </div>
     </div>
     <div class="locked">Run both searches to see the takeaway.</div>
     <div class="aha" hidden></div>
     <div class="examples"><div class="ex gen"><small>General example · HR handbook</small><p>2 rows in the <code>chunks</code> table: content, embedding vector(768) and tsv.</p></div><div class="ex med"><small>Medical example · antenatal care guideline <span class="tag sim">Illustrative</span></small><p>You'd add <b>metadata columns</b> such as guideline version and language, then filter <code>WHERE version = '2024'</code> so an outdated protocol is never retrieved.</p></div></div>
     <div class="facts">
       <div class="why"><h3>Why?</h3>One row per chunk: <code>content</code> for the prompt, <code>embedding</code> for vector search, <code>tsv</code> for full-text search. Plain SQL still works for filters and deletes.</div>
-      <div class="sci"><h3>How it works</h3><b>HNSW</b> (Hierarchical Navigable Small World) is a graph index: each vector links to its nearest neighbours. A search enters at a sparse upper layer and greedily hops towards the query instead of scanning every row.</div>
+      <div class="sci"><h3>How it works</h3>HNSW is <b>approximate</b> (ANN = approximate nearest neighbour): very rarely it misses the single best match, so the kit fetches 20 candidates, not 1.</div>
       <div class="kit"><h3>In the kit</h3>Table and index: <code>backend/sql/migrations/001_init.sql</code>. Saving: <code>step5_store.py</code>. See the rows yourself in pgAdmin (Setup Guide, Step 8).</div>
     </div>
     <details class="deeper"><summary>Go deeper: the SQL behind it</summary><div>
@@ -517,6 +711,14 @@ tsv        tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED
 <span class="k">SELECT</span> content, 1 - (embedding <span class="k">&lt;=&gt;</span> :question) <span class="k">AS</span> similarity
 <span class="k">FROM</span> chunks <span class="k">ORDER BY</span> embedding <span class="k">&lt;=&gt;</span> :question <span class="k">LIMIT</span> 20;</pre>
       <p>HNSW is approximate: it can very rarely miss the single best match, which is why the kit fetches 20 candidates, not 1.</p>
+      <p><b>The three tuning knobs</b> (the kit uses pgvector's defaults):</p>
+      <div class="scroll-x"><table class="t"><tr><th>setting</th><th>default</th><th>what it controls</th></tr>
+        <tr><td><code>m</code></td><td>16</td><td>links per vector. More links = better recall, bigger index.</td></tr>
+        <tr><td><code>ef_construction</code></td><td>64</td><td>shortlist size while building. Higher = better graph, slower INSERTs.</td></tr>
+        <tr><td><code>hnsw.ef_search</code></td><td>40</td><td>shortlist size while searching. Higher = more accurate, slower queries.</td></tr></table></div>
+      <pre class="sql"><span class="c">-- example: a denser graph, and a wider search for one session</span>
+<span class="k">CREATE INDEX</span> ON chunks <span class="k">USING hnsw</span> (embedding vector_cosine_ops) <span class="k">WITH</span> (m = 24, ef_construction = 100);
+<span class="k">SET</span> hnsw.ef_search = 100;</pre>
     </div></details>
   </section>
 
@@ -609,7 +811,20 @@ const sharedWords = (a, b) => [...wordsOf(text(a))].filter((w) => wordsOf(text(b
 
 function Galaxy(canvas, opts) {
   const ctx = canvas.getContext("2d");
-  let W = 0, H = 0, q = null, guess = null, phase = "idle", t0 = 0, kwOn = false, hover = null, particles = [], scores = [], visible = true;
+  let W = 0, H = 0, q = null, guess = null, phase = "idle", t0 = 0, kwOn = false, hover = null, picked = null, particles = [], scores = [], visible = true;
+  // click any dot: show the sentence it embeds, how it is stored, and its score for the current query
+  const info = document.createElement("div"); info.className = "dot-info empty"; info.setAttribute("aria-live", "polite");
+  info.innerHTML = "<b>Click any dot</b> to see the sentence it embeds and its cosine score for the query.";
+  canvas.closest(".stage").after(info);
+  function showInfo() {
+    if (!picked) return;
+    const s = STARS[picked], sv = DATA.sample_vector.id === picked ? DATA.sample_vector : null, rank = scores.findIndex((x) => x.id === picked) + 1;
+    const vec = sv && `768 numbers: [${sv.first12.slice(0, 4).map((v) => v.toFixed(4)).join(", ")}, …], norm ${sv.norm.toFixed(2)}`;
+    info.className = "dot-info";
+    info.innerHTML = `<span class="lbl">Embedded text · ${esc(s.group.toLowerCase())}</span><p class="txt">"${esc(text(picked))}"</p>
+      <p class="meta">stored as: 1 vector of ${sv ? esc(vec) : "768 numbers"} · ${esc(DATA.model)}</p>` +
+      (q ? `<p class="meta">cosine with <span class="q-text">"${esc(text(q))}"</span> = <b class="k-text">${DATA.cos[q][picked].toFixed(2)}</b> · rank ${rank} of ${scores.length}</p>` : "");
+  }
   const DUST = Array.from({ length: 200 }, () => ({ x: rnd(), y: rnd(), r: rnd() * 1.2 + 0.2, t: rnd() * 6 }));
   const P = (x, y) => [x * W, y * H];
   function size() {
@@ -620,6 +835,7 @@ function Galaxy(canvas, opts) {
   function setQuestion(id) {
     q = id; guess = null; phase = opts.guessing ? "guess" : "ready"; particles = [];
     scores = Object.keys(STARS).map((s) => ({ id: s, c: DATA.cos[id][s] })).sort((a, b) => b.c - a.c);
+    showInfo();
   }
   function launch() {
     if (!q || phase === "explode" || phase === "fly") return;
@@ -660,7 +876,7 @@ function Galaxy(canvas, opts) {
       g.addColorStop(0, lit ? "rgba(78,224,143,0.9)" : isBest ? "rgba(143,180,255,0.95)" : `rgba(143,180,255,${0.5 * tw})`); g.addColorStop(1, "rgba(91,140,255,0)");
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 4.5, 0, 7); ctx.fill();
       ctx.fillStyle = lit ? "#4ee08f" : "#eaf1ff"; ctx.beginPath(); ctx.arc(x, y, R * 0.55, 0, 7); ctx.fill();
-      if (guess === s.id || (hover === s.id && phase === "guess")) { ctx.strokeStyle = "#ffb547"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, R + 7, 0, 7); ctx.stroke(); }
+      if (guess === s.id || hover === s.id || picked === s.id) { ctx.strokeStyle = guess === s.id || phase === "guess" ? "#ffb547" : "#8fb4ff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, R + 7, 0, 7); ctx.stroke(); }
       ctx.font = `${isBest ? 700 : 500} ${W < 600 ? 11 : 13}px IBM Plex Sans, sans-serif`; ctx.textAlign = "center";
       ctx.fillStyle = isBest ? "#ffffff" : lit ? "#4ee08f" : "rgba(220,228,245,0.85)";
       const half = ctx.measureText(s.label).width / 2;
@@ -699,11 +915,67 @@ function Galaxy(canvas, opts) {
     Object.values(STARS).forEach((s) => { const [sx, sy] = P(s.x, s.y), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = s.id; } });
     return best;
   }
-  canvas.addEventListener("pointermove", (e) => { hover = starAt(e); canvas.style.cursor = hover && phase === "guess" ? "pointer" : "default"; });
-  canvas.addEventListener("click", (e) => { const s = starAt(e); if (s && phase === "guess") { guess = s; opts.onGuess?.(s); } });
+  canvas.addEventListener("pointermove", (e) => { hover = starAt(e); canvas.style.cursor = hover ? "pointer" : "default"; });
+  canvas.addEventListener("click", (e) => { const s = starAt(e); if (!s) return; picked = s; showInfo(); if (phase === "guess") { guess = s; opts.onGuess?.(s); } });
   new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
   addEventListener("resize", size); size(); requestAnimationFrame(draw);
   return { setQuestion, launch, setKw: (on) => (kwOn = on), get phase() { return phase; }, get guess() { return guess; } };
+}
+
+/* ---------- the pipeline map: both labs on one strip, each box jumps to its step ---------- */
+const PIPE = [
+  { lab: 1, id: "s1", t: "Parse", d: "file → text" },
+  { lab: 1, id: "s2", t: "Chunk", d: "text → pieces" },
+  { lab: 1, id: "s3", t: "Embed", d: "piece → 768 numbers" },
+  { lab: 1, id: "s4", t: "Score", d: "how close? (cosine)" },
+  { lab: 1, id: "s5", t: "Store", d: "rows + HNSW index" },
+  { lab: 2, id: "s1", t: "Check", d: "guardrail, cache, rewrite" },
+  { lab: 2, id: "s4", t: "Embed query", d: "question → vector" },
+  { lab: 2, id: "s5", t: "Search", d: "meaning + keywords" },
+  { lab: 2, id: "s7", t: "Filter", d: "good enough?" },
+  { lab: 2, id: "s8", t: "Answer", d: "LLM + citations" },
+];
+const LAB_FILE = { 1: "rag-ingestion-lab.html", 2: "rag-retrieval-lab.html" };
+const num = (id) => +id.slice(1);
+// the map box a step belongs to: the last box of this lab that starts at or before it
+const pipeNode = (lab, id) => PIPE.filter((n) => n.lab === lab && num(n.id) <= num(id)).pop();
+function pipeMap(lab) {
+  const group = (l, title) => `<div class="pmap-g ${l === lab ? "on" : ""}"><small>${title}</small><ol>` +
+    PIPE.filter((n) => n.lab === l).map((n) => `<li><a href="${l === lab ? "#" + n.id : LAB_FILE[l]}"><b>${n.t}</b><span>${n.d}</span></a></li>`).join("") + `</ol></div>`;
+  $("#pmap").innerHTML = group(1, "Once per upload · Lab 1") + group(2, "Every question · Lab 2");
+}
+
+/* ---------- presenter mode: what to say and click, per step, only while it is on ---------- */
+function initPresenter(lab, notes, intro) {
+  const store = { get: () => { try { return localStorage.getItem("rag-lab-presenter") === "1"; } catch { return false; } }, set: (v) => { try { localStorage.setItem("rag-lab-presenter", v ? "1" : "0"); } catch {} } };
+  const crumb = (id) => { const here = pipeNode(lab, id); return PIPE.filter((n) => n.lab === lab).map((n) => (n === here ? `<b>${n.t}</b>` : n.t)).join(" → "); };
+  Object.entries(notes).forEach(([id, n]) => {
+    const host = document.getElementById(id); if (!host) return;
+    const d = document.createElement("div"); d.className = "pnote";
+    d.innerHTML = `<small>🎤 Presenter notes${host.classList.contains("mission") ? ` · ${crumb(id)}` : ""}</small><p class="p-line">${n.line}</p><p><b>Say:</b> “${n.say}”</p><p><b>Click:</b> ${n.click}</p>`;
+    const head = host.querySelector(".m-head, .play-top"); head ? head.after(d) : host.prepend(d);
+  });
+  const bar = document.createElement("div"); bar.className = "pbar";
+  bar.innerHTML = `<button class="btn" id="p-toggle" aria-pressed="false" aria-label="Presenter notes">🎤<span> Presenter notes</span></button><button class="btn" id="p-revise" aria-label="Revise">📋<span> Revise</span></button>`;
+  document.body.append(bar);
+  const dlg = document.createElement("dialog"); dlg.className = "revise";
+  const items = MISSIONS.map((m, i) => notes[m.id] && `<li><b>${i + 1}. ${esc(m.querySelector("h2").textContent)}</b><p class="p-line">${notes[m.id].line}</p><p><b>Say:</b> “${notes[m.id].say}”</p></li>`).filter(Boolean).join("");
+  dlg.innerHTML = `<div class="rv-head"><b>Revise: Lab ${lab} in one page</b><button class="btn" id="p-close">Close</button></div>${intro}<ol>${items}</ol><p class="rv-key">The one sentence to repeat all session: <b>"Keyword search matches letters. Meaning search matches ideas."</b></p>`;
+  document.body.append(dlg);
+  const set = (on) => { document.body.classList.toggle("presenting", on); $("#p-toggle").setAttribute("aria-pressed", on); store.set(on); };
+  $("#p-toggle").onclick = () => set(!document.body.classList.contains("presenting"));
+  $("#p-revise").onclick = () => dlg.showModal();
+  $("#p-close").onclick = () => dlg.close();
+  dlg.addEventListener("click", (e) => e.target === dlg && dlg.close());
+  set(store.get());
+  // arrow keys move between steps while presenting
+  addEventListener("keydown", (e) => {
+    if (!document.body.classList.contains("presenting") || dlg.open || e.target.closest("input, textarea, select, [contenteditable]")) return;
+    const dir = e.key === "ArrowRight" || e.key === "PageDown" ? 1 : e.key === "ArrowLeft" || e.key === "PageUp" ? -1 : 0;
+    if (!dir) return;
+    const cur = MISSIONS.findIndex((m) => m.id === $(".rail a.here")?.dataset.for), next = MISSIONS[Math.max(0, Math.min(MISSIONS.length - 1, (cur < 0 ? -1 : cur) + dir))];
+    e.preventDefault(); next.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+  });
 }
 
 
@@ -803,7 +1075,23 @@ async function slice() {
   if (triedSizes.size >= 2) discover("s2", `There's no perfect chunk size, only a trade-off. Small chunks give <b>precise</b> matches but lose context; large chunks keep context but <b>blend</b> many topics into one embedding. The kit uses <b>200 words with a 40-word overlap</b>.`);
 }
 $$("[data-size]").forEach((b) => (b.onclick = () => { size = +b.dataset.size; $$("[data-size]").forEach((x) => x.setAttribute("aria-pressed", x === b)); slice(); }));
-$("#slice").onclick = slice; $("#ov").onchange = () => { if ($("#fan .icard")) slice(); };
+$("#slice").onclick = slice;
+
+/* ---------- 2b. a naive fixed-size cut vs the kit's sentence-aware chunker ---------- */
+const CUT_WORDS = BODY.split(/\s+/), iC = CUT_WORDS.indexOf("carried"), iM = CUT_WORDS.findIndex((w, i) => i > iC && /^March/.test(w));
+const cutMark = (w, i) => (i === iC || i === iC + 1 ? `<mark class="q">${esc(w)}</mark>` : i === iM - 1 || i === iM ? `<mark class="k">${esc(w)}</mark>` : esc(w));
+const cutSpan = (a, b) => CUT_WORDS.slice(a, b).map((w, j) => cutMark(w, a + j)).join(" ");
+function cutDemo() {
+  const n = +$("#cut-range").value, k = Math.floor(iC / n), broke = Math.floor(iM / n) !== k;
+  $("#cut-n").textContent = n;
+  $("#cut-naive").className = `cmp ${broke ? "bad-c" : "ok-c"}`;
+  $("#cut-naive").innerHTML = `<small>Naive splitter · chunk ${k + 1}, the one search finds</small><p>${cutSpan(k * n, (k + 1) * n)} <span class="cut-mark">✂</span> <span class="faded">${cutSpan((k + 1) * n, (k + 1) * n + 8)} …</span></p>` +
+    `<p class="cut-verdict">${broke ? '✗ "31 March" fell into the next chunk. The LLM gets only this chunk, so it can\'t say until when.' : '✓ Lucky cut: "carried over" and "31 March" are in the same chunk. Drag again.'}</p>`;
+}
+const sStart = CUT_WORDS.lastIndexOf("Up", iC), sEnd = iM + 1;
+$("#cut-kit").innerHTML = `<small>The kit's chunker · cuts only between sentences + 40-word overlap</small><p><span class="faded">… </span>${cutSpan(sStart, sEnd)}<span class="faded"> …</span></p><p class="cut-verdict">✓ The rule and its date always stay in one chunk. Answer: 31 March.</p>`;
+$("#cut-range").value = [...Array(31).keys()].map((i) => 20 + i).find((n) => Math.floor(iM / n) !== Math.floor(iC / n)) ?? 25;
+$("#cut-range").oninput = cutDemo; cutDemo(); $("#ov").onchange = () => { if ($("#fan .icard")) slice(); };
 
 /* ---------- 3a. the number machine: card 1's real 768 numbers ---------- */
 const VEC = DATA.chunk0_vector, MAXV = Math.max(...VEC.map(Math.abs));
@@ -829,15 +1117,21 @@ $("#feed-btn").onclick = () => {
   $$("#feed span").forEach((s, i) => setTimeout(() => s.classList.add("eaten"), reduce ? 0 : i * 28));
   tween(1700, (p) => { filled = Math.round(768 * ease(p)); drawStrip(); $("#readout").textContent = `${filled} / 768 dimensions`; }, () => {
     $("#core").classList.remove("on"); $("#feed-btn").disabled = false; $("#feed-btn").textContent = "Embed again";
-    $("#readout").innerHTML = `768 / 768 dimensions. Hover or tap a cell.`;
+    $("#readout").innerHTML = `768 / 768 numbers = the meaning of: <span class="d-text">${VEC_TEXT}</span> Tap any cell.`;
   });
   setTimeout(() => $$("#feed span").forEach((s) => s.classList.remove("eaten")), reduce ? 0 : 3200);
 };
 function cellAt(e) { const r = strip.getBoundingClientRect(), cw = r.width / 48, c = Math.floor((e.clientX - r.left) / cw), rw = Math.floor((e.clientY - r.top) / cw); return c >= 0 && c < 48 && rw >= 0 && rw < 16 ? rw * 48 + c : -1; }
-strip.addEventListener("pointermove", (e) => {
+// the key of this vector = which document and chunk it belongs to (one row in the chunks table)
+const VEC_TEXT = `"${esc(feedWords.slice(0, 18).join(" "))} …"`;
+function showCell(e) {
   if (filled < 768) return; hoverCell = cellAt(e); drawStrip();
-  if (hoverCell >= 0) $("#readout").innerHTML = `dimension <b>#${hoverCell + 1}</b> = ${VEC[hoverCell] >= 0 ? "+" : ""}${VEC[hoverCell].toFixed(4)}. Means "leave"? <b>No single dimension does.</b>`;
-});
+  if (hoverCell < 0) return;
+  const v = VEC[hoverCell];
+  $("#readout").innerHTML = `This square = number <b>#${hoverCell + 1}</b> of 768 = <b>${v >= 0 ? "+" : ""}${v.toFixed(4)}</b><br>All 768 squares together = the meaning of: <span class="d-text">${VEC_TEXT}</span>`;
+}
+strip.addEventListener("pointermove", showCell);
+strip.addEventListener("pointerdown", showCell);
 
 /* ---------- 3b. the meaning galaxy ---------- */
 const QUESTIONS = [
@@ -920,6 +1214,26 @@ function drawDuel() {
   dx.fillStyle = "#b9c4dc"; dx.font = "600 12px JetBrains Mono, monospace"; dx.textAlign = "left"; dx.fillText(`${Math.round(ang)}°`, ox + 40, oy - 8);
   $("#live").textContent = cosOf(ang).toFixed(2);
   $("#live-mini").textContent = `angle ${Math.round(ang)}° · vector norm ${len.toFixed(2)} (try changing it)`;
+  cosMath(r);
+}
+// The same 4 steps the database runs, shown on the 2-number vectors drawn above.
+function cosMath(r) {
+  const f = (v) => v.toFixed(3), b1 = len * cosOf(ang), b2 = len * Math.sin(ang * Math.PI / 180), dot = 1 * b1 + 0 * b2, nB = Math.hypot(b1, b2), c = dot / (1 * nB);
+  const steps = [
+    `<b>Write both vectors as numbers.</b> A lies on the x-axis. B has norm L = ${len.toFixed(2)} at angle θ = ${ang}°, so B = [L × cos θ, L × sin θ].
+      <span class="eq"><span class="d-text">A = [1.000, 0.000]</span><br><span class="q-text">B = [${len.toFixed(2)} × cos ${ang}°, ${len.toFixed(2)} × sin ${ang}°] = [${f(b1)}, ${f(b2)}]</span></span>`,
+    `<b>Dot product A · B:</b> multiply the matching numbers, then add them up.
+      <span class="eq">A · B = a₁×b₁ + a₂×b₂ = 1.000 × ${f(b1)} + 0.000 × ${f(b2)} = ${f(dot)}</span>`,
+    `<b>Norm (length) of each vector:</b> square every number, add, take the square root.
+      <span class="eq">|A| = √(1.000² + 0.000²) = 1.000<br>|B| = √(${f(b1)}² + ${f(b2)}²) = ${f(nB)}</span>`,
+    `<b>Divide the dot product by both norms.</b>
+      <span class="eq">cos θ = (A · B) / (|A| × |B|) = ${f(dot)} / (1.000 × ${f(nB)}) = <span class="ans">${f(c)}</span> → shown as <span class="ans">${c.toFixed(2)}</span></span>`,
+    `<b>Why the length doesn't matter:</b> L = ${len.toFixed(2)} sits on top (in A · B) and below (in |B|), so it cancels and only the angle is left.
+      <span class="eq">cos θ = cos ${ang}° = ${f(cosOf(ang))}</span>`,
+  ];
+  if (locked) steps.push(`<b>The real pair:</b> the same 4 steps on the two 768-number Gemini vectors (768 products in the dot product, 768 squares in each norm) give <b class="real">${r.c.toFixed(2)}</b>. Going back to the angle:
+      <span class="eq real">θ = arccos(${r.c.toFixed(2)}) = ${Math.round(Math.acos(r.c) * 180 / Math.PI)}° (the green dashed vector)</span>`);
+  $("#cm-steps").innerHTML = steps.map((t) => `<li>${t}</li>`).join("");
 }
 function setRound() {
   const r = ROUNDS[round]; locked = false; reveal = 0; ang = 70; len = 0.8;
@@ -933,7 +1247,7 @@ function showRounds() { $("#rounds").innerHTML = ROUNDS.map((_, i) => `<span cla
 function pointer(e) {
   if (locked) return;
   const rect = duel.getBoundingClientRect(), [ox, oy, R] = origin(), x = e.clientX - rect.left - ox, y = oy - (e.clientY - rect.top);
-  ang = Math.max(0, Math.min(90, Math.atan2(Math.max(0, y), Math.max(0, x)) * 180 / Math.PI)); len = Math.max(0.3, Math.min(1, Math.hypot(x, y) / R)); drawDuel();
+  ang = Math.round(Math.max(0, Math.min(90, Math.atan2(Math.max(0, y), Math.max(0, x)) * 180 / Math.PI))); len = Math.round(Math.max(0.3, Math.min(1, Math.hypot(x, y) / R)) * 100) / 100; drawDuel();
 }
 duel.addEventListener("pointerdown", (e) => { duel.setPointerCapture(e.pointerId); pointer(e); });
 duel.addEventListener("pointermove", (e) => e.buttons && pointer(e));
@@ -953,13 +1267,17 @@ const dot4 = a4.reduce((s, v, i) => s + v * b4[i], 0), la4 = Math.hypot(...a4), 
 $("#calc").innerHTML = `<tr><th>number</th><th>A (chunk)</th><th>B (query)</th><th>A × B</th></tr>` +
   a4.map((v, i) => `<tr><td>${i + 1}</td><td class="d-text">${v.toFixed(2)}</td><td class="q-text">${b4[i].toFixed(2)}</td><td>${(v * b4[i]).toFixed(4)}</td></tr>`).join("") +
   `<tr><td>sum</td><td>norm ${la4.toFixed(3)}</td><td>norm ${lb4.toFixed(3)}</td><td>${dot4.toFixed(4)}</td></tr>` +
-  `<tr><td colspan="3">cosine = ${dot4.toFixed(4)} / (${la4.toFixed(3)} × ${lb4.toFixed(3)})</td><td class="k-text"><b>${(dot4 / (la4 * lb4)).toFixed(3)}</b></td></tr>`;
+  `<tr><td colspan="3">norm |A| = √(${a4.map((v) => `${v.toFixed(2)}²`).join(" + ")}) = √${a4.reduce((s, v) => s + v * v, 0).toFixed(4)}</td><td>${la4.toFixed(3)}</td></tr>` +
+  `<tr><td colspan="3">norm |B| = √(${b4.map((v) => `${v.toFixed(2)}²`).join(" + ")}) = √${b4.reduce((s, v) => s + v * v, 0).toFixed(4)}</td><td>${lb4.toFixed(3)}</td></tr>` +
+  `<tr><td colspan="3">cosine = ${dot4.toFixed(4)} / (${la4.toFixed(3)} × ${lb4.toFixed(3)})</td><td class="k-text"><b>${(dot4 / (la4 * lb4)).toFixed(3)}</b></td></tr>` +
+  `<tr><td colspan="3">angle θ = arccos(${(dot4 / (la4 * lb4)).toFixed(3)})</td><td>${(Math.acos(dot4 / (la4 * lb4)) * 180 / Math.PI).toFixed(1)}°</td></tr>`;
 
 /* ---------- 5a. save the real rows ---------- */
 const kwList = DATA.chunk0_tsv.split(" ").filter((x) => /^'\p{L}/u.test(x)).slice(0, 6).map((x) => x.split(":")[0].replace(/'/g, "")).join(", ");
 const preview = (c) => esc(c.text.replace(/#+\s*/g, "").replace(/\s+/g, " ").slice(0, 80));
 $("#pcs").innerHTML = DATA.chunks.map((c, i) => `<div class="pc"><b>Chunk ${i + 1}</b> · ${c.words} words · "${preview(c)}…"</div>`).join("");
-const HEAD = `<tr><th>#</th><th>content (text)</th><th>embedding vector(768)</th><th>tsv (full-text)</th></tr>`;
+const HEAD = `<tr><th>#</th><th>content (text)</th><th>embedding vector(768)</th><th>tsv (keywords for full-text search)</th></tr>`;
+$("#tsv-ex").textContent = DATA.tsv_example.tsv;
 $("#rows").innerHTML = HEAD;
 $("#save").onclick = async () => {
   $("#save").disabled = true; $("#rows").innerHTML = HEAD;
@@ -1036,6 +1354,26 @@ $$("[data-n]").forEach((b) => (b.onclick = () => { if (racing) return; N = +b.da
 $("#race").onclick = race;
 let raceW = innerWidth; addEventListener("resize", () => { if (racing || innerWidth === raceW) return; raceW = innerWidth; resetRace(); });
 buildPoints(); resetRace();
+
+/* ---------- the pipeline map and presenter notes ---------- */
+pipeMap(1);
+initPresenter(1, {
+  s1: { line: "The parser turns a PDF or Word file into plain text, because AI models only read text.",
+        say: "A .docx or .pdf is mostly layout code. The parser throws that away and keeps the words, plus the page number, so an answer can later say 'page 3'.",
+        click: "<b>Run parser</b> on .docx, then try .pdf and .md. Point at what disappears." },
+  s2: { line: "The chunker cuts the text into pieces of about 200 words, so the LLM later gets only the piece it needs.",
+        say: "Too small and a piece loses its context; too big and it mixes topics. And where you cut matters: cut in the middle of a sentence and the answer can end up in the wrong piece.",
+        click: "<b>Run chunker</b> at 60, 400, then 200 words. Then <b>drag the naive-splitter slider</b>: show '31 March' falling into the next chunk, while the kit's chunker keeps it." },
+  s3: { line: "The embedding model turns each chunk into 768 numbers that capture its meaning.",
+        say: "This grid is one chunk's meaning as numbers. Similar meaning gives similar numbers, even with different words: 'holidays' finds 'unused days', and a Hindi question finds the English rule.",
+        click: "<b>Embed chunk 1</b>. Pick the sample query, ask the audience to guess the nearest dot, then <b>Embed query + search</b>." },
+  s4: { line: "Cosine similarity gives one score for how close two vectors point: near 1 means same meaning.",
+        say: "We compare the direction, not the length. Scores are relative: even unrelated text scores about 0.5 here, so the kit ranks results and uses a 0.50 threshold.",
+        click: "Let the audience guess each pair, then <b>Submit estimate</b>. If someone asks how 0.34 is computed, show the cos θ panel." },
+  s5: { line: "Each chunk is saved as one row: its text, its vector and its keywords (tsv). An HNSW index makes search fast.",
+        say: "Without an index the database checks every row. HNSW links each vector to its nearest neighbours and hops to the answer: about 33 checks instead of 300 here.",
+        click: "<b>INSERT into Postgres</b>, explain the tsv box, walk the 3-layer diagram, then <b>Run both searches</b>." },
+}, `<p class="rv-intro">Lab 1 runs <b>once per uploaded file</b>: parse → chunk → embed → store. The story: later a user asks <b>"Can I carry over unused holidays?"</b>. This lab prepares the handbook so that question can be answered.</p>`);
 </script>
 </body>
 </html>

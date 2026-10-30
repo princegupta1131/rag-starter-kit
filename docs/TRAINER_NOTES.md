@@ -45,6 +45,12 @@ The one sentence to repeat all session:
 
 ---
 
+## Presenter mode (in both labs)
+
+- **🎤 Presenter notes** (bottom-right button): every step shows a yellow card with **one line** (what the step does), **Say** (what to read out) and **Click** (what to press). Only shown while it's on. **→ / ←** jump between steps.
+- **📋 Revise**: every step's one line + what to say on one page. Read it before the session.
+- **The map at the top** (Lab 1 boxes + Lab 2 boxes) jumps to any step. If you lose the thread, point at it: "We're here now."
+
 ## 3. Ingestion: what to say and click
 
 Open **RAG Ingestion Lab** (part 1): the ingestion pipeline, **parse → chunk → embed → store**.
@@ -63,9 +69,12 @@ Colours: **blue** = document, **amber** = query, **green** = exact keywords, **r
 - **Click** *60 words* → *Run chunker*, then *400 words*, then *200 words · kit default*. Watch the Precision and Context gauges.
 - **Say:** "Small chunks give precise matches but lose context; large chunks blend several topics into one embedding. 200 words with a 40-word overlap, so a sentence at a boundary is never lost."
 - **Medical:** the symptom ("severe headache, blurred vision") and the action ("refer immediately") must stay in the same chunk.
+- **Wow, *What a bad cut does to the answer*:** drag the naive-splitter slider. At many sizes "31 March" falls into the next chunk, so the chunk that matches "Until when can I carry over unused days?" has no date. **Say:** "Where you cut decides whether the answer is right. The kit cuts only between sentences, so this never happens."
 
 ### Step 3 · Embedding (`step4_embed.py`) · 8 min, the key step
-- **Click** *Embed chunk 1*: a real 768-dim vector lights up. Then pick a query, tap the dot you expect as its nearest neighbour, and *Embed query + search*.
+- **Click** *Embed chunk 1*: a real 768-dim vector lights up. **Say:** "This whole grid is one vector: 768 numbers for one chunk." Tap any cell: it shows that number and the text this vector is the meaning of: "Every full-time employee receives 24 days of paid annual leave…" (chunk 1). Every chunk gets its own vector, saved as one row in the `chunks` table. A single cell has no word of its own; all 768 numbers together carry the chunk's meaning.
+- **Click any dot** on the map: it shows the full sentence that dot embeds and its cosine score for the selected query.
+- Then pick a query, tap the dot you expect as its nearest neighbour, and *Embed query + search*.
   - *Can I carry over unused holidays?* → nearest neighbour is the carry-over rule, **0.80**, almost no shared keywords.
   - The **Hindi** query → next to the English leave rule, **0.72**.
   - *Stock price?* → no close neighbour: the top-1 is only 0.55.
@@ -78,11 +87,29 @@ Colours: **blue** = document, **amber** = query, **green** = exact keywords, **r
   - vacation ↔ holiday **0.88** · carry-over rule **0.80** · sick leave **0.64** · password + 2FA **0.53**
 - **The surprise (pair 4):** unrelated text still scores 0.53. "Scores only mean something relative to each other, so the kit **ranks** results and uses a **0.50** threshold."
 - **Point:** change the vector's length and the score doesn't move: cosine ignores magnitude.
-- **Go deeper:** `cosine = (A·B) / (|A| × |B|)` with a worked example.
+- **Show the maths:** the panel under the canvas, *How this cos θ is calculated*, works out the score live as you drag. At the start position (70°, norm 0.80) it reads:
+  1. Vectors: A = [1.000, 0.000], B = [0.80 × cos 70°, 0.80 × sin 70°] = [0.274, 0.752]
+  2. Dot product: A · B = 1.000 × 0.274 + 0.000 × 0.752 = 0.274
+  3. Norms: |A| = √(1² + 0²) = 1.000, |B| = √(0.274² + 0.752²) = 0.800
+  4. Divide: cos θ = 0.274 / (1.000 × 0.800) = **0.342 → 0.34**
+  5. The 0.80 is on top and below, so it cancels: cos θ = cos 70° = 0.342
+- **Say:** "The real kit does exactly these 4 steps, only with 768 numbers per vector instead of 2. After *Submit estimate*, the panel turns the real score back into an angle: arccos(0.88) = 28°."
+- **Go deeper:** the same formula with 4 numbers per vector, including both norms and the angle (0.988 → 9°).
 
 ### Step 5 · Vector store: pgvector + HNSW (`step5_store.py`) · 5 min
 - **Click** *INSERT into Postgres*: 2 rows appear (content, embedding vector(768), tsv).
+- **The tsv column** (box under the table): **tsv = text search vector**, built by Postgres from the content. It keeps only keywords: small words (to, the, over) dropped, words cut to their root (carried → carri), plus each word's position.
+  - Example: "Up to 5 unused days can be carried over…" → `'5':3 'carri':8 'day':5,17 'unus':4,16 …`
+  - **Say:** "The embedding finds the same meaning; the tsv finds the same words. The kit uses both and fuses them (Lab 2, RRF)."
+- **Walk the diagram** *How the HNSW index finds the nearest vector*:
+  - **Full form:** HNSW = **Hierarchical** (layers: few vectors at the top, all at the bottom) **Navigable** (each vector links to its nearest vectors) **Small World** (any vector is only a few hops away).
+  - **Example:** "Can I carry over unused holidays?" The top layer jumps to the leave area, the next layer to "carry over 5 unused days". The laptop, travel and security chunks are never checked.
+  - **Say:** "Without an index, Postgres compares the query with every row: 10 million rows = 10 million calculations. HNSW builds a graph once, at INSERT time, linking each vector to its closest neighbours."
+  - Point at the layers, top to bottom: "Enter at the top, hop to whichever neighbour is closer to the query, drop down a layer, repeat. The bottom layer has every vector and gives the nearest one."
+  - Analogy: a map app. Highway to the city (layer 2), main roads to the area (layer 1), local streets to the house (layer 0).
 - **Click** *Run both searches*: exact kNN (full scan) vs ANN search (HNSW index). Try *3,000 vectors*: the gap grows.
+  - **Say:** "Each dot is one chunk vector. Same query, two ways. Left, no index: Postgres checks every dot, 300 checks. Right, HNSW: it checks the white top-layer dots, starts from the closest, then follows the links to the query, about 33 checks. Same answer, about 10× less work. With 3,000 vectors the gap grows."
+  - Colours: orange = checked, green line = the hops, green ring = nearest found.
 - **Say:** "HNSW is a graph of nearest neighbours: it enters at a sparse top layer and hops towards the query. It's approximate, so the kit fetches 20 candidates." (The race is a simulation; the page says so.)
 - **Medical:** add metadata columns such as guideline version and filter on them, so an outdated protocol is never retrieved.
 
@@ -91,6 +118,8 @@ Colours: **blue** = document, **amber** = query, **green** = exact keywords, **r
 ---
 
 ## 4. Retrieval: what to say and click
+
+**Open with the *Why RAG?* switch** (top of Lab 2). Leave question: RAG off → "around 20 days" (a guess), RAG on → "24 days [1]". Stock price: RAG off → a made-up share price, RAG on → "I couldn't find this in the uploaded documents." The RAG-off answers are illustrative and the page says so.
 
 Open **RAG Retrieval Lab** (part 2): the retrieval pipeline, 9 stages. At the top, pick a query to trace:
 *Sample query* (carry-over), *Direct lookup* (annual leave), *Cross-lingual (Hindi)* or *Out of scope* (stock price).
