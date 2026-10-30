@@ -152,14 +152,16 @@ The settings live in `backend/.env`. Open it (from the main folder):
 |---|---|
 | `open -e backend/.env` | `notepad backend\.env` |
 
-Find these **2 lines** at the top and replace them with yours from your note:
+At the top you'll see these **3 lines**. Leave `LLM_PROVIDER=gemini` as it is, and replace the other **2** with yours from your note:
 
 ```env
 DATABASE_URL=postgresql://localhost:5432/rag_starter
+LLM_PROVIDER=gemini
 GEMINI_API_KEY=AIzaSyB...your-whole-key...
 ```
 
 - Keep `DATABASE_URL=` and `GEMINI_API_KEY=` at the start. No spaces and no quotes around the value
+- No `LLM_PROVIDER` line in your file (made before this was added)? That's fine: Gemini is the default
 - Don't change the other lines
 - **Save** (Mac `Cmd + S`, Windows `Ctrl + S`) and close the file
 

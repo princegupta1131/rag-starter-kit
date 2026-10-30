@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RAG Ingestion Lab</title>
@@ -8,362 +9,477 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Story mode: one example (the handbook + Priya's question) followed through five steps.
-   Every step has the same parts: what happens, see it (before -> after), why, the science simply, where in the kit, go deeper.
-   Colour has meaning: blue = the document, amber = the question. */
+/* One deliberate night-sky look for both labs.
+   Blue = the document, amber = the question, green = exact words, coral = stopped. */
 :root {
-  --paper: #f7f8fb;
-  --card: #ffffff;
-  --ink: #152033;
-  --ink-2: #3a485c;
-  --muted: #5f6b7c;
-  --line: #e0e5ee;
-  --doc: #2456d6;
-  --doc-soft: #eaf1ff;
-  --doc-mid: #9db8f3;
-  --q: #a35400;
-  --q-fill: #f29b1d;
-  --q-soft: #fff3e0;
-  --ok: #157f3c;
-  --ok-soft: #e5f5ea;
-  --bad: #b42318;
-  --bad-soft: #fde9e7;
-  --neg: #c2416b;
-  --c1: #e8f0ff; --c2: #fff1e0; --c3: #e8f6ee; --c4: #f3ecfd; --c5: #fdecef;
-  --shadow: 0 1px 2px rgb(21 32 51 / 5%), 0 14px 30px -20px rgb(21 32 51 / 28%);
+  --space: #070b16;
+  --panel: #0f1628;
+  --panel-2: #141d33;
+  --panel-3: #1a2540;
+  --ink: #eef3ff;
+  --ink-2: #b9c4dc;
+  --muted: #8592ad;
+  --line: #24304b;
+  --star: #8fb4ff;
+  --glow: #5b8cff;
+  --q: #ffb547;
+  --q-soft: rgb(255 181 71 / 14%);
+  --kw: #4ee08f;
+  --kw-soft: rgb(78 224 143 / 14%);
+  --bad: #ff8a7a;
+  --bad-soft: rgb(255 138 122 / 14%);
+  --gold: #ffd36b; --silver: #c9d3e6; --bronze: #e0a273;
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --paper: #0d131d; --card: #151d29; --ink: #e9eef7; --ink-2: #c3cddb; --muted: #97a3b4; --line: #263246;
-  --doc: #82a8ff; --doc-soft: #182850; --doc-mid: #4069c0; --q: #ffb44d; --q-fill: #f29b1d; --q-soft: #34250f;
-  --ok: #62d18d; --ok-soft: #12301f; --bad: #ff8a7a; --bad-soft: #3a1915; --neg: #f07aa0;
-  --c1: #17233d; --c2: #33240f; --c3: #13301f; --c4: #251c3d; --c5: #3a1a22;
-  --shadow: 0 14px 30px -20px rgb(0 0 0 / 70%); color-scheme: dark; } }
-:root[data-theme="dark"] {
-  --paper: #0d131d; --card: #151d29; --ink: #e9eef7; --ink-2: #c3cddb; --muted: #97a3b4; --line: #263246;
-  --doc: #82a8ff; --doc-soft: #182850; --doc-mid: #4069c0; --q: #ffb44d; --q-fill: #f29b1d; --q-soft: #34250f;
-  --ok: #62d18d; --ok-soft: #12301f; --bad: #ff8a7a; --bad-soft: #3a1915; --neg: #f07aa0;
-  --c1: #17233d; --c2: #33240f; --c3: #13301f; --c4: #251c3d; --c5: #3a1a22;
-  --shadow: 0 14px 30px -20px rgb(0 0 0 / 70%); color-scheme: dark; }
-
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.65 var(--body); }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--card); }
-h1, h2, h3, p { margin: 0; }
-h1, h2 { font-family: var(--display); letter-spacing: -0.02em; text-wrap: balance; }
-a { color: var(--doc); }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; background: var(--space); color: var(--ink); font: 400 17px/1.6 var(--body); overflow-x: hidden; }
+h1, h2, h3, p, ul, ol { margin: 0; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--doc); outline-offset: 2px; border-radius: 6px; }
-.wrap { width: min(1040px, 100%); margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.term { font: 600 13px var(--mono); padding: 2px 8px; border-radius: 6px; background: var(--doc-soft); color: var(--doc); white-space: nowrap; }
-.q-text { color: var(--q); font-weight: 600; }
-.d-text { color: var(--doc); font-weight: 600; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; font-variant-ligatures: none; }
+code { background: var(--panel-3); border-radius: 6px; padding: 1px 6px; color: var(--ink); overflow-wrap: anywhere; }
+a { color: var(--star); }
+:focus-visible { outline: 2px solid var(--q); outline-offset: 2px; border-radius: 8px; }
+b { font-weight: 700; }
+.q-text { color: var(--q); }
+.d-text { color: var(--star); }
+.k-text { color: var(--kw); }
+#bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 
-/* ---------- hero: the story ---------- */
-.hero { padding-block: 48px 24px; display: grid; gap: 18px; }
-.eyebrow { font: 700 12px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--doc); }
-.hero h1 { font-size: clamp(32px, 5vw, 54px); line-height: 1.05; font-weight: 800; max-width: 18ch; }
-.lead { font-size: 19px; color: var(--ink-2); max-width: 62ch; }
-.story { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: stretch; margin-top: 6px; }
-@media (max-width: 820px) { .story { grid-template-columns: minmax(0, 1fr); } .story .arrow { justify-self: center; } }
-.story .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); display: grid; gap: 8px; align-content: start; }
-.story .card small { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.story .card.doc { border-top: 4px solid var(--doc); }
-.story .card.q { border-top: 4px solid var(--q-fill); }
-.story .card.ans { border-top: 4px solid var(--ok); }
-.story .arrow { align-self: center; font: 800 26px var(--display); color: var(--muted); }
-.parts { display: flex; gap: 10px; flex-wrap: wrap; }
-.part { font-size: 15px; padding: 8px 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); text-decoration: none; color: var(--ink-2); }
-.part.on { border-color: var(--doc); background: var(--doc-soft); font-weight: 600; color: var(--ink); }
+.wrap { width: min(1120px, 100%); margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-/* ---------- the 5-step map ---------- */
-.map { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-block: 8px 12px; }
-@media (max-width: 820px) { .map { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.map a { text-decoration: none; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 6px; transition: transform 150ms, border-color 150ms; }
-.map a:hover { transform: translateY(-2px); border-color: var(--doc); }
-.map .n { font: 700 12px var(--mono); color: var(--muted); }
-.map b { font: 700 17px var(--display); }
-.map span:last-child { font-size: 14px; color: var(--muted); }
-.map svg { width: 34px; height: 34px; color: var(--doc); }
-.how-read { font-size: 15px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.how-read span { padding: 3px 10px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+/* hero */
+.hero { padding-block: 48px 24px; display: grid; gap: 14px; }
+.eyebrow { font: 700 12px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--q); }
+h1 { font: 800 clamp(34px, 6vw, 64px)/1.02 var(--display); letter-spacing: -0.02em; text-wrap: balance; max-width: 18ch; }
+h1 em { font-style: normal; background: linear-gradient(90deg, var(--star), var(--q)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { color: var(--ink-2); font-size: 19px; max-width: 62ch; }
+.story { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: stretch; margin-top: 6px; }
+@media (max-width: 760px) { .story { grid-template-columns: minmax(0, 1fr); } .story .op { justify-self: center; transform: rotate(90deg); } }
+.story .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.story small { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.story b { font: 700 18px var(--display); }
+.story .note { color: var(--ink-2); font-size: 14px; }
+.story .op { align-self: center; color: var(--muted); font: 700 22px var(--display); }
+.parts { display: flex; gap: 8px; flex-wrap: wrap; }
+.part { border: 1px solid var(--line); border-radius: 99px; padding: 8px 16px; font-weight: 600; font-size: 15px; text-decoration: none; color: var(--ink-2); background: var(--panel); }
+.part.on { border-color: var(--q); color: var(--q); }
+a.part:hover { border-color: var(--star); color: var(--ink); }
 
-/* ---------- steps ---------- */
-.step { padding-block: 48px; border-top: 1px solid var(--line); display: grid; gap: 20px; scroll-margin-top: 16px; }
-.step-head { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-.step-num { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; font: 800 24px var(--display); color: var(--card); background: var(--doc); flex: none; }
-.step-head h2 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.1; font-weight: 800; }
-.what { font-size: 21px; line-height: 1.5; color: var(--ink); max-width: 60ch; }
-.see { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: var(--shadow); display: grid; gap: 16px; min-width: 0; }
-.see-title { font: 700 12px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.real { font: 600 11px var(--mono); padding: 3px 8px; border-radius: 99px; background: var(--ok-soft); color: var(--ok); letter-spacing: 0.04em; }
-.sim { font: 600 11px var(--mono); padding: 3px 8px; border-radius: 99px; background: var(--q-soft); color: var(--q); letter-spacing: 0.04em; }
-.ba { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); gap: 10px; align-items: stretch; }
-@media (max-width: 760px) { .ba { grid-template-columns: minmax(0, 1fr); } .ba .to { transform: rotate(90deg); } }
-.ba .to { display: grid; place-items: center; font: 800 28px var(--display); color: var(--doc); }
-.box { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--paper); min-width: 0; display: grid; gap: 8px; align-content: start; }
-.box > small { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.box.after { background: var(--doc-soft); border-color: transparent; }
-.mono { font: 500 14px/1.6 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-2); }
-.mono .mk { color: var(--bad); font-weight: 700; }
-.pg { justify-self: start; font: 600 12px var(--mono); padding: 2px 8px; border-radius: 6px; background: var(--card); color: var(--doc); }
-.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 860px) { .trio { grid-template-columns: minmax(0, 1fr); } }
-.tile { border-radius: 16px; padding: 16px; font-size: 16px; color: var(--ink-2); }
-.tile h3 { font: 700 13px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); margin-bottom: 6px; }
-.tile.why { background: var(--c2); } .tile.sci { background: var(--c1); } .tile.where { background: var(--c3); }
-.tile code, .deeper code { font: 600 13px var(--mono); background: var(--card); padding: 1px 6px; border-radius: 5px; color: var(--ink); overflow-wrap: anywhere; }
-.hl { background: var(--q-soft); box-shadow: inset 0 -2px 0 var(--q-fill); border-radius: 3px; padding: 0 2px; }
-details.deeper { border: 1px dashed var(--line); border-radius: 14px; padding: 4px 16px; background: var(--card); }
-details.deeper summary { cursor: pointer; padding: 10px 0; font-weight: 600; color: var(--doc); list-style: none; display: flex; align-items: center; gap: 8px; }
+/* sticky mission rail */
+.rail { position: sticky; top: 0; z-index: 20; background: rgb(7 11 22 / 86%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.rail .wrap { display: flex; align-items: center; gap: 14px; min-height: 60px; }
+.rail ol { list-style: none; padding: 0; display: flex; gap: 6px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.rail ol::-webkit-scrollbar { display: none; }
+.rail a { display: flex; align-items: center; gap: 7px; text-decoration: none; color: var(--muted); font: 600 14px var(--body); padding: 6px 10px 6px 6px; border-radius: 99px; white-space: nowrap; border: 1px solid transparent; }
+.rail a i { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--mono); font-style: normal; border: 1.5px solid var(--line); flex: none; }
+.rail a.here { color: var(--ink); border-color: var(--line); background: var(--panel); }
+.rail a.found i { background: var(--q); border-color: var(--q); color: #241400; }
+.rail .score { font: 700 13px var(--mono); color: var(--q); white-space: nowrap; }
+@media (max-width: 760px) { .rail a span { display: none; } .rail a.here span { display: inline; } .rail .score b { display: none; } }
+
+/* a mission */
+.mission { padding-block: 56px 8px; display: grid; gap: 16px; }
+.phase { margin-top: 48px; font: 700 13px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+.phase::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.m-head { display: flex; align-items: center; gap: 16px; }
+.m-num { font: 800 clamp(44px, 7vw, 72px)/0.9 var(--display); color: transparent; -webkit-text-stroke: 1.5px var(--star); flex: none; }
+.m-head .t { display: grid; gap: 2px; min-width: 0; }
+.term { font: 700 12px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--star); }
+.mission h2 { font: 800 clamp(26px, 3.6vw, 38px)/1.1 var(--display); letter-spacing: -0.01em; text-wrap: balance; }
+.hook { display: flex; gap: 12px; align-items: flex-start; background: linear-gradient(90deg, var(--q-soft), transparent 80%); border-left: 3px solid var(--q); border-radius: 0 14px 14px 0; padding: 12px 16px; font-size: 18px; }
+.hook::before { content: "?"; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--q); color: #241400; display: grid; place-items: center; font: 800 16px var(--display); }
+.what { color: var(--ink-2); max-width: 70ch; }
+
+/* the play area */
+.play { position: relative; border-radius: 22px; border: 1px solid var(--line); padding: 18px; display: grid; gap: 14px; min-width: 0;
+  background: radial-gradient(900px 400px at 20% 0%, rgb(30 54 120 / 45%), transparent 60%), radial-gradient(700px 400px at 100% 100%, rgb(70 30 90 / 40%), transparent 60%), var(--panel); }
+@media (max-width: 600px) { .play { padding: 14px; border-radius: 18px; } }
+.play-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tag { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; border: 1px solid currentColor; }
+.tag.real { color: var(--kw); } .tag.sim { color: var(--muted); }
+.instr { font-weight: 600; }
+.instr b { color: var(--q); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: rgb(7 11 22 / 55%); border: 1px solid var(--line); border-radius: 16px; padding: 14px; min-width: 0; }
+.panel > small, .lbl { display: block; font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+
+.btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 99px; padding: 10px 18px; cursor: pointer; font-weight: 600; font-size: 16px; transition: border-color 150ms, transform 150ms, box-shadow 150ms; }
+.btn:hover { border-color: var(--star); }
+.btn:active { transform: scale(0.97); }
+.btn[aria-pressed="true"] { border-color: var(--q); color: var(--q); box-shadow: 0 0 0 3px rgb(255 181 71 / 18%); }
+.btn.go { background: linear-gradient(90deg, #ff9f2e, #ffcc66); color: #241400; border-color: transparent; box-shadow: 0 10px 28px -10px rgb(255 181 71 / 70%); }
+.btn.go:hover { box-shadow: 0 12px 32px -8px rgb(255 181 71 / 85%); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn.kw[aria-pressed="true"] { border-color: var(--kw); color: var(--kw); box-shadow: 0 0 0 3px rgb(78 224 143 / 18%); }
+
+/* discovery card */
+.aha { border-radius: 18px; padding: 16px 18px; border: 1px solid rgb(255 181 71 / 45%); background: linear-gradient(120deg, rgb(255 181 71 / 16%), rgb(91 140 255 / 10%)); display: grid; gap: 6px; }
+.aha[hidden] { display: none; }
+.aha small { font: 700 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--q); }
+.aha p { font-size: 18px; }
+.aha.pop { animation: pop 520ms cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes pop { from { transform: scale(0.94); opacity: 0; } }
+.locked { border: 1px dashed var(--line); border-radius: 18px; padding: 14px 18px; color: var(--muted); font-size: 15px; }
+.spark { position: fixed; width: 7px; height: 7px; border-radius: 50%; pointer-events: none; z-index: 50; animation: spark 900ms ease-out forwards; }
+@keyframes spark { to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; } }
+
+/* why / science / kit */
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 860px) { .facts { grid-template-columns: minmax(0, 1fr); } }
+.facts > div { display: block; background: var(--panel-2); border-radius: 16px; padding: 14px 16px; color: var(--ink-2); font-size: 15.5px; }
+.facts h3 { font: 700 12px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.facts .why h3 { color: var(--q); } .facts .sci h3 { color: var(--star); } .facts .kit h3 { color: var(--kw); }
+.facts b { color: var(--ink); }
+details.deeper { border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+details.deeper summary { cursor: pointer; padding: 12px 16px; font-weight: 600; color: var(--ink-2); list-style: none; }
 details.deeper summary::-webkit-details-marker { display: none; }
-details.deeper summary::before { content: "+"; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--doc-soft); font: 700 14px var(--mono); }
-details.deeper[open] summary::before { content: "−"; }
-details.deeper > div { padding-bottom: 16px; display: grid; gap: 12px; color: var(--ink-2); font-size: 16px; min-width: 0; }
+details.deeper summary::before { content: "+"; display: inline-block; width: 22px; color: var(--q); font-weight: 800; }
+details.deeper[open] summary::before { content: "–"; }
+details.deeper > div { padding: 0 16px 16px; display: grid; gap: 10px; color: var(--ink-2); font-size: 15.5px; }
 .note { font-size: 14px; color: var(--muted); }
-.btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.btn { border: 1px solid var(--line); background: var(--card); border-radius: 99px; padding: 8px 16px; cursor: pointer; font-size: 15px; color: var(--ink-2); }
-.btn:hover { border-color: var(--doc); color: var(--doc); }
-.btn[aria-pressed="true"] { background: var(--doc); border-color: var(--doc); color: var(--card); font-weight: 600; }
-.btn.qbtn[aria-pressed="true"] { background: var(--q-fill); border-color: var(--q-fill); color: #2a1600; }
-.label { font-size: 14px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
-
-/* step 2: pieces */
-.paper { border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 12px; font-size: 13px; line-height: 1.5; color: var(--muted); max-height: 230px; overflow: hidden; position: relative; white-space: pre-wrap; }
-.paper::after { content: ""; position: absolute; inset: auto 0 0; height: 60px; background: linear-gradient(transparent, var(--card)); }
-.cards { display: grid; gap: 8px; max-height: 340px; overflow: auto; padding-right: 4px; }
-.ccard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); }
-.ccard header { display: flex; justify-content: space-between; gap: 8px; font: 700 12px var(--mono); color: var(--doc); }
-.ccard header span:last-child { color: var(--muted); font-weight: 500; }
-.ccard mark { background: var(--q-soft); color: var(--ink); border-radius: 4px; box-shadow: inset 0 -2px 0 var(--q-fill); }
-.topics { display: flex; gap: 4px; flex-wrap: wrap; }
-.topics span { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--doc-soft); color: var(--doc); font-weight: 600; }
-.verdict { font-size: 16px; padding: 12px 14px; border-radius: 12px; background: var(--paper); }
-
-/* step 3: numbers + meaning map */
-.numbers { display: flex; flex-wrap: wrap; gap: 4px; }
-.numbers span { font: 600 12px var(--mono); padding: 3px 6px; border-radius: 6px; background: var(--card); color: var(--ink-2); }
-.numbers span.pos { color: var(--doc); } .numbers span.neg { color: var(--neg); }
-.numbers .more { background: transparent; color: var(--muted); }
-.map-wrap { overflow-x: auto; }
-svg#mmap { width: 100%; min-width: 620px; height: auto; display: block; border-radius: 14px; background: var(--paper); border: 1px solid var(--line); }
-.mmap-read { font-size: 16px; padding: 12px 14px; border-radius: 12px; background: var(--q-soft); color: var(--ink); min-height: 48px; }
-canvas#strip { width: 100%; min-width: 420px; height: auto; border-radius: 8px; display: block; }
-.strip-wrap { overflow-x: auto; }
-
-/* step 4: arrows */
-.arrows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 760px) { .arrows { grid-template-columns: minmax(0, 1fr); } }
-.arrow-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: var(--paper); display: grid; gap: 6px; justify-items: center; text-align: center; }
-.arrow-card svg { width: 150px; height: 120px; }
-.arrow-card .score { font: 800 28px var(--display); }
-.arrow-card .pair { font-size: 14px; color: var(--ink-2); }
-.tag { font: 600 12px var(--mono); padding: 2px 8px; border-radius: 99px; }
-.tag.close { background: var(--ok-soft); color: var(--ok); } .tag.mid { background: var(--q-soft); color: var(--q); } .tag.far { background: var(--bad-soft); color: var(--bad); }
-.dial { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: center; }
-@media (max-width: 560px) { .dial { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
-.dial svg { width: 200px; height: 140px; }
-.slider { display: grid; grid-template-columns: 130px minmax(0, 1fr) 60px; gap: 10px; align-items: center; font-size: 15px; }
-@media (max-width: 480px) { .slider { grid-template-columns: minmax(0, 1fr) 60px; } .slider input { grid-column: 1 / -1; grid-row: 2; } }
-.slider output { font: 700 15px var(--mono); text-align: right; }
-input[type="range"] { width: 100%; accent-color: var(--doc); }
-table.calc { border-collapse: collapse; width: 100%; font: 500 14px var(--mono); }
-table.calc th, table.calc td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
-table.calc th { color: var(--muted); font-weight: 600; }
-table.calc td:first-child, table.calc th:first-child { text-align: left; }
-table.calc tr.sum td { font-weight: 700; color: var(--ink); border-bottom: 0; }
 .scroll-x { overflow-x: auto; }
+table.t { border-collapse: collapse; font-size: 14px; width: 100%; }
+table.t th, table.t td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; }
+table.t th { font: 700 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+pre.sql { margin: 0; background: #050810; border: 1px solid var(--line); border-radius: 12px; padding: 14px; overflow-x: auto; font: 500 13px/1.6 var(--mono); font-variant-ligatures: none; color: var(--ink-2); }
+pre.sql .c { color: var(--muted); } pre.sql .k { color: var(--q); }
 
-/* step 5: rows + index demo */
-.row-table { border-collapse: collapse; width: 100%; font-size: 14px; }
-.row-table th { text-align: left; font: 700 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-.row-table td { padding: 10px; vertical-align: top; border-bottom: 1px solid var(--line); color: var(--ink-2); min-width: 140px; }
-.row-table td.n { font: 600 12px var(--mono); color: var(--doc); }
-.row-table td.k { font: 600 12px var(--mono); color: var(--ok); }
-canvas#hnsw { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); display: block; }
-.versus { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-@media (max-width: 560px) { .versus { grid-template-columns: minmax(0, 1fr); } }
-.vs { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 2px; background: var(--paper); font-size: 15px; }
-.vs .counter { font: 800 30px var(--display); }
-pre.sql { margin: 0; font: 500 13px/1.6 var(--mono); background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; overflow-x: auto; color: var(--ink-2); }
-pre.sql .k { color: var(--doc); font-weight: 700; } pre.sql .c { color: var(--muted); }
+/* score bars */
+.hits { list-style: none; padding: 0; display: grid; gap: 8px; }
+.hits li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; font-size: 15px; }
+.hits li .r { font: 700 12px var(--mono); color: var(--muted); }
+.hits li b { font: 700 14px var(--mono); }
+.hits li .bar { grid-column: 2 / 4; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.hits li .bar i { display: block; height: 100%; background: var(--star); border-radius: 3px; }
+.hits.kw li .bar i { background: var(--kw); }
+.drop { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
+@keyframes drop { from { transform: translateY(-14px); opacity: 0; } }
 
-.summary { padding-block: 40px 70px; display: grid; gap: 16px; border-top: 1px solid var(--line); }
-.summary h2 { font-size: 30px; }
-.summary .box.after { font-size: 17px; }
-footer { color: var(--muted); font-size: 14px; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
-/* last, so no font shorthand resets it: <=> must show as the three characters you type */
-code, .mono, pre, pre *, table.calc, .numbers span { font-variant-ligatures: none !important; font-feature-settings: "liga" 0, "calt" 0 !important; }
+.summary { margin-block: 72px 80px; display: grid; gap: 16px; }
+.summary h2 { font: 800 clamp(26px, 3.6vw, 38px)/1.1 var(--display); }
+footer.src { color: var(--muted); font-size: 13px; }
+.mission .play canvas { display: block; width: 100%; touch-action: none; }
+
+/* question cards + the galaxy stage */
+.deck { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 860px) { .deck { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.qcard { text-align: left; border: 1px solid var(--line); background: var(--panel-2); border-radius: 16px; padding: 12px 14px; cursor: pointer; display: grid; gap: 4px; transition: transform 160ms, border-color 160ms, box-shadow 160ms; }
+.qcard:hover { transform: translateY(-3px); border-color: var(--q); }
+.qcard[aria-pressed="true"] { border-color: var(--q); box-shadow: 0 0 0 3px rgb(255 181 71 / 25%), 0 12px 30px -12px rgb(255 181 71 / 50%); }
+.qcard small { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.qcard b { font: 700 16px var(--display); color: var(--q); }
+.stage { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: radial-gradient(1200px 600px at 30% 0%, #10204a 0%, transparent 60%), radial-gradient(900px 500px at 90% 100%, #2a1638 0%, transparent 60%), var(--space); }
+.stage canvas { touch-action: manipulation !important; }
+.hud { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; flex-wrap: wrap; }
+.hud span { font: 600 15px var(--body); padding: 7px 13px; border-radius: 99px; background: rgb(15 22 40 / 82%); border: 1px solid var(--line); backdrop-filter: blur(6px); }
+.hud b { color: var(--q); }
+.hud [hidden] { display: none; }
+.hud .count { font: 700 13px var(--mono); color: var(--star); }
+.reveal { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 860px) { .reveal { grid-template-columns: minmax(0, 1fr); } }
+.rv { background: rgb(7 11 22 / 55%); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; transition: opacity 300ms, filter 300ms; }
+.rv small { font: 700 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.rv .big { font: 800 30px var(--display); }
+.rv.guess .big { color: var(--q); } .rv.model .big { color: var(--star); }
+.rv p { color: var(--ink-2); font-size: 15px; }
+.rv.hide { opacity: 0.25; filter: blur(2px); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
+/* ---------- page 1 only ---------- */
+/* 1. x-ray */
+.xray { position: relative; background: #050810; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; cursor: ns-resize; touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; }
+.xray .ln { display: block; font: 500 14px/1.65 var(--mono); font-variant-ligatures: none; color: var(--ink-2); padding: 2px 0; overflow-wrap: anywhere; }
+.xray .j { display: inline-block; max-width: 40em; white-space: pre; vertical-align: bottom; overflow: hidden; color: var(--bad); transition: max-width 500ms ease, opacity 400ms ease; }
+.xray .ln.clean { color: var(--ink); }
+.xray .ln.clean .j { max-width: 0; opacity: 0; }
+.beam { position: absolute; left: 0; right: 0; height: 3px; top: 0; background: var(--kw); box-shadow: 0 0 18px 4px rgb(78 224 143 / 55%); pointer-events: none; }
+.beam::after { content: "SCANNER"; position: absolute; right: 10px; top: -22px; font: 700 10px var(--mono); letter-spacing: 0.12em; color: var(--kw); }
+.page-chip { position: absolute; right: 12px; bottom: 10px; font: 700 12px var(--mono); color: #241400; background: var(--q); padding: 3px 10px; border-radius: 99px; opacity: 0; transform: scale(0.6); transition: 300ms; }
+.page-chip.on { opacity: 1; transform: none; }
+.meter { color: var(--ink-2); font-size: 15px; }
+.meter b { font: 700 18px var(--mono); color: var(--kw); }
+
+/* 2. slicing */
+.paper { background: #f4efe2; color: #2a2620; border-radius: 12px; padding: 14px 16px; font: 400 14px/1.7 Georgia, serif; max-height: 420px; overflow-y: auto; }
+.paper .s.h { display: block; font: 700 14px var(--body); margin-top: 6px; }
+.paper .s.copied { background: rgb(255 181 71 / 45%); border-radius: 3px; }
+.paper .cut { display: block; position: relative; height: 0; border-top: 2px dashed #d9534f; margin: 10px 0; }
+.paper .cut::before { content: "✂"; position: absolute; left: -2px; top: -13px; font-size: 16px; color: #d9534f; background: #f4efe2; padding-right: 4px; line-height: 1; }
+.paper .cut.in { animation: cutin 380ms ease both; }
+@keyframes cutin { from { transform: scaleX(0); transform-origin: left; } }
+.fan { display: grid; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; align-content: start; }
+.icard { text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; cursor: pointer; display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.icard header { display: flex; justify-content: space-between; font: 700 12px var(--mono); color: var(--star); }
+.icard .topics { display: flex; flex-wrap: wrap; gap: 4px; }
+.icard .topics span { font: 600 11px var(--mono); padding: 1px 7px; border-radius: 99px; background: rgb(143 180 255 / 14%); color: var(--star); }
+.icard .body { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.icard mark { background: rgb(255 181 71 / 30%); color: var(--ink); border-radius: 3px; }
+.icard.fly { animation: fly 520ms cubic-bezier(.2, 1.2, .4, 1) both; }
+@keyframes fly { from { transform: translateX(-60px) rotate(-6deg); opacity: 0; } }
+.icard.right { border-color: var(--kw); box-shadow: 0 0 0 3px rgb(78 224 143 / 22%); }
+.icard.wrong { border-color: var(--bad); animation: shake 380ms; }
+@keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.gauges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.gauge { display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); }
+.gauge .track { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.gauge .track i { display: block; height: 100%; border-radius: 99px; transition: width 600ms cubic-bezier(.2, 1.2, .4, 1); }
+.verdict { font-size: 16px; color: var(--ink-2); }
+.verdict b { color: var(--ink); }
+
+/* 3. the number machine */
+.machine { display: grid; grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1.3fr); gap: 14px; align-items: center; }
+@media (max-width: 760px) { .machine { grid-template-columns: minmax(0, 1fr); } .machine .core { justify-self: center; } }
+.feed { font-size: 15px; color: var(--ink-2); line-height: 1.7; }
+.feed span { display: inline-block; transition: transform 500ms ease-in, opacity 500ms ease-in, filter 500ms; }
+.feed span.eaten { transform: translateX(40px) scale(0.3); opacity: 0; filter: blur(2px); }
+.core { width: 110px; height: 110px; border-radius: 50%; display: grid; place-items: center; text-align: center; font: 700 11px/1.3 var(--mono); color: var(--star); border: 2px solid var(--glow); box-shadow: 0 0 30px -4px var(--glow), inset 0 0 24px -6px var(--glow); position: relative; }
+.core.on { animation: hum 600ms ease-in-out infinite alternate; }
+@keyframes hum { to { box-shadow: 0 0 50px 4px var(--glow), inset 0 0 30px 0 var(--glow); transform: scale(1.04); } }
+.readout { font: 600 14px var(--mono); color: var(--ink-2); min-height: 22px; }
+.readout b { color: var(--q); }
+
+
+
+/* 4. angle duel */
+.duel { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; align-items: center; }
+@media (max-width: 760px) { .duel { grid-template-columns: minmax(0, 1fr); } }
+.duel canvas { background: #050810; border: 1px solid var(--line); border-radius: 16px; cursor: grab; }
+.pair { display: grid; gap: 8px; }
+.pair div { border-radius: 12px; padding: 10px 12px; font-size: 15px; }
+.pair .a { background: rgb(143 180 255 / 12%); border-left: 3px solid var(--star); }
+.pair .b { background: var(--q-soft); border-left: 3px solid var(--q); }
+.bigscore { font: 800 54px/1 var(--display); color: var(--q); }
+.mini { font: 600 14px var(--mono); color: var(--ink-2); }
+.rounds { display: flex; gap: 8px; flex-wrap: wrap; }
+.rounds span { font: 700 13px var(--mono); padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.rounds span.done { border-color: var(--kw); color: var(--kw); }
+.result-line { font-size: 16px; min-height: 26px; }
+.result-line b { color: var(--kw); }
+
+/* 5. save + race */
+.vault { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 14px; align-items: center; }
+@media (max-width: 600px) { .vault { grid-template-columns: minmax(0, 1fr); } .vault svg { justify-self: center; } }
+.vault .pcs { display: grid; gap: 8px; }
+.vault .pc { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 14px; color: var(--ink-2); transition: transform 700ms cubic-bezier(.5, -0.3, .7, 1), opacity 700ms; }
+.vault .pc.in { transform: translateX(180px) scale(0.3); opacity: 0; }
+@media (max-width: 600px) { .vault .pc.in { transform: translateY(120px) scale(0.3); } }
+.db-glow { transition: filter 300ms; }
+.db-glow.on { filter: drop-shadow(0 0 14px var(--glow)); }
+table.rows { min-width: 640px; }
+table.rows td.n { font: 500 12px var(--mono); color: var(--star); white-space: nowrap; }
+table.rows td.k { font: 500 12px var(--mono); color: var(--kw); }
+table.rows tr.new { animation: drop 420ms cubic-bezier(.2, 1.2, .4, 1) both; }
+.race { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 760px) { .race { grid-template-columns: minmax(0, 1fr); } }
+.lane { position: relative; }
+.lane canvas { background: #050810; border: 1px solid var(--line); border-radius: 14px; cursor: crosshair; }
+.lane header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.lane header b { font: 700 15px var(--body); }
+.lane .cnt { font: 800 26px var(--mono); color: var(--star); }
+.lane.fast .cnt { color: var(--kw); }
+.flag { position: absolute; right: 10px; top: 46px; transform: scale(0.5); opacity: 0; font: 800 18px var(--display); padding: 8px 16px; border-radius: 99px; background: var(--kw); color: #052012; transition: 300ms cubic-bezier(.2, 1.4, .4, 1); pointer-events: none; white-space: nowrap; }
+.flag.on { opacity: 1; transform: none; }
+.lane.slow .flag { background: var(--star); color: #071233; }
 </style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
 
 <header class="wrap hero">
-  <span class="eyebrow">RAG Starter Kit · part 1 of 2</span>
-  <h1>How does the AI find answers in <span class="d-text">your</span> documents?</h1>
-  <p class="lead">We'll follow one real example the whole way. A company handbook goes in, and an employee, Priya, asks a question. This page shows how the handbook is <b>prepared</b> so her question can be answered later.</p>
+  <span class="eyebrow">RAG Starter Kit · Lab 1 of 2 · Ingestion</span>
+  <h1>How does an AI <em>read</em> your documents?</h1>
+  <p class="lead">Before anyone asks anything, the handbook is prepared once: read, sliced, turned into numbers, and saved. Five missions, one real handbook. Play each one, and unlock five discoveries.</p>
   <div class="story">
-    <div class="card doc"><small>The document</small><b>Greenleaf employee handbook</b><span class="note">Working hours, leave, expenses, equipment, IT security, learning. 352 words.</span></div>
-    <div class="arrow" aria-hidden="true">+</div>
-    <div class="card q"><small>The question</small><b class="q-text">"Can I carry over unused holidays?"</b><span class="note">Priya, a new employee, asks in her own words.</span></div>
-    <div class="arrow" aria-hidden="true">=</div>
-    <div class="card ans"><small>The goal</small><b>"Yes, up to 5 days."</b><span class="note">Found in the handbook, with the source shown.</span></div>
+    <div class="card"><small>The document</small><b class="d-text">Greenleaf handbook</b><span class="note">Hours, leave, expenses, laptops, passwords. 352 words.</span></div>
+    <span class="op" aria-hidden="true">+</span>
+    <div class="card"><small>Later, Priya asks</small><b class="q-text">"Can I carry over unused holidays?"</b><span class="note">The handbook never says "holidays".</span></div>
+    <span class="op" aria-hidden="true">=</span>
+    <div class="card"><small>The goal</small><b class="k-text">"Yes, up to 5 days."</b><span class="note">Found in the handbook, source shown.</span></div>
   </div>
-  <div class="parts"><span class="part on">Part 1 · Prepare the document (this page)</span><a class="part" href="rag-retrieval-lab.html">Part 2 · Answer the question →</a></div>
+  <div class="parts"><span class="part on">Lab 1 · Prepare the document</span><a class="part" href="rag-retrieval-lab.html">Lab 2 · Answer the question →</a></div>
 </header>
 
-<main class="wrap">
-  <nav class="map" aria-label="The five steps">
-    <a href="#s1"><span class="n">STEP 1</span><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="7" y="4" width="20" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 11h12M11 16h12M11 21h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><b>Read</b><span>Get the plain text out</span></a>
-    <a href="#s2"><span class="n">STEP 2</span><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="4" y="6" width="11" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="19" y="6" width="11" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="19" width="11" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="19" y="19" width="11" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg><b>Cut</b><span>Into small pieces</span></a>
-    <a href="#s3"><span class="n">STEP 3</span><svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="9" cy="10" r="3" fill="currentColor"/><circle cx="14" cy="15" r="3" fill="currentColor"/><circle cx="25" cy="24" r="3" fill="currentColor"/><path d="M5 29h25M5 29V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><b>Understand</b><span>Turn meaning into numbers</span></a>
-    <a href="#s4"><span class="n">STEP 4</span><svg viewBox="0 0 34 34" aria-hidden="true"><path d="M5 28L29 22M5 28L24 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M12 26a8 8 0 0 0 -2 -6" fill="none" stroke="currentColor" stroke-width="2"/></svg><b>Compare</b><span>How close are two meanings?</span></a>
-    <a href="#s5"><span class="n">STEP 5</span><svg viewBox="0 0 34 34" aria-hidden="true"><ellipse cx="17" cy="8" rx="11" ry="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 8v18c0 2.2 4.9 4 11 4s11-1.8 11-4V8M6 17c0 2.2 4.9 4 11 4s11-1.8 11-4" fill="none" stroke="currentColor" stroke-width="2"/></svg><b>Save</b><span>In a searchable database</span></a>
-  </nav>
-  <p class="how-read">Every step shows: <span>What happens</span><span>See it</span><span>Why?</span><span>The science, simply</span><span>Where in the kit</span><span>Go deeper (optional)</span></p>
+<nav class="rail" aria-label="Missions"><div class="wrap"><ol id="rail-list"></ol><span class="score" id="score"></span></div></nav>
 
-  <!-- STEP 1 -->
-  <section class="step" id="s1">
-    <div class="step-head"><span class="step-num">1</span><h2>Read the file and get the plain text</h2><span class="term">Extraction</span></div>
-    <p class="what">The file is opened and only the <b>words</b> are kept. Formatting symbols are dropped, and the page number is remembered.</p>
-    <div class="see">
-      <div class="see-title"><span>See it with the handbook</span><span class="real">REAL FILE</span></div>
-      <div class="ba">
-        <div class="box"><small>Before: the file</small><div class="mono" id="ex-before"></div></div>
-        <div class="to" aria-hidden="true">→</div>
-        <div class="box after"><small>After: plain text</small><div class="mono" id="ex-after"></div><span class="pg">page 1</span></div>
+<main class="wrap">
+
+  <!-- 1 READ -->
+  <section class="mission" id="s1" data-short="Read">
+    <div class="m-head"><span class="m-num">01</span><div class="t"><span class="term">Extraction</span><h2>X-ray the file</h2></div></div>
+    <p class="hook">A file is full of hidden junk the AI can't use. What's really inside one?</p>
+    <div class="play">
+      <div class="play-top"><span class="instr"><b>Drag the scanner</b> down the file, or press Scan.</span><span class="tag real">Real handbook text</span></div>
+      <div class="row" role="group" aria-label="File type" id="fmt">
+        <button class="btn" data-fmt="docx" aria-pressed="true">Word file</button>
+        <button class="btn" data-fmt="pdf" aria-pressed="false">PDF file</button>
+        <button class="btn" data-fmt="md" aria-pressed="false">Markdown file</button>
       </div>
+      <div class="xray" id="xray"><div class="beam" id="beam"></div><div id="lines"></div><span class="page-chip" id="page-chip">page 1 remembered</span></div>
+      <div class="row"><button class="btn go" id="scan">Scan the file</button><span class="meter">junk removed <b id="junk">0</b> characters · words kept <b id="kept">0</b></span></div>
     </div>
-    <div class="trio">
-      <div class="tile why"><h3>Why?</h3>The search and the AI only understand words. Symbols like <code>##</code> or Word's hidden XML are noise. The page number lets an answer say "see page 3".</div>
-      <div class="tile sci"><h3>The science, simply</h3>No AI here, just careful reading. One exception: a picture is described in words by a vision model, so a chart or a photo becomes text the search can find.</div>
-      <div class="tile where"><h3>Where in the kit</h3><code>ingestion_service/steps/step1_extract.py</code> reads PDF, Word, TXT, Markdown, CSV, JSON and HTML. Images: <code>step2_caption.py</code>.</div>
+    <div class="locked">Scan the whole file to unlock this discovery.</div>
+    <div class="aha" hidden></div>
+    <div class="facts">
+      <div class="why"><h3>Why?</h3>The search and the AI understand only words. Symbols like <code>##</code> or Word's hidden XML are noise. The page number lets an answer say "see page 3".</div>
+      <div class="sci"><h3>The science, simply</h3>No AI here, just careful reading. One exception: a picture is described in words by a vision model, so a chart or a photo becomes searchable text.</div>
+      <div class="kit"><h3>In the kit</h3><code>ingestion_service/steps/step1_extract.py</code> reads PDF, Word, TXT, Markdown, CSV, JSON and HTML. Images: <code>step2_caption.py</code>.</div>
     </div>
     <details class="deeper"><summary>Go deeper: what can go wrong</summary><div>
       <p>Bad text in means wrong answers out. Scanned PDFs are pictures of text and need OCR first, which the kit doesn't include. Some Hindi PDFs store letters in a scrambled order and need a Word copy instead. In the app, open a document's <b>View chunks</b> to check what was really extracted.</p>
+      <p class="note">The Word and PDF views show, simplified, how those formats wrap the same handbook words.</p>
     </div></details>
   </section>
 
-  <!-- STEP 2 -->
-  <section class="step" id="s2">
-    <div class="step-head"><span class="step-num">2</span><h2>Cut the text into small pieces</h2><span class="term">Chunking</span></div>
-    <p class="what">The text is cut into pieces of about <b>200 words</b>. Each piece can be found on its own, like an <b>index card</b> in a drawer.</p>
-    <div class="see">
-      <div class="see-title"><span>Try it: pick a piece size</span><span class="real">REAL TEXT · SAME RULES AS THE KIT</span></div>
-      <div class="btns" role="group" aria-label="Piece size">
+  <!-- 2 CUT -->
+  <section class="mission" id="s2" data-short="Cut">
+    <div class="m-head"><span class="m-num">02</span><div class="t"><span class="term">Chunking</span><h2>Slice the handbook into cards</h2></div></div>
+    <p class="hook">Too small and a card loses its context. Too big and it's about everything. Can you find the sweet spot?</p>
+    <div class="play">
+      <div class="play-top"><span class="instr"><b>Pick a card size</b> and press Slice. Try at least two sizes.</span><span class="tag real">Real text · the kit's exact rules</span></div>
+      <div class="row" role="group" aria-label="Card size">
         <button class="btn" data-size="60" aria-pressed="false">Small · 60 words</button>
-        <button class="btn" data-size="200" aria-pressed="true">Kit default · 200 words</button>
-        <button class="btn" data-size="400" aria-pressed="false">Large · 400 words</button>
-        <label class="label"><input type="checkbox" id="ov" checked> overlap (repeat up to 40 words)</label>
+        <button class="btn" data-size="200" aria-pressed="true">Kit · 200 words</button>
+        <button class="btn" data-size="400" aria-pressed="false">Big · 400 words</button>
+        <label class="meter"><input type="checkbox" id="ov" checked> overlap: repeat up to 40 words</label>
+        <button class="btn go" id="slice">✂ Slice!</button>
       </div>
-      <div class="ba">
-        <div class="box"><small>Before: one long text</small><div class="paper" id="paper"></div></div>
-        <div class="to" aria-hidden="true">→</div>
-        <div class="box after"><small id="pieces-title">After: pieces</small><div class="cards" id="cards"></div></div>
+      <div class="split">
+        <div class="panel"><small>The handbook</small><div class="paper" id="paper"></div></div>
+        <div class="panel"><small id="fan-title">Index cards</small><div class="fan" id="fan"><p class="note">Press Slice to cut.</p></div></div>
       </div>
-      <div class="verdict" id="chunk-verdict" aria-live="polite"></div>
+      <div class="gauges">
+        <div class="gauge"><span>Focus: one topic per card</span><span class="track"><i id="g-focus" style="width: 0; background: var(--star);"></i></span></div>
+        <div class="gauge"><span>Context: enough words around it</span><span class="track"><i id="g-ctx" style="width: 0; background: var(--q);"></i></span></div>
+      </div>
+      <p class="verdict" id="verdict" aria-live="polite"></p>
+      <p class="instr" id="challenge" hidden>Bonus: <b>tap the card</b> that answers "Can I carry over unused holidays?"</p>
     </div>
-    <div class="trio">
-      <div class="tile why"><h3>Why?</h3>One summary of a whole manual would be a blur of every topic. Small pieces let the search hand the AI <b>exactly</b> the paragraph about leave, not the whole handbook.</div>
-      <div class="tile sci"><h3>The science, simply</h3>Smaller piece = sharper meaning, but less context. Bigger piece = more context, but mixed topics. About 200 words is a good middle. The <span class="hl">overlap</span> repeats the end of the previous piece, so a sentence at the border is never lost.</div>
-      <div class="tile where"><h3>Where in the kit</h3><code>step3_chunk.py</code>. Settings in <code>backend/.env</code>: <code>CHUNK_SIZE_WORDS=200</code>, <code>CHUNK_OVERLAP_WORDS=40</code>. A sentence is never cut in half.</div>
+    <div class="locked">Slice with two different sizes to unlock this discovery.</div>
+    <div class="aha" hidden></div>
+    <div class="facts">
+      <div class="why"><h3>Why?</h3>One summary of a whole manual would be a blur of every topic. Small cards let the search hand the AI <b>exactly</b> the paragraph about leave.</div>
+      <div class="sci"><h3>The science, simply</h3>Smaller card = sharper meaning, less context. Bigger card = more context, mixed topics. The <b class="q-text">overlap</b> (amber) repeats the end of the previous card, so a sentence at the border is never lost.</div>
+      <div class="kit"><h3>In the kit</h3><code>step3_chunk.py</code>. In <code>backend/.env</code>: <code>CHUNK_SIZE_WORDS=200</code>, <code>CHUNK_OVERLAP_WORDS=40</code>. A sentence is never cut in half.</div>
     </div>
     <details class="deeper"><summary>Go deeper: exactly how the kit cuts</summary><div>
-      <p>1. Split the text into sentences. 2. Add whole sentences to a piece until the next one would pass 200 words. 3. Start the next piece with the last sentences of the previous one, up to 40 words. 4. Skip exact duplicate pieces, like repeated headers. With these rules the real handbook becomes 2 pieces in the database, of 199 and 185 words (they also include the title and the "try asking" list that this demo leaves out).</p>
+      <p>1. Split the text into sentences. 2. Add whole sentences to a card until the next one would pass 200 words. 3. Start the next card with the last sentences of the previous one, up to 40 words. 4. Skip exact duplicate cards, like repeated headers. With these rules the real handbook becomes 2 cards in the database, of 199 and 185 words (they also include the title and the "try asking" list that this demo leaves out).</p>
     </div></details>
   </section>
 
-  <!-- STEP 3 -->
-  <section class="step" id="s3">
-    <div class="step-head"><span class="step-num">3</span><h2>Turn the meaning into numbers</h2><span class="term">Embedding</span></div>
-    <p class="what">An AI model reads each piece and gives back a list of <b>768 numbers</b>. Think of them as <b>GPS coordinates for meaning</b>: texts about the same thing get coordinates close to each other.</p>
-    <div class="see">
-      <div class="see-title"><span>See it: piece 1 of the handbook</span><span class="real">REAL NUMBERS</span></div>
-      <div class="ba">
-        <div class="box"><small>Before: words</small><p style="font-size: 15px; color: var(--ink-2);" id="emb-before"></p></div>
-        <div class="to" aria-hidden="true">→</div>
-        <div class="box after"><small>After: 768 numbers</small><div class="numbers" id="numbers"></div><span class="note">You can't read these numbers. You can only <b>compare</b> them (step 4).</span></div>
+  <!-- 3 UNDERSTAND -->
+  <section class="mission" id="s3" data-short="Understand">
+    <div class="m-head"><span class="m-num">03</span><div class="t"><span class="term">Embedding</span><h2>Turn meaning into a place in space</h2></div></div>
+    <p class="hook">Priya says "holidays". The handbook says "unused days". How can a computer know they mean the same?</p>
+    <div class="play">
+      <div class="play-top"><span class="instr"><b>Feed card 1</b> to the embedding model.</span><span class="tag real">Real 768 numbers</span></div>
+      <div class="machine">
+        <div class="feed" id="feed"></div>
+        <div class="core" id="core">gemini-<br>embedding<br>-001</div>
+        <div><canvas id="strip" aria-label="768 numbers as coloured cells: blue positive, pink negative"></canvas><p class="readout" id="readout">0 / 768 numbers</p></div>
       </div>
+      <div class="row"><button class="btn go" id="feed-btn">Feed the model</button><span class="note" id="feed-note">Then hover or tap the cells: which number means "leave"?</span></div>
     </div>
-
-    <div class="see">
-      <div class="see-title"><span>The meaning map: where does each question land?</span><span class="real">REAL SCORES</span></div>
-      <div class="btns" role="group" aria-label="Pick a question">
-        <button class="btn qbtn" data-q="q_carry" aria-pressed="true">Can I carry over unused holidays?</button>
-        <button class="btn qbtn" data-q="q_laptop" aria-pressed="false">What do I do if my laptop is stolen?</button>
-        <button class="btn qbtn" data-q="q_hindi" aria-pressed="false">छुट्टी कितने दिन की मिलती है?</button>
-        <button class="btn qbtn" data-q="q_stock" aria-pressed="false">What is the company's stock price?</button>
+    <div class="play">
+      <div class="play-top"><span class="instr">These numbers are <b>coordinates</b>. Every handbook sentence is a star. Pick a question, <b>tap the star you think answers it</b>, then launch.</span><span class="tag real">Real scores</span></div>
+      <div class="deck" role="group" aria-label="Pick a question" id="deck"></div>
+      <div class="stage"><canvas id="sky" aria-label="A sky of handbook sentences as stars; a question flies in as a comet"></canvas>
+        <div class="hud" aria-live="polite"><span id="prompt"></span><span class="count" id="counter" hidden></span></div></div>
+      <div class="row">
+        <button class="btn go" id="launch">Launch the question</button>
+        <button class="btn kw" id="kw" aria-pressed="false">Keyword flashlight: off</button>
       </div>
-      <div class="mmap-read" id="mmap-read" aria-live="polite"></div>
-      <div class="map-wrap"><svg id="mmap" viewBox="0 0 900 470" role="img" aria-label="Map of handbook sentences grouped by topic, with the chosen question"></svg></div>
-      <p class="note">A simplified picture: the real model uses 768 directions, not 2. The topic groups and the line to the closest sentence follow the real similarity scores.</p>
+      <div class="reveal" aria-live="polite">
+        <div class="rv guess hide" id="r-guess"><small>Your guess</small><span class="big" id="g-score">?</span><p id="g-text">Tap a star before launching.</p></div>
+        <div class="rv model hide" id="r-model"><small>The model's pick</small><span class="big" id="m-score">?</span><p id="m-text"></p></div>
+        <div class="rv hide" id="r-why"><small>The surprise</small><span class="big" id="w-big">?</span><p id="w-text"></p></div>
+      </div>
+      <p class="note">The sky is a 2-D picture of a 768-dimension space: the constellations and every score come from real embeddings of the handbook.</p>
     </div>
-    <div class="trio">
-      <div class="tile why"><h3>Why?</h3>People don't use the document's words. Priya says "holidays", the handbook says "unused days". Numbers for <b>meaning</b> let us match them anyway, even across languages.</div>
-      <div class="tile sci"><h3>The science, simply</h3>The model is a neural network trained on billions of examples. Texts that mean the same were <b>pulled closer</b>, unrelated texts <b>pushed apart</b>, until closeness in numbers became closeness in meaning.</div>
-      <div class="tile where"><h3>Where in the kit</h3><code>step4_embed.py</code> sends each piece to Gemini's <code>gemini-embedding-001</code> model. <code>EMBED_DIM=768</code>.</div>
+    <div class="locked">Launch a question to unlock this discovery.</div>
+    <div class="aha" hidden></div>
+    <div class="facts">
+      <div class="why"><h3>Why?</h3>People don't use the document's words. Coordinates for <b>meaning</b> let "holidays" find "unused days", even across languages.</div>
+      <div class="sci"><h3>The science, simply</h3>A neural network trained on billions of examples: texts that mean the same were <b>pulled closer</b>, unrelated ones <b>pushed apart</b>, until closeness in numbers became closeness in meaning.</div>
+      <div class="kit"><h3>In the kit</h3><code>step4_embed.py</code> sends each card to Gemini's <code>gemini-embedding-001</code>. <code>EMBED_DIM=768</code>.</div>
     </div>
-    <details class="deeper"><summary>Go deeper: inside the model, and all 768 numbers</summary><div>
-      <p><b>1. Tokens:</b> the text is split into word pieces the model knows (carri · ed · over · unused · days). <b>2. Attention:</b> a transformer reads all the pieces together, so each word is understood in context: "leave" next to "annual" means time off, not "leave the room". <b>3. One vector:</b> the layers are pooled into one list of 768 numbers for the whole piece.</p>
-      <p>No single number means "leave". Meaning is spread over all 768, like a fingerprint. Here are all 768 numbers of piece 1 (blue = positive, pink = negative, darker = bigger):</p>
-      <div class="strip-wrap"><canvas id="strip" width="960" height="200" aria-label="768 numbers as coloured cells"></canvas></div>
+    <details class="deeper"><summary>Go deeper: inside the model</summary><div>
+      <p><b>1. Tokens:</b> the text is split into word pieces the model knows (carri · ed · over · unused · days). <b>2. Attention:</b> a transformer reads all the pieces together, so each word is understood in context: "leave" next to "annual" means time off, not "leave the room". <b>3. One vector:</b> everything is pooled into one list of 768 numbers for the whole card.</p>
+      <p>No single number means "leave". Meaning is spread over all 768, like a fingerprint.</p>
     </div></details>
   </section>
 
-  <!-- STEP 4 -->
-  <section class="step" id="s4">
-    <div class="step-head"><span class="step-num">4</span><h2>Measure how close two meanings are</h2><span class="term">Cosine similarity</span></div>
-    <p class="what">Picture each list of numbers as an <b>arrow</b>. If two texts mean the same, their arrows point the <b>same way</b>. The score is the cosine of the angle between them: <b>1</b> = same direction, <b>0</b> = unrelated.</p>
-    <div class="see">
-      <div class="see-title"><span>See it: Priya's question against three handbook sentences</span><span class="real">REAL SCORES, DRAWN AS REAL ANGLES</span></div>
-      <div class="arrows" id="arrows"></div>
-    </div>
-    <div class="trio">
-      <div class="tile why"><h3>Why?</h3>We need one number that says "how close is this piece to the question?", so all the pieces can be ranked and the best ones picked.</div>
-      <div class="tile sci"><h3>The science, simply</h3>Cosine looks only at <b>direction</b>, not length. A short question and a long paragraph can point the same way. That's exactly "same meaning, different length".</div>
-      <div class="tile where"><h3>Where in the kit</h3>Postgres does it: <code>1 - (embedding &lt;=&gt; question)</code> in <code>repositories/chunks.py</code>. <code>&lt;=&gt;</code> is pgvector's cosine distance.</div>
-    </div>
-    <details class="deeper"><summary>Go deeper: try the angle yourself, and the formula</summary><div>
-      <div class="dial">
-        <svg id="dial" viewBox="-20 -110 200 130" aria-label="Two arrows and the angle between them"></svg>
-        <div style="display: grid; gap: 10px; min-width: 0;">
-          <label class="slider">Angle <input type="range" id="deg" min="0" max="180" value="37"><output id="deg-out">37°</output></label>
-          <label class="slider">Amber length <input type="range" id="len" min="30" max="100" value="80"><output id="len-out">0.80</output></label>
-          <p>cosine = <b id="cos-out" style="font: 800 22px var(--display);">0.80</b> <span class="note">Change the length: the score doesn't move.</span></p>
+  <!-- 4 COMPARE -->
+  <section class="mission" id="s4" data-short="Compare">
+    <div class="m-head"><span class="m-num">04</span><div class="t"><span class="term">Cosine similarity</span><h2>The arrow duel</h2></div></div>
+    <p class="hook">Each list of 768 numbers is an arrow. Two texts mean the same when their arrows point the same way. Can you guess the angle?</p>
+    <div class="play">
+      <div class="play-top"><span class="instr" id="duel-instr"></span><span class="tag real">Real scores, real angles</span></div>
+      <div class="duel">
+        <canvas id="duel" aria-label="Drag to turn the amber arrow; the score is the cosine of the angle"></canvas>
+        <div style="display: grid; gap: 12px;">
+          <div class="pair"><div class="a" id="pa"></div><div class="b" id="pb"></div></div>
+          <div><span class="lbl">Your arrow's score</span><span class="bigscore" id="live">0.50</span><div class="mini" id="live-mini"></div></div>
+          <div class="row"><button class="btn go" id="lock">Lock in my guess</button><button class="btn" id="next" hidden>Next round →</button></div>
         </div>
       </div>
-      <p><b>The formula:</b> cosine = (A · B) / (|A| × |B|). Multiply the two lists number by number, add it all up, and divide by the two lengths. With 4 numbers:</p>
-      <div class="scroll-x"><table class="calc" id="calc"></table></div>
+      <p class="result-line" id="result" aria-live="polite"></p>
+      <div class="rounds" id="rounds"></div>
+    </div>
+    <div class="locked">Play all 4 rounds to unlock this discovery.</div>
+    <div class="aha" hidden></div>
+    <div class="facts">
+      <div class="why"><h3>Why?</h3>We need one number that says "how close is this card to the question?", so every card can be ranked and the best ones picked.</div>
+      <div class="sci"><h3>The science, simply</h3>Cosine looks only at <b>direction</b>, not length. Drag your arrow longer or shorter: the score doesn't move. A short question and a long paragraph can point the same way.</div>
+      <div class="kit"><h3>In the kit</h3>Postgres does it: <code>1 - (embedding &lt;=&gt; question)</code> in <code>repositories/chunks.py</code>. <code>&lt;=&gt;</code> is pgvector's cosine distance.</div>
+    </div>
+    <details class="deeper"><summary>Go deeper: the formula, with 4 numbers</summary><div>
+      <p><b>cosine = (A · B) / (|A| × |B|)</b>. Multiply the two lists number by number, add it all up, and divide by the two lengths:</p>
+      <div class="scroll-x"><table class="t" id="calc"></table></div>
       <p>Real vectors do the same with 768 numbers. Gemini's vectors here aren't length 1 (this one is 0.59), and that's fine: cosine ignores length.</p>
     </div></details>
   </section>
 
-  <!-- STEP 5 -->
-  <section class="step" id="s5">
-    <div class="step-head"><span class="step-num">5</span><h2>Save every piece in a searchable database</h2><span class="term">Postgres + pgvector</span></div>
-    <p class="what">Each piece becomes <b>one row</b> in Postgres: its words, its 768 numbers, and its keywords. A special <b>index</b> makes the search fast, like highways on a map.</p>
-    <div class="see">
-      <div class="see-title"><span>See it: the real rows for the handbook</span><span class="real">REAL DATABASE</span></div>
-      <div class="scroll-x"><table class="row-table" id="rows"></table></div>
+  <!-- 5 SAVE -->
+  <section class="mission" id="s5" data-short="Save">
+    <div class="m-head"><span class="m-num">05</span><div class="t"><span class="term">Postgres + pgvector</span><h2>Save it, then race to find it</h2></div></div>
+    <p class="hook">With 10 million cards, checking every one for each question is far too slow. How does the database find the closest one in milliseconds?</p>
+    <div class="play">
+      <div class="play-top"><span class="instr"><b>Save the 2 real cards</b> into Postgres.</span><span class="tag real">Real database rows</span></div>
+      <div class="vault">
+        <div class="pcs" id="pcs"></div>
+        <svg class="db-glow" id="db" viewBox="0 0 120 130" width="130" aria-hidden="true"><ellipse cx="60" cy="18" rx="50" ry="14" fill="none" stroke="#5b8cff" stroke-width="3"/><path d="M10 18v90c0 8 22 14 50 14s50-6 50-14V18M10 63c0 8 22 14 50 14s50-6 50-14" fill="none" stroke="#5b8cff" stroke-width="3"/><text x="60" y="100" text-anchor="middle" fill="#8fb4ff" style="font: 700 11px JetBrains Mono, monospace">pgvector</text></svg>
+      </div>
+      <button class="btn go" id="save" style="justify-self: start;">Save to Postgres</button>
+      <div class="scroll-x"><table class="t rows" id="rows"></table></div>
     </div>
-    <div class="see">
-      <div class="see-title"><span>Try it: find the closest point to a question</span><span class="sim">SIMULATION</span></div>
-      <canvas id="hnsw" width="900" height="360" aria-label="Points with links; a search walks towards the question"></canvas>
-      <div class="btns"><button class="btn" id="run-exact">Check every row</button><button class="btn" id="run-hnsw">Use the index</button><button class="btn" id="new-q">Move the question</button></div>
-      <div class="versus">
-        <div class="vs"><span class="label">Check every row</span><span class="counter" id="c-exact">–</span><span>checks</span></div>
-        <div class="vs"><span class="label">Use the index (HNSW)</span><span class="counter" id="c-hnsw">–</span><span id="hnsw-res">checks</span></div>
+    <div class="play">
+      <div class="play-top"><span class="instr"><b>Tap a map</b> to drop a question, then start the race.</span><span class="tag sim">Simulation</span></div>
+      <div class="row" role="group" aria-label="How many cards">
+        <button class="btn" data-n="300" aria-pressed="true">300 cards</button>
+        <button class="btn" data-n="3000" aria-pressed="false">3,000 cards</button>
+        <button class="btn go" id="race">Start the race</button>
+      </div>
+      <div class="race">
+        <div class="lane slow"><header><b>Check every card</b><span><span class="cnt" id="c-exact">0</span> checks</span></header><canvas id="exact"></canvas><span class="flag" id="f-exact"></span></div>
+        <div class="lane fast"><header><b>Use the index (HNSW)</b><span><span class="cnt" id="c-hnsw">0</span> checks</span></header><canvas id="hnsw"></canvas><span class="flag" id="f-hnsw"></span></div>
       </div>
     </div>
-    <div class="trio">
-      <div class="tile why"><h3>Why?</h3>Everything in one place: words for the answer, numbers for meaning search, keywords for exact-word search. Normal SQL still works for filters and deletes.</div>
-      <div class="tile sci"><h3>The science, simply</h3>Checking every row is fine for 100 rows, far too slow for 10 million. The <b>HNSW index</b> links each point to its neighbours, so a search hops towards the question instead of checking everything.</div>
-      <div class="tile where"><h3>Where in the kit</h3>Table and index: <code>backend/sql/migrations/001_init.sql</code>. Saving: <code>step5_store.py</code>. See the rows yourself in pgAdmin (Setup Guide, Step 8).</div>
+    <div class="locked">Finish a race to unlock this discovery.</div>
+    <div class="aha" hidden></div>
+    <div class="facts">
+      <div class="why"><h3>Why?</h3>Everything in one row: words for the answer, numbers for meaning search, keywords for exact-word search. Normal SQL still works for filters and deletes.</div>
+      <div class="sci"><h3>The science, simply</h3>The <b>HNSW index</b> links each point to its neighbours, like highways. A search starts on a few far-apart points and hops towards the question instead of checking everything.</div>
+      <div class="kit"><h3>In the kit</h3>Table and index: <code>backend/sql/migrations/001_init.sql</code>. Saving: <code>step5_store.py</code>. See the rows yourself in pgAdmin (Setup Guide, Step 8).</div>
     </div>
     <details class="deeper"><summary>Go deeper: the SQL behind it</summary><div>
-      <pre class="sql"><span class="c">-- turn on pgvector, store 768 numbers per piece, and the keywords</span>
+      <pre class="sql"><span class="c">-- turn on pgvector, store 768 numbers per card, and the keywords</span>
 <span class="k">CREATE EXTENSION IF NOT EXISTS</span> vector;
 embedding  vector(768),
 tsv        tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED
@@ -371,7 +487,7 @@ tsv        tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED
 <span class="c">-- the index that makes meaning search fast</span>
 <span class="k">CREATE INDEX</span> ON chunks <span class="k">USING hnsw</span> (embedding vector_cosine_ops);
 
-<span class="c">-- meaning search: the 20 pieces closest to the question</span>
+<span class="c">-- meaning search: the 20 cards closest to the question</span>
 <span class="k">SELECT</span> content, 1 - (embedding <span class="k">&lt;=&gt;</span> :question) <span class="k">AS</span> similarity
 <span class="k">FROM</span> chunks <span class="k">ORDER BY</span> embedding <span class="k">&lt;=&gt;</span> :question <span class="k">LIMIT</span> 20;</pre>
       <p>HNSW is approximate: it can very rarely miss the single best match, which is why the kit fetches 20 candidates, not 1.</p>
@@ -380,234 +496,520 @@ tsv        tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED
 
   <section class="summary">
     <h2>What we have now</h2>
-    <div class="box after">Every piece of the handbook is saved with its <b>words</b>, its <b>meaning as numbers</b>, and its <b>keywords</b>. This happens once, when the document is uploaded.</div>
-    <p style="font-size: 18px;">Next: what happens when Priya asks <span class="q-text">"Can I carry over unused holidays?"</span> → <a href="rag-retrieval-lab.html"><b>Part 2: Answer the question</b></a></p>
-    <footer>Real data: the sample handbook embedded with gemini-embedding-001 (768 numbers); similarity scores computed from those vectors; rows read from the kit's Postgres database.</footer>
+    <p class="lead">Every card of the handbook is saved with its <b class="d-text">words</b>, its <b class="q-text">meaning as 768 numbers</b>, and its <b class="k-text">keywords</b>. This happens once, at upload.</p>
+    <div class="parts"><a class="part on" href="rag-retrieval-lab.html">Next: Lab 2 · Priya asks her question →</a></div>
+    <footer class="src">Real data: the sample handbook embedded with gemini-embedding-001 (768 numbers); similarity scores computed from those vectors; rows read from the kit's Postgres database. The race is a simulation of how an HNSW index searches.</footer>
   </section>
 </main>
 
 <script>
 const DATA = {"model":"gemini-embedding-001","dims":768,"items":[{"id":"hours","text":"Core working hours are 10:00 to 16:00, Monday to Friday.","x":-0.0445,"y":0.1358},{"id":"wfh","text":"Employees may work from home up to three days a week after their first month.","x":-0.0499,"y":0.264},{"id":"leave","text":"Every full-time employee receives 24 days of paid annual leave per calendar year.","x":0.1647,"y":0.1977},{"id":"carry","text":"Up to 5 unused days can be carried over to the next year; any extra unused days expire on 31 March.","x":0.2067,"y":0.0292},{"id":"sick","text":"Sick leave is 12 days per year.","x":0.1152,"y":0.2047},{"id":"parental","text":"Parental leave is 26 weeks for the primary caregiver and 4 weeks for the secondary caregiver.","x":0.0763,"y":0.2176},{"id":"travel","text":"Travel must be booked through the TravelDesk portal.","x":-0.1114,"y":0.1282},{"id":"meals","text":"Meals during travel are reimbursed up to 1,500 rupees per day.","x":0.0044,"y":0.1463},{"id":"laptop","text":"New employees receive a laptop on day one.","x":-0.1998,"y":0.1469},{"id":"lost","text":"Lost or stolen equipment must be reported to IT Support within 24 hours.","x":-0.3205,"y":0.0117},{"id":"2fa","text":"Use a password manager and turn on two-factor authentication (2FA) for every work account.","x":-0.2973,"y":0.0476},{"id":"learning","text":"Each employee has a yearly learning budget of 30,000 rupees for courses, books and conferences.","x":-0.0072,"y":0.1559},{"id":"w_vacation","text":"vacation days","x":0.1725,"y":0.0499},{"id":"w_holiday","text":"holiday","x":0.1438,"y":-0.078},{"id":"w_password","text":"password","x":-0.2744,"y":-0.0271},{"id":"w_computer","text":"computer","x":-0.2981,"y":-0.1252},{"id":"q_leave","text":"How many days of annual leave do I get?","x":0.3851,"y":-0.2218},{"id":"q_carry","text":"Can I carry over unused holidays?","x":0.3938,"y":-0.2711},{"id":"q_laptop","text":"What do I do if my laptop is stolen?","x":-0.3683,"y":-0.4472},{"id":"q_stock","text":"What is the company's stock price?","x":-0.0731,"y":-0.4475},{"id":"q_hindi","text":"छुट्टी कितने दिन की मिलती है?","x":0.3819,"y":-0.1177}],"cos":{"hours":{"hours":1.0,"wfh":0.809,"leave":0.814,"carry":0.764,"sick":0.778,"parental":0.754,"travel":0.757,"meals":0.7,"laptop":0.74,"lost":0.761,"2fa":0.714,"learning":0.719,"w_vacation":0.746,"w_holiday":0.728,"w_password":0.705,"w_computer":0.719,"q_leave":0.634,"q_carry":0.587,"q_laptop":0.532,"q_stock":0.538,"q_hindi":0.616},"wfh":{"hours":0.809,"wfh":1.0,"leave":0.799,"carry":0.742,"sick":0.793,"parental":0.772,"travel":0.759,"meals":0.724,"laptop":0.826,"lost":0.724,"2fa":0.743,"learning":0.758,"w_vacation":0.755,"w_holiday":0.685,"w_password":0.681,"w_computer":0.671,"q_leave":0.583,"q_carry":0.56,"q_laptop":0.489,"q_stock":0.506,"q_hindi":0.64},"leave":{"hours":0.814,"wfh":0.799,"leave":1.0,"carry":0.818,"sick":0.875,"parental":0.826,"travel":0.77,"meals":0.752,"laptop":0.789,"lost":0.74,"2fa":0.717,"learning":0.775,"w_vacation":0.838,"w_holiday":0.77,"w_password":0.673,"w_computer":0.658,"q_leave":0.746,"q_carry":0.656,"q_laptop":0.487,"q_stock":0.519,"q_hindi":0.722},"carry":{"hours":0.764,"wfh":0.742,"leave":0.818,"carry":1.0,"sick":0.807,"parental":0.79,"travel":0.742,"meals":0.741,"laptop":0.709,"lost":0.72,"2fa":0.678,"learning":0.724,"w_vacation":0.832,"w_holiday":0.796,"w_password":0.68,"w_computer":0.675,"q_leave":0.696,"q_carry":0.796,"q_laptop":0.528,"q_stock":0.514,"q_hindi":0.7},"sick":{"hours":0.778,"wfh":0.793,"leave":0.875,"carry":0.807,"sick":1.0,"parental":0.821,"travel":0.762,"meals":0.74,"laptop":0.774,"lost":0.735,"2fa":0.718,"learning":0.744,"w_vacation":0.832,"w_holiday":0.754,"w_password":0.684,"w_computer":0.668,"q_leave":0.685,"q_carry":0.64,"q_laptop":0.5,"q_stock":0.501,"q_hindi":0.691},"parental":{"hours":0.754,"wfh":0.772,"leave":0.826,"carry":0.79,"sick":0.821,"parental":1.0,"travel":0.739,"meals":0.711,"laptop":0.748,"lost":0.715,"2fa":0.694,"learning":0.712,"w_vacation":0.777,"w_holiday":0.723,"w_password":0.676,"w_computer":0.642,"q_leave":0.628,"q_carry":0.581,"q_laptop":0.476,"q_stock":0.501,"q_hindi":0.667},"travel":{"hours":0.757,"wfh":0.759,"leave":0.77,"carry":0.742,"sick":0.762,"parental":0.739,"travel":1.0,"meals":0.751,"laptop":0.752,"lost":0.787,"2fa":0.735,"learning":0.723,"w_vacation":0.763,"w_holiday":0.764,"w_password":0.707,"w_computer":0.696,"q_leave":0.576,"q_carry":0.572,"q_laptop":0.548,"q_stock":0.539,"q_hindi":0.587},"meals":{"hours":0.7,"wfh":0.724,"leave":0.752,"carry":0.741,"sick":0.74,"parental":0.711,"travel":0.751,"meals":1.0,"laptop":0.742,"lost":0.69,"2fa":0.666,"learning":0.839,"w_vacation":0.726,"w_holiday":0.708,"w_password":0.637,"w_computer":0.629,"q_leave":0.577,"q_carry":0.557,"q_laptop":0.532,"q_stock":0.506,"q_hindi":0.658},"laptop":{"hours":0.74,"wfh":0.826,"leave":0.789,"carry":0.709,"sick":0.774,"parental":0.748,"travel":0.752,"meals":0.742,"laptop":1.0,"lost":0.807,"2fa":0.748,"learning":0.777,"w_vacation":0.729,"w_holiday":0.679,"w_password":0.687,"w_computer":0.746,"q_leave":0.583,"q_carry":0.518,"q_laptop":0.617,"q_stock":0.536,"q_hindi":0.608},"lost":{"hours":0.761,"wfh":0.724,"leave":0.74,"carry":0.72,"sick":0.735,"parental":0.715,"travel":0.787,"meals":0.69,"laptop":0.807,"lost":1.0,"2fa":0.765,"learning":0.676,"w_vacation":0.701,"w_holiday":0.679,"w_password":0.719,"w_computer":0.764,"q_leave":0.533,"q_carry":0.526,"q_laptop":0.718,"q_stock":0.517,"q_hindi":0.537},"2fa":{"hours":0.714,"wfh":0.743,"leave":0.717,"carry":0.678,"sick":0.718,"parental":0.694,"travel":0.735,"meals":0.666,"laptop":0.748,"lost":0.765,"2fa":1.0,"learning":0.686,"w_vacation":0.731,"w_holiday":0.684,"w_password":0.838,"w_computer":0.747,"q_leave":0.532,"q_carry":0.53,"q_laptop":0.605,"q_stock":0.507,"q_hindi":0.528},"learning":{"hours":0.719,"wfh":0.758,"leave":0.775,"carry":0.724,"sick":0.744,"parental":0.712,"travel":0.723,"meals":0.839,"laptop":0.777,"lost":0.676,"2fa":0.686,"learning":1.0,"w_vacation":0.698,"w_holiday":0.665,"w_password":0.633,"w_computer":0.658,"q_leave":0.592,"q_carry":0.579,"q_laptop":0.502,"q_stock":0.546,"q_hindi":0.635},"w_vacation":{"hours":0.746,"wfh":0.755,"leave":0.838,"carry":0.832,"sick":0.832,"parental":0.777,"travel":0.763,"meals":0.726,"laptop":0.729,"lost":0.701,"2fa":0.731,"learning":0.698,"w_vacation":1.0,"w_holiday":0.883,"w_password":0.744,"w_computer":0.718,"q_leave":0.692,"q_carry":0.719,"q_laptop":0.522,"q_stock":0.508,"q_hindi":0.762},"w_holiday":{"hours":0.728,"wfh":0.685,"leave":0.77,"carry":0.796,"sick":0.754,"parental":0.723,"travel":0.764,"meals":0.708,"laptop":0.679,"lost":0.679,"2fa":0.684,"learning":0.665,"w_vacation":0.883,"w_holiday":1.0,"w_password":0.73,"w_computer":0.722,"q_leave":0.648,"q_carry":0.736,"q_laptop":0.549,"q_stock":0.535,"q_hindi":0.729},"w_password":{"hours":0.705,"wfh":0.681,"leave":0.673,"carry":0.68,"sick":0.684,"parental":0.676,"travel":0.707,"meals":0.637,"laptop":0.687,"lost":0.719,"2fa":0.838,"learning":0.633,"w_vacation":0.744,"w_holiday":0.73,"w_password":1.0,"w_computer":0.785,"q_leave":0.504,"q_carry":0.525,"q_laptop":0.567,"q_stock":0.522,"q_hindi":0.537},"w_computer":{"hours":0.719,"wfh":0.671,"leave":0.658,"carry":0.675,"sick":0.668,"parental":0.642,"travel":0.696,"meals":0.629,"laptop":0.746,"lost":0.764,"2fa":0.747,"learning":0.658,"w_vacation":0.718,"w_holiday":0.722,"w_password":0.785,"w_computer":1.0,"q_leave":0.532,"q_carry":0.531,"q_laptop":0.632,"q_stock":0.559,"q_hindi":0.544},"q_leave":{"hours":0.634,"wfh":0.583,"leave":0.746,"carry":0.696,"sick":0.685,"parental":0.628,"travel":0.576,"meals":0.577,"laptop":0.583,"lost":0.533,"2fa":0.532,"learning":0.592,"w_vacation":0.692,"w_holiday":0.648,"w_password":0.504,"w_computer":0.532,"q_leave":1.0,"q_carry":0.674,"q_laptop":0.451,"q_stock":0.53,"q_hindi":0.706},"q_carry":{"hours":0.587,"wfh":0.56,"leave":0.656,"carry":0.796,"sick":0.64,"parental":0.581,"travel":0.572,"meals":0.557,"laptop":0.518,"lost":0.526,"2fa":0.53,"learning":0.579,"w_vacation":0.719,"w_holiday":0.736,"w_password":0.525,"w_computer":0.531,"q_leave":0.674,"q_carry":1.0,"q_laptop":0.472,"q_stock":0.431,"q_hindi":0.651},"q_laptop":{"hours":0.532,"wfh":0.489,"leave":0.487,"carry":0.528,"sick":0.5,"parental":0.476,"travel":0.548,"meals":0.532,"laptop":0.617,"lost":0.718,"2fa":0.605,"learning":0.502,"w_vacation":0.522,"w_holiday":0.549,"w_password":0.567,"w_computer":0.632,"q_leave":0.451,"q_carry":0.472,"q_laptop":1.0,"q_stock":0.444,"q_hindi":0.452},"q_stock":{"hours":0.538,"wfh":0.506,"leave":0.519,"carry":0.514,"sick":0.501,"parental":0.501,"travel":0.539,"meals":0.506,"laptop":0.536,"lost":0.517,"2fa":0.507,"learning":0.546,"w_vacation":0.508,"w_holiday":0.535,"w_password":0.522,"w_computer":0.559,"q_leave":0.53,"q_carry":0.431,"q_laptop":0.444,"q_stock":1.0,"q_hindi":0.49},"q_hindi":{"hours":0.616,"wfh":0.64,"leave":0.722,"carry":0.7,"sick":0.691,"parental":0.667,"travel":0.587,"meals":0.658,"laptop":0.608,"lost":0.537,"2fa":0.528,"learning":0.635,"w_vacation":0.762,"w_holiday":0.729,"w_password":0.537,"w_computer":0.544,"q_leave":0.706,"q_carry":0.651,"q_laptop":0.452,"q_stock":0.49,"q_hindi":1.0}},"sample_vector":{"id":"leave","first12":[-0.023,0.0085,0.0004,-0.0613,0.0019,0.0149,0.0184,0.0126,0.0185,0.013,-0.0027,-0.0086],"norm":0.5814},"keyword":{"q_leave":{"terms":"how | many | days | of | annual | leave | do | get","tsquery":"'mani' | 'day' | 'annual' | 'leav' | 'get'","hits":[{"id":"leave","rank":0.3},{"id":"carry","rank":0.2},{"id":"sick","rank":0.2},{"id":"wfh","rank":0.1},{"id":"parental","rank":0.1},{"id":"meals","rank":0.1},{"id":"laptop","rank":0.1}]},"q_carry":{"terms":"can | carry | over | unused | holidays","tsquery":"'carri' | 'unus' | 'holiday'","hits":[{"id":"carry","rank":0.3}]},"q_laptop":{"terms":"what | do | if | my | laptop | is | stolen","tsquery":"'laptop' | 'stolen'","hits":[{"id":"laptop","rank":0.1},{"id":"lost","rank":0.1}]},"q_stock":{"terms":"what | is | the | company | stock | price","tsquery":"'compani' | 'stock' | 'price'","hits":[]},"q_hindi":{"terms":"छुट्टी | कितने | दिन | की | मिलती | है","tsquery":"'छुट्टी' | 'कितने' | 'दिन' | 'की' | 'मिलती' | 'है'","hits":[]}},"tsv_example":{"id":"carry","tsv":"'31':20 '5':3 'carri':8 'day':5,17 'expir':18 'extra':15 'march':21 'next':12 'unus':4,16 'year':13"},"chunk0_vector":[-0.0041,0.02,0.009,-0.0552,0.0101,-0.0146,0.0076,-0.0038,-0.0009,0.0092,-0.0142,-0.0228,-0.0016,0.036,0.1366,-0.0036,-0.0013,0.0133,0.0006,-0.0141,0.0174,0.0011,0.0028,0.0109,0.0062,-0.0245,0.0187,0.0133,0.0343,0.0039,-0.0123,-0.0022,0.0062,0.0179,0.0018,0.0102,-0.0006,-0.0083,-0.0082,0.0288,-0.0101,0.0142,-0.0101,-0.0123,-0.0127,0.0027,-0.018,-0.0252,0.01,0.0243,-0.005,-0.004,-0.0182,-0.2164,0.0165,-0.0137,-0.0156,-0.0029,0.0132,0.0059,-0.0082,0.0021,-0.0304,0.0031,-0.0072,-0.0234,-0.025,-0.0052,0.0108,-0.0267,0.0193,-0.0087,-0.0105,-0.0225,-0.0018,-0.039,0.0018,-0.0138,-0.0077,0.0041,-0.009,-0.0323,-0.0151,-0.0196,0.0117,-0.0008,-0.0155,-0.0108,-0.0136,-0.0185,0.0091,0.0266,0.023,0.0005,-0.0159,-0.0125,0.0089,-0.0075,0.0,-0.0174,-0.0079,-0.0177,-0.0154,-0.0143,0.0108,-0.0052,0.0242,0.0009,0.0195,0.0193,0.0086,0.0032,0.0151,0.03,0.0184,-0.1819,0.0208,-0.0101,0.0082,0.001,-0.0265,-0.0064,-0.0055,0.0175,0.0291,0.0002,-0.0011,-0.0209,-0.0078,0.0205,-0.0072,-0.0179,-0.0066,0.0007,0.0113,0.0089,-0.0095,-0.006,-0.0013,-0.0315,0.0182,0.0079,0.0058,0.0031,-0.0005,-0.0215,-0.0093,-0.0051,-0.0037,-0.0414,-0.0099,-0.0267,-0.0024,0.0041,0.0111,-0.053,0.0177,0.0099,0.0016,-0.0093,-0.0067,-0.0043,-0.0015,0.0161,0.0223,0.0066,0.008,0.01,-0.0122,0.0236,-0.009,0.0094,0.0191,-0.0046,0.0083,-0.0053,-0.0064,0.0176,0.013,-0.021,-0.0039,0.0019,-0.0197,0.0019,0.0021,0.01,-0.01,-0.0007,-0.0085,-0.0234,-0.0054,-0.0092,0.0002,-0.0003,0.0051,-0.0285,0.0026,0.0164,0.0042,0.0239,0.0037,-0.0137,0.0125,-0.0052,0.0248,0.0038,-0.0264,-0.01,0.0066,0.0333,0.0103,0.0139,0.0194,0.0086,0.0259,-0.029,-0.0124,-0.0099,-0.0285,-0.0108,-0.0045,0.022,0.0079,0.0328,-0.0007,0.0113,0.0128,-0.0414,-0.0076,-0.0045,0.0059,0.0297,0.0003,0.0041,-0.0148,-0.0109,0.0115,0.0315,0.0314,0.0068,0.0008,-0.0049,-0.0086,0.0192,0.0025,-0.0055,0.0052,-0.024,0.0039,0.0079,-0.0239,0.0043,0.0051,-0.0312,-0.0261,-0.0001,0.0069,-0.0081,0.0067,-0.0244,-0.0115,-0.0018,0.0076,-0.0143,0.0025,0.0071,0.0127,0.0061,-0.0238,-0.0055,-0.0047,-0.0031,0.0112,0.0,0.0029,0.0058,-0.0907,0.01,0.0075,0.006,-0.0137,0.0147,-0.0099,-0.0008,0.0033,0.0189,-0.0082,-0.0042,0.0259,-0.0033,0.0053,0.0002,-0.0116,-0.0083,0.0151,-0.0124,0.0056,-0.0064,-0.0024,-0.0193,0.003,0.0073,0.0089,0.0491,0.0098,-0.0143,0.0255,0.0393,-0.012,-0.0083,-0.0054,0.0133,0.0194,-0.0145,-0.0064,0.0051,0.0176,-0.0168,0.0051,0.0039,-0.0183,0.018,-0.0372,-0.0041,-0.028,-0.0103,-0.0162,0.0087,0.0319,0.0117,0.0419,0.0086,0.0139,-0.0025,0.009,0.0008,0.006,-0.011,-0.0051,-0.0029,0.009,0.0031,-0.0324,0.0115,-0.0166,0.0054,-0.0036,-0.0068,0.0154,-0.0337,0.0101,-0.0181,-0.0087,-0.0129,-0.0263,0.0154,0.02,0.0048,-0.0022,0.0137,-0.0054,0.0056,-0.0008,0.0013,0.0069,-0.0104,0.0073,0.0289,-0.0059,0.0312,-0.0025,-0.0142,0.0206,-0.015,-0.0229,0.0087,-0.0061,0.0004,0.0073,-0.0173,-0.0192,0.0024,0.0007,-0.0111,-0.014,-0.0013,-0.0119,0.0087,0.0064,0.0028,-0.0188,-0.0126,0.0064,0.0043,0.0027,-0.0238,-0.0055,-0.0157,0.0092,-0.0118,-0.0175,0.0159,-0.0188,0.018,-0.0078,-0.0272,0.0139,-0.0027,0.0093,-0.0003,0.0089,-0.0012,0.0162,0.0048,0.0151,-0.0058,0.0077,-0.0068,0.0162,-0.0028,-0.0031,0.0236,0.0086,-0.0059,-0.0169,-0.0264,-0.0198,-0.0131,0.0073,-0.0114,0.0021,-0.0216,-0.016,-0.0155,-0.0418,-0.0262,0.0072,0.0205,-0.0099,0.0103,-0.0052,0.0079,-0.0197,-0.0135,0.0101,-0.0129,0.0163,-0.0101,-0.008,0.0103,0.0107,0.0023,-0.0247,-0.0016,-0.001,0.0136,-0.0117,0.0024,-0.0071,-0.0112,0.0083,-0.0078,0.0087,0.0046,0.011,0.0076,-0.0049,-0.0066,0.005,0.0335,0.014,-0.0027,0.008,-0.0188,0.0124,-0.0079,0.0393,0.0007,0.0074,-0.0059,0.0162,-0.0047,0.0225,-0.0125,-0.0235,0.0085,-0.0063,-0.006,0.0049,0.0059,0.0091,0.0357,-0.0212,0.0246,-0.0324,-0.0208,0.0087,0.015,0.0149,0.0035,0.0141,-0.0062,-0.0241,-0.0081,-0.0233,0.0163,0.0058,-0.01,0.0024,-0.0077,-0.0042,0.0116,-0.0162,0.0254,-0.0127,0.0141,-0.0076,0.0157,0.0162,0.0007,-0.0235,0.024,0.0088,0.0071,-0.0017,0.005,0.0013,-0.0033,0.0207,0.0032,-0.0267,0.03,-0.011,-0.0056,0.0041,-0.0033,0.0077,0.0161,-0.0054,0.0047,-0.0185,-0.0107,-0.0098,-0.0052,-0.0146,-0.145,0.0008,0.0075,-0.0056,-0.0084,-0.001,0.0005,0.0015,-0.007,-0.0148,-0.0157,0.014,0.0214,0.0112,-0.0057,-0.0274,0.0019,0.0121,-0.0088,0.0061,0.0056,-0.0036,0.006,-0.006,-0.0012,-0.0149,0.0066,0.0053,0.0229,0.0151,-0.0156,0.0012,0.0067,0.0075,-0.0187,0.0071,-0.0041,-0.0174,0.008,0.007,0.0103,-0.0053,-0.0041,-0.0162,0.0038,-0.0142,0.015,-0.0321,0.0079,-0.0047,-0.0209,-0.0074,0.006,0.0041,0.0005,0.0085,-0.0096,0.0149,-0.0207,0.0107,-0.0226,0.0038,0.0172,0.0171,0.0109,0.0129,0.0183,-0.0107,0.0025,-0.0108,-0.0133,-0.042,-0.0129,0.0132,-0.0258,-0.0173,0.0124,0.0243,0.006,0.0085,-0.0111,0.0035,-0.07,-0.0051,-0.0051,0.0059,0.0143,0.0061,0.0131,-0.0181,-0.0064,0.0028,0.0083,-0.0079,-0.0062,-0.0031,0.0369,0.0055,0.0007,-0.0033,0.0029,-0.0018,-0.0113,0.0178,0.005,-0.0124,-0.0299,0.0243,-0.0116,0.0088,-0.011,-0.0293,0.0031,-0.1519,-0.0045,-0.0076,0.0154,-0.0144,0.0195,-0.0019,0.0213,-0.0089,-0.0309,0.0049,-0.0318,-0.0248,-0.017,-0.0105,0.1416,0.0178,-0.0083,-0.0116,0.008,0.0072,-0.0007,-0.0047,0.0046,-0.017,0.004,0.0067,-0.0115,0.0118,-0.0241,0.0261,-0.0069,-0.0182,-0.0068,0.0145,0.0092,0.0147,0.0002,-0.0028,-0.0074,0.0212,-0.0117,-0.016,-0.0044,0.011,0.0018,-0.0233,-0.0157,0.0073,0.0034,-0.008,-0.0622,0.0072,0.0023,0.0019,0.0201,-0.0071,-0.0035,0.0225,0.0006,0.004,0.0125,-0.016,0.0141,-0.0085,0.0,0.0161,0.0085,0.0093,-0.0059,0.0093,-0.0086,-0.0078,0.0153,0.0074,-0.0002,-0.0104,0.0156,0.0157,-0.0062,-0.0109,0.0006,0.0052,-0.0347,0.0017,-0.0116,0.0151,0.018,0.0051,-0.0054,0.0062,0.0216,0.0283,-0.001,-0.014,-0.0137,-0.0095,-0.0016,0.0014,0.0098,0.0162,0.0117,0.0118,-0.0139,-0.0305,-0.0059,0.0119,-0.0107,0.0242,0.0003],"handbook":"# Greenleaf Co. Employee Handbook (sample document)\n\nThis is a made-up handbook for practising with the RAG Starter Kit. Upload it, then try the questions at the bottom.\n\n## Working hours\n\nCore working hours are 10:00 to 16:00, Monday to Friday. Outside core hours, employees choose when to work, as long as they complete 40 hours a week. Employees may work from home up to three days a week after their first month.\n\n## Leave\n\nEvery full-time employee receives 24 days of paid annual leave per calendar year. Up to 5 unused days can be carried over to the next year; any extra unused days expire on 31 March.\n\nSick leave is 12 days per year. A doctor's note is needed for sick leave longer than 2 consecutive days.\n\nParental leave is 26 weeks for the primary caregiver and 4 weeks for the secondary caregiver, both fully paid.\n\n## Expenses\n\nTravel must be booked through the TravelDesk portal. Economy class is used for flights under 6 hours. Meals during travel are reimbursed up to 1,500 rupees per day. Submit receipts within 30 days of returning, through the Expenses app.\n\n## Equipment\n\nNew employees receive a laptop on day one. A home-office allowance of 10,000 rupees is paid once, after the first month. Lost or stolen equipment must be reported to IT Support within 24 hours.\n\n## IT security\n\nUse a password manager and turn on two-factor authentication (2FA) for every work account. Never share passwords, even with IT Support. Report suspicious emails with the \"Report phishing\" button.\n\n## Learning\n\nEach employee has a yearly learning budget of 30,000 rupees for courses, books and conferences. Requests above 10,000 rupees need manager approval.\n\n---\n\n### Try asking\n\n- How many days of annual leave do I get?\n- Can I carry over unused leave? *(then follow up: \"until when?\")*\n- What is the meal limit when travelling?\n- What do I do if my laptop is stolen?\n- What is the company's stock price? *(not in the document → should say not found)*\n- छुट्टी कितने दिन की मिलती है? *(Hindi question, English document)*\n","chunk0_text":"# Greenleaf Co. Employee Handbook (sample document) This is a made-up handbook for practising with the RAG Starter Kit. Upload it, then try the questions at the bottom. ## Working hours Core working hours are 10:00 to 16:00, Monday to Friday. Outside core hours, employees choose when to work, as long as they complete 40 hours a week. Employees may work from home up to three days a week after their first month. ## Leave Every full-time employee receives 24 days of paid annual leave per calendar year. Up to 5 unused days can be carried over to the next year; any extra unused days expire on 31 March. Sick leave is 12 days per year. A doctor's note is needed for sick leave longer than 2 consecutive days. Parental leave is 26 weeks for the primary caregiver and 4 weeks for the secondary caregiver, both fully paid. ## Expenses Travel must be booked through the TravelDesk portal. Economy class is used for flights under 6 hours. Meals during travel are reimbursed up to 1,500 rupees per day. Submit receipts within 30 days of returning, through the Expenses app. ## Equipment New employees receive a laptop on day one.","chunks":[{"index":0,"words":199,"text":"# Greenleaf Co. Employee Handbook (sample document) This is a made-up handbook for practising with the RAG Starter Kit. Upload it, then try the questions at the bottom. ## Working hours Core working hours are 10:00 to 16:00, Monday to Friday. Outside core hours, employees choose when to work, as long as they complete 40 hours a week. Employees may work from home up to three days a week after their first month. ## Leave Every full-time employee receives 24 days of paid annual leave per calendar year. Up to 5 unused days can be carried over to the next year; any extra unused days expire on 31 March. Sick leave is 12 days per year. A doctor's note is needed for sick leave longer than 2 consecutive days. Parental leave is 26 weeks for the primary caregiver and 4 weeks for the secondary caregiver, both fully paid. ## Expenses Travel must be booked through the TravelDesk portal. Economy class is used for flights under 6 hours. Meals during travel are reimbursed up to 1,500 rupees per day. Submit receipts within 30 days of returning, through the Expenses app. ## Equipment New employees receive a laptop on day one."},{"index":1,"words":185,"text":"Meals during travel are reimbursed up to 1,500 rupees per day. Submit receipts within 30 days of returning, through the Expenses app. ## Equipment New employees receive a laptop on day one. A home-office allowance of 10,000 rupees is paid once, after the first month. Lost or stolen equipment must be reported to IT Support within 24 hours. ## IT security Use a password manager and turn on two-factor authentication (2FA) for every work account. Never share passwords, even with IT Support. Report suspicious emails with the \"Report phishing\" button. ## Learning Each employee has a yearly learning budget of 30,000 rupees for courses, books and conferences. Requests above 10,000 rupees need manager approval. --- ### Try asking - How many days of annual leave do I get? - Can I carry over unused leave? *(then follow up: \"until when?\")* - What is the meal limit when travelling? - What do I do if my laptop is stolen? - What is the company's stock price? *(not in the document → should say not found)* - छुट्टी कितने दिन की मिलती है? *(Hindi question, English document)*"}],"chunk_sims":{"q_leave":[0.641,0.618],"q_carry":[0.593,0.569],"q_laptop":[0.505,0.584],"q_stock":[0.554,0.568],"q_hindi":[0.651,0.636]},"chunk0_tsv":"'00':37,40 '1':178 '10':36 '12':116 '16':39 '2':131 '24':83 '26':137 '30':186 '31':111 '4':144 '40':57 '5':94 '500':179 '6':169 'annual':87 'app':193 'book':157 'bottom':29 'calendar':90 'caregiv':142,149 'carri':99 'choos':48 'class':163 'co':2 'complet':56 'consecut':132 'core':32,45 'day':69,84,96,108,117,133,182,187,201 'doctor':121 'document':6 'economi':162 'employe':3,47,61,81,196 'equip':194 'everi':77 'expens':153,192 'expir':109 'extra':106 'first':74 'flight':167 'friday':43 'full':79 'full-tim':78 'fulli':151 'greenleaf':1 'handbook':4,13 'home':65 'hour':31,34,46,58,170 'kit':20 'laptop':199 'leav':76,88,114,128,135 'long':53 'longer':129 'made':11 'made-up':10 'march':112 'may':62 'meal':171 'monday':41 'month':75 'must':155 'need':125 'new':195 'next':103 'note':123 'one':202 'outsid':44 'paid':86,152 'parent':134 'per':89,118,181 'portal':161 'practis':15 'primari':141 'question':26 'rag':18 'receipt':184 'receiv':82,197 'reimburs':175 'return':189 'rupe':180 'sampl':5 'secondari':148 'sick':113,127 'starter':19 'submit':183 'three':68 'time':80 'travel':154,173 'traveldesk':160 'tri':24 'unus':95,107 'upload':21 'use':165 'week':60,71,138,145 'within':185 'work':30,33,51,63 'year':91,104,119"};
-const $ = (s) => document.querySelector(s);
-const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+/* shared by both labs: helpers, the background sky, the mission rail, discoveries, and the meaning galaxy */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const text = (id) => DATA.items.find((i) => i.id === id).text;
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const sleep = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
 
-/* ---------- step 1: before / after ---------- */
+/* run fn(p) with p going 0 -> 1 over ms; instant when motion is reduced */
+function tween(ms, fn, done) {
+  if (reduce) { fn(1); done?.(); return; }
+  const t0 = performance.now();
+  const tick = (t) => { const p = Math.min(1, (t - t0) / ms); fn(p); p < 1 ? requestAnimationFrame(tick) : done?.(); };
+  requestAnimationFrame(tick);
+}
+const ease = (t) => 1 - (1 - t) ** 3;
+function typeInto(el, str, ms = 900) {
+  return new Promise((res) => tween(ms, (p) => { el.textContent = str.slice(0, Math.round(str.length * p)); }, res));
+}
+
+/* the quiet star field behind the page (drawn once) */
+function drawBackground() {
+  const c = $("#bg"), x = c.getContext("2d"), d = Math.min(2, devicePixelRatio || 1);
+  c.width = innerWidth * d; c.height = innerHeight * d; x.setTransform(d, 0, 0, d, 0, 0);
+  let s = 5; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 160; i++) { x.globalAlpha = 0.15 + r() * 0.45; x.fillStyle = r() > 0.85 ? "#ffd9a0" : "#c8d6ff"; x.beginPath(); x.arc(r() * innerWidth, r() * innerHeight, r() * 1.1 + 0.2, 0, 7); x.fill(); }
+}
+addEventListener("resize", drawBackground); drawBackground();
+
+/* the rail: one dot per mission, filled when its discovery is unlocked */
+const MISSIONS = $$(".mission");
+$("#rail-list").innerHTML = MISSIONS.map((m, i) => `<li><a href="#${m.id}" data-for="${m.id}"><i>${i + 1}</i><span>${esc(m.dataset.short)}</span></a></li>`).join("");
+const found = new Set();
+function updateScore() { $("#score").innerHTML = `${found.size}/${MISSIONS.length} <b>discoveries</b>`; }
+updateScore();
+const railIO = new IntersectionObserver((entries) => entries.forEach((e) => {
+  if (!e.isIntersecting) return;
+  $$(".rail a").forEach((a) => a.classList.toggle("here", a.dataset.for === e.target.id));
+  const a = $(`.rail a[data-for="${e.target.id}"]`), ol = $("#rail-list");
+  ol.scrollTo({ left: a.offsetLeft - ol.clientWidth / 2 + a.clientWidth / 2, behavior: reduce ? "auto" : "smooth" });
+}), { rootMargin: "-45% 0px -50% 0px" });
+MISSIONS.forEach((m) => railIO.observe(m));
+
+/* a discovery: show the "aha" card for a mission, with a burst of sparks the first time */
+function discover(id, html) {
+  const box = $(`#${id} .aha`), first = !found.has(id);
+  box.innerHTML = `<small>Discovery unlocked</small><p>${html}</p>`;
+  box.hidden = false; $(`#${id} .locked`)?.remove();
+  if (!first) return;
+  found.add(id); updateScore();
+  $(`.rail a[data-for="${id}"]`).classList.add("found");
+  box.classList.remove("pop"); void box.offsetWidth; box.classList.add("pop");
+  if (reduce) return;
+  const r = box.getBoundingClientRect(), colors = ["#ffb547", "#8fb4ff", "#4ee08f", "#ffd36b"];
+  for (let i = 0; i < 24; i++) {
+    const s = document.createElement("span"), a = rnd() * Math.PI * 2, d = 60 + rnd() * 110;
+    s.className = "spark"; s.style.left = `${r.left + 30 + rnd() * Math.min(260, r.width - 60)}px`; s.style.top = `${r.top + 18}px`;
+    s.style.background = colors[i % 4]; s.style.setProperty("--dx", `${Math.cos(a) * d}px`); s.style.setProperty("--dy", `${Math.sin(a) * d - 40}px`);
+    document.body.appendChild(s); setTimeout(() => s.remove(), 950);
+  }
+}
+
+/* ---------- the meaning galaxy: every handbook sentence is a star, a question flies in as a comet ---------- */
+const CONST = [
+  { name: "LEAVE & TIME OFF", stars: { leave: [0.17, 0.30, "24 days annual leave"], carry: [0.31, 0.43, "carry over 5 unused days"], sick: [0.12, 0.50, "sick leave 12 days"], parental: [0.29, 0.22, "parental leave 26 weeks"] } },
+  { name: "DEVICES", stars: { laptop: [0.70, 0.22, "laptop on day one"], lost: [0.83, 0.34, "report stolen equipment"] } },
+  { name: "SECURITY", stars: { "2fa": [0.82, 0.72, "password manager + 2FA"] } },
+  { name: "MONEY & TRAVEL", stars: { meals: [0.14, 0.78, "meals ₹1,500/day"], travel: [0.29, 0.70, "book on TravelDesk"], learning: [0.42, 0.84, "learning budget ₹30,000"] } },
+  { name: "WORKING TIME", stars: { hours: [0.52, 0.46, "core hours 10–16"], wfh: [0.59, 0.58, "work from home 3 days"] } },
+];
+const STARS = {}; CONST.forEach((c) => Object.entries(c.stars).forEach(([id, [x, y, label]]) => (STARS[id] = { id, x, y, label, group: c.name })));
+const LAND = { q_carry: [0.36, 0.37], q_laptop: [0.79, 0.27], q_hindi: [0.21, 0.37], q_stock: [0.60, 0.80], q_leave: [0.22, 0.26] };
+const STOP = new Set("a an the is are to of and or for in on do i my can what how many get up any be by with as at per it its if".split(" "));
+const wordsOf = (t) => new Set(t.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w.length > 1 && !STOP.has(w)));
+const sharedWords = (a, b) => [...wordsOf(text(a))].filter((w) => wordsOf(text(b)).has(w)).length;
+
+function Galaxy(canvas, opts) {
+  const ctx = canvas.getContext("2d");
+  let W = 0, H = 0, q = null, guess = null, phase = "idle", t0 = 0, kwOn = false, hover = null, particles = [], scores = [], visible = true;
+  const DUST = Array.from({ length: 200 }, () => ({ x: rnd(), y: rnd(), r: rnd() * 1.2 + 0.2, t: rnd() * 6 }));
+  const P = (x, y) => [x * W, y * H];
+  function size() {
+    const d = Math.min(2, devicePixelRatio || 1);
+    W = canvas.clientWidth; H = Math.max(360, Math.round(W * (W < 600 ? 1.45 : 0.56)));
+    canvas.width = W * d; canvas.height = H * d; canvas.style.height = H + "px"; ctx.setTransform(d, 0, 0, d, 0, 0);
+  }
+  function setQuestion(id) {
+    q = id; guess = null; phase = opts.guessing ? "guess" : "ready"; particles = [];
+    scores = Object.keys(STARS).map((s) => ({ id: s, c: DATA.cos[id][s] })).sort((a, b) => b.c - a.c);
+  }
+  function launch() {
+    if (!q || phase === "explode" || phase === "fly") return;
+    t0 = performance.now(); phase = reduce ? "done" : "explode";
+    const [sx, sy] = P(0.5, 0.97);
+    particles = Array.from({ length: 140 }, () => ({ x: sx + (rnd() - 0.5) * 260, y: sy - rnd() * 30, vx: (rnd() - 0.5) * 2, vy: -rnd() * 2 - 0.5 }));
+    opts.onStatus?.("embed");
+    if (reduce) opts.onDone?.(scores);
+  }
+  function draw(now) {
+    requestAnimationFrame(draw);
+    if (!visible && phase !== "explode" && phase !== "fly") return; // keep a launched comet moving even off-screen
+    ctx.clearRect(0, 0, W, H);
+    DUST.forEach((d) => { ctx.globalAlpha = 0.25 + 0.35 * Math.sin(now / 900 + d.t) ** 2; ctx.fillStyle = "#c8d6ff"; ctx.beginPath(); ctx.arc(d.x * W, d.y * H, d.r, 0, 7); ctx.fill(); });
+    ctx.globalAlpha = 1;
+    CONST.forEach((c) => {
+      const pts = Object.keys(c.stars).map((id) => P(STARS[id].x, STARS[id].y));
+      ctx.strokeStyle = "rgba(143,180,255,0.18)"; ctx.lineWidth = 1.2; ctx.setLineDash([3, 5]);
+      for (let i = 1; i < pts.length; i++) { ctx.beginPath(); ctx.moveTo(...pts[i - 1]); ctx.lineTo(...pts[i]); ctx.stroke(); }
+      ctx.setLineDash([]);
+      const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = Math.min(...pts.map((p) => p[1])) - 26;
+      ctx.fillStyle = "rgba(185,196,220,0.55)"; ctx.font = "700 11px JetBrains Mono, monospace"; ctx.textAlign = "center"; ctx.fillText(c.name, Math.max(60, Math.min(W - 60, cx)), cy);
+    });
+    const kwHits = q && kwOn ? new Set(DATA.keyword[q].hits.map((h) => h.id)) : new Set();
+    const done = phase === "done", land = q && LAND[q];
+    if (done) {
+      const [lx, ly] = P(...land), grow = reduce ? 1 : Math.max(0, Math.min(1, (now - t0 - 2600) / 900));
+      scores.slice(0, 3).forEach((s) => {
+        const [x, y] = P(STARS[s.id].x, STARS[s.id].y), strength = Math.max(0.15, (s.c - 0.45) / 0.35) * (q === "q_stock" ? 0.3 : 1);
+        ctx.strokeStyle = `rgba(255,181,71,${0.25 + 0.6 * strength})`; ctx.lineWidth = 1 + 5 * strength;
+        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + (x - lx) * grow, ly + (y - ly) * grow); ctx.stroke();
+        if (grow >= 1) { ctx.fillStyle = "#ffcf7a"; ctx.font = "700 13px JetBrains Mono, monospace"; ctx.textAlign = "center"; ctx.fillText(s.c.toFixed(2), lx + (x - lx) * 0.62, ly + (y - ly) * 0.62 - 6); }
+      });
+    }
+    Object.values(STARS).forEach((s) => {
+      const [x, y] = P(s.x, s.y), isBest = done && scores[0].id === s.id, lit = kwHits.has(s.id), tw = 0.7 + 0.3 * Math.sin(now / 600 + s.x * 20), R = isBest ? 9 : 6;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, R * 4.5);
+      g.addColorStop(0, lit ? "rgba(78,224,143,0.9)" : isBest ? "rgba(143,180,255,0.95)" : `rgba(143,180,255,${0.5 * tw})`); g.addColorStop(1, "rgba(91,140,255,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 4.5, 0, 7); ctx.fill();
+      ctx.fillStyle = lit ? "#4ee08f" : "#eaf1ff"; ctx.beginPath(); ctx.arc(x, y, R * 0.55, 0, 7); ctx.fill();
+      if (guess === s.id || (hover === s.id && phase === "guess")) { ctx.strokeStyle = "#ffb547"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, R + 7, 0, 7); ctx.stroke(); }
+      ctx.font = `${isBest ? 700 : 500} ${W < 600 ? 11 : 13}px IBM Plex Sans, sans-serif`; ctx.textAlign = "center";
+      ctx.fillStyle = isBest ? "#ffffff" : lit ? "#4ee08f" : "rgba(220,228,245,0.85)";
+      const half = ctx.measureText(s.label).width / 2;
+      ctx.fillText(s.label, Math.min(W - half - 6, Math.max(half + 6, x)), y + R + 17);
+    });
+    if (q && kwOn && kwHits.size === 0) {
+      ctx.fillStyle = "rgba(255,138,122,0.95)"; ctx.font = `700 ${W < 600 ? 14 : 16}px IBM Plex Sans, sans-serif`; ctx.textAlign = "center";
+      ctx.fillText("Keyword search: no star contains these words", W / 2, H * 0.1 + 40);
+    }
+    if (phase === "explode" || phase === "fly") {
+      const t = (now - t0) / 1000, [lx, ly] = P(...land), [sx, sy] = P(0.5, 0.95);
+      if (t < 1.2) {
+        ctx.fillStyle = "#ffcf7a"; ctx.font = `700 ${W < 600 ? 14 : 18}px IBM Plex Sans, sans-serif`; ctx.textAlign = "center";
+        ctx.globalAlpha = Math.max(0, 1 - t / 0.8); ctx.fillText(`"${text(q)}"`, sx, sy - 10); ctx.globalAlpha = 1;
+        particles.forEach((p) => { p.x += p.vx + (sx - p.x) * 0.04 * t; p.y += p.vy + (sy - 60 - p.y) * 0.04 * t; ctx.fillStyle = "rgba(255,190,90,0.9)"; ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, 7); ctx.fill(); });
+        opts.onCount?.(Math.min(768, Math.round(768 * t / 1.1)));
+      } else if (t < 2.6) {
+        if (phase !== "fly") { phase = "fly"; opts.onStatus?.("fly"); opts.onCount?.(768); }
+        const k = ease((t - 1.2) / 1.4), cx = (sx + lx) / 2 + (lx < sx ? -160 : 160), cy = Math.min(sy, ly) - 120;
+        const at = (kk) => [(1 - kk) ** 2 * sx + 2 * (1 - kk) * kk * cx + kk ** 2 * lx, (1 - kk) ** 2 * (sy - 60) + 2 * (1 - kk) * kk * cy + kk ** 2 * ly];
+        for (let i = 12; i > 0; i--) { const [tx, ty] = at(Math.max(0, k - i * 0.025)); ctx.fillStyle = `rgba(255,181,71,${0.06 * (12 - i)})`; ctx.beginPath(); ctx.arc(tx, ty, 9 - i * 0.6, 0, 7); ctx.fill(); }
+        const [bx, by] = at(k); ctx.fillStyle = "#fff4dc"; ctx.beginPath(); ctx.arc(bx, by, 7, 0, 7); ctx.fill();
+      } else { phase = "done"; opts.onDone?.(scores); }
+    }
+    if (done) {
+      const [lx, ly] = P(...land), pulse = 1 + 0.25 * Math.sin(now / 300);
+      const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, 26 * pulse); g.addColorStop(0, "rgba(255,181,71,0.9)"); g.addColorStop(1, "rgba(255,181,71,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, ly, 26 * pulse, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff4dc"; ctx.beginPath(); ctx.arc(lx, ly, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = "#ffb547"; ctx.font = "700 13px IBM Plex Sans, sans-serif"; ctx.textAlign = "center"; ctx.fillText("the question", lx, ly - 16);
+    }
+  }
+  function starAt(ev) {
+    const r = canvas.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
+    let best = null, bd = 30 ** 2;
+    Object.values(STARS).forEach((s) => { const [sx, sy] = P(s.x, s.y), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = s.id; } });
+    return best;
+  }
+  canvas.addEventListener("pointermove", (e) => { hover = starAt(e); canvas.style.cursor = hover && phase === "guess" ? "pointer" : "default"; });
+  canvas.addEventListener("click", (e) => { const s = starAt(e); if (s && phase === "guess") { guess = s; opts.onGuess?.(s); } });
+  new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
+  addEventListener("resize", size); size(); requestAnimationFrame(draw);
+  return { setQuestion, launch, setKw: (on) => (kwOn = on), get phase() { return phase; }, get guess() { return guess; } };
+}
+
+
+/* ---------- 1. x-ray: the same words wrapped three ways ---------- */
 const RAW = DATA.handbook;
-const CLEAN = RAW.split("\n").map((l) => l.replace(/^#{1,6}\s*/, "").replace(/\*([^*]+)\*/g, "$1").replace(/^---$/, "").replace(/^- /, "")).join("\n").replace(/\n{3,}/g, "\n\n").trim();
-const head = (s, n) => s.split("\n").slice(0, n).join("\n");
-$("#ex-before").innerHTML = esc(head(RAW, 9)).replace(/^(#{1,6})/gm, '<span class="mk">$1</span>').replace(/(\*)/g, '<span class="mk">$1</span>') + "\n…";
-$("#ex-after").textContent = head(CLEAN, 9) + "\n…";
+const SRC = RAW.split("\n").filter((l) => l.trim()).slice(0, 8);
+const WRAP = {
+  md: (l) => { const m = l.match(/^(#{1,6}\s*)(.*)$/); return m ? [[m[1], 1], [m[2], 0]] : [[l, 0]]; },
+  docx: (l) => [["<w:p><w:r><w:t>", 1], [l.replace(/^#{1,6}\s*/, ""), 0], ["</w:t></w:r></w:p>", 1]],
+  pdf: (l, i) => [[`BT /F1 ${/^#/.test(l) ? 16 : 11} Tf 72 ${720 - i * 24} Td (`, 1], [l.replace(/^#{1,6}\s*/, ""), 0], [") Tj ET", 1]],
+};
+let fmt = "docx", beamY = 0, scanned = false;
+function buildXray() {
+  $$("#fmt [data-fmt]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.fmt === fmt));
+  $("#lines").innerHTML = SRC.map((l, i) => `<span class="ln">${WRAP[fmt](l, i).map(([t, j]) => (j ? `<span class="j">${esc(t)}</span>` : esc(t))).join("")}</span>`).join("");
+  setBeam(0);
+}
+function setBeam(y) {
+  const box = $("#xray"), lines = $$("#lines .ln");
+  beamY = Math.max(0, Math.min(box.clientHeight - 3, y)); $("#beam").style.top = `${beamY}px`;
+  let junk = 0, kept = 0;
+  lines.forEach((ln) => {
+    const clean = ln.offsetTop + ln.offsetHeight / 2 < beamY;
+    ln.classList.toggle("clean", clean);
+    if (clean) { $$(".j", ln).forEach((j) => (junk += j.textContent.length)); kept += [...ln.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(" ").split(/\s+/).filter(Boolean).length; }
+  });
+  $("#junk").textContent = junk; $("#kept").textContent = kept;
+  const all = lines.every((l) => l.classList.contains("clean"));
+  $("#page-chip").classList.toggle("on", all);
+  if (all && !scanned) {
+    scanned = true;
+    discover("s1", `The AI never sees <code>##</code>, <code>&lt;w:t&gt;</code> or <code>Tj</code>. Every file type, however messy, becomes the same <b>plain words</b>, plus the page number so an answer can point back to it.`);
+  }
+}
+const xray = $("#xray");
+xray.addEventListener("pointerdown", (e) => { xray.setPointerCapture(e.pointerId); setBeam(e.clientY - xray.getBoundingClientRect().top); });
+xray.addEventListener("pointermove", (e) => { if (e.buttons) setBeam(e.clientY - xray.getBoundingClientRect().top); });
+$("#scan").onclick = () => { const h = xray.clientHeight; tween(1800, (p) => setBeam(h * p)); };
+$$("#fmt [data-fmt]").forEach((b) => (b.onclick = () => { fmt = b.dataset.fmt; buildXray(); }));
+buildXray();
 
-/* ---------- step 2: the kit's chunker ---------- */
+/* ---------- 2. slicing, with the kit's chunker ---------- */
 const HEADINGS = ["Working hours", "Leave", "Expenses", "Equipment", "IT security", "Learning"];
+const CLEAN = RAW.split("\n").map((l) => l.replace(/^#{1,6}\s*/, "").replace(/\*([^*]+)\*/g, "$1").replace(/^---$/, "").replace(/^- /, "")).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+const BODY = CLEAN.split("\n\n").slice(1).join("\n\n").split("\n\nTry asking")[0].replace(/\n\n---$/, "").trim();
 function sentencesOf(t, size) {
   const out = [];
-  for (const s of t.split(/(?<=[.!?।])\s+|\n\s*\n/)) {
-    const w = s.split(/\s+/).filter(Boolean);
-    for (let i = 0; i < w.length; i += size) out.push(w.slice(i, i + size).join(" "));
-  }
+  for (const s of t.split(/(?<=[.!?।])\s+|\n\s*\n/)) { const w = s.split(/\s+/).filter(Boolean); for (let i = 0; i < w.length; i += size) out.push(w.slice(i, i + size).join(" ")); }
   return out.filter(Boolean);
 }
 function windowed(sents, size, overlap) {
-  const chunks = []; let cur = [], curW = 0, carried = 0; const wc = (s) => s.split(" ").length;
-  for (const s of sents) {
-    const n = wc(s);
+  const wc = (i) => sents[i].split(" ").length, chunks = []; let cur = [], curW = 0, carried = 0;
+  sents.forEach((_, i) => {
+    const n = wc(i);
     if (cur.length && curW + n > size) {
-      chunks.push({ sents: cur, carried });
-      let tail = [], tw = 0;
-      for (let i = cur.length - 1; i >= 0; i--) { if (tw + wc(cur[i]) > overlap) break; tail.unshift(cur[i]); tw += wc(cur[i]); }
+      chunks.push({ idx: cur, carried }); let tail = [], tw = 0;
+      for (let k = cur.length - 1; k >= 0; k--) { if (tw + wc(cur[k]) > overlap) break; tail.unshift(cur[k]); tw += wc(cur[k]); }
       if (tw + n > size) { tail = []; tw = 0; }
       cur = tail; curW = tw; carried = tail.length;
     }
-    cur.push(s); curW += n;
-  }
-  if (cur.length) chunks.push({ sents: cur, carried });
+    cur.push(i); curW += n;
+  });
+  if (cur.length) chunks.push({ idx: cur, carried });
   return chunks;
 }
-const BODY = CLEAN.split("\n\n").slice(1).join("\n\n").split("\n\nTry asking")[0].replace(/\n\n---$/, "").trim(); // the handbook, without the title line and the "try asking" list
-let size = 200;
-function renderChunks() {
-  const overlap = $("#ov").checked ? 40 : 0;
-  document.querySelectorAll("[data-size]").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.size === size));
-  $("#paper").textContent = BODY;
-  const chunks = windowed(sentencesOf(BODY, size), size, overlap);
-  $("#pieces-title").textContent = `After: ${chunks.length} piece${chunks.length === 1 ? "" : "s"}`;
-  // which handbook topics each piece covers (a heading line is its own "sentence")
+let size = 200; const triedSizes = new Set();
+function paperPlain() { $("#paper").innerHTML = sentencesOf(BODY, 9999).map((s) => `<span class="s ${HEADINGS.includes(s) ? "h" : ""}">${esc(s)}</span> `).join(""); }
+paperPlain();
+async function slice() {
+  const overlap = $("#ov").checked ? 40 : 0, sents = sentencesOf(BODY, size), chunks = windowed(sents, size, overlap);
+  const starts = new Set(chunks.slice(1).map((c) => c.idx[c.carried] ?? c.idx[0])), copied = new Set(chunks.flatMap((c) => c.idx.slice(0, c.carried)));
+  $("#paper").innerHTML = sents.map((s, i) => `${starts.has(i) ? '<span class="cut in"></span>' : ""}<span class="s ${HEADINGS.includes(s) ? "h" : ""} ${copied.has(i) ? "copied" : ""}">${esc(s)}</span> `).join("");
+  // which handbook topics each card covers
   let topic = null;
-  const withTopics = chunks.map((c) => {
-    const topics = [];
-    let t = topic;
-    c.sents.forEach((s, j) => {
-      if (HEADINGS.includes(s.trim())) t = s.trim();
-      else if (t && !topics.includes(t)) topics.push(t);
-      if (j >= c.carried && HEADINGS.includes(s.trim())) topic = s.trim();
-    });
-    return { ...c, topics };
+  const cards = chunks.map((c) => {
+    const topics = []; let t = topic;
+    c.idx.forEach((i, j) => { const s = sents[i]; if (HEADINGS.includes(s)) t = s; else if (t && !topics.includes(t)) topics.push(t); if (j >= c.carried && HEADINGS.includes(s)) topic = s; });
+    const words = c.idx.map((i) => sents[i]).join(" ").split(" ").length;
+    const body = c.idx.map((i, j) => (j < c.carried ? `<mark>${esc(sents[i])}</mark>` : esc(sents[i]))).join(" ");
+    return { topics, words, body, answers: c.idx.some((i) => /carried over/.test(sents[i])) };
   });
-  $("#cards").innerHTML = withTopics.map((c, i) => {
-    const words = c.sents.join(" ").split(" ").length;
-    const plain = c.sents.map((s, j) => (j < c.carried ? `<mark>${esc(s)}</mark>` : esc(s))).join(" ");
-    return `<article class="ccard"><header><span>Piece ${i + 1}</span><span>${words} words</span></header><div class="topics">${c.topics.map((t) => `<span>${esc(t)}</span>`).join("")}</div><div>${plain}</div></article>`;
-  }).join("");
-  const avg = withTopics.reduce((a, c) => a + c.topics.length, 0) / withTopics.length;
-  $("#chunk-verdict").innerHTML = size <= 60
-    ? `<b>${chunks.length} small pieces</b>, about ${avg.toFixed(1)} topic each: very precise, but a piece like "any extra unused days expire on 31 March" can lose the context of what it's about.`
-    : size >= 400 ? `<b>${chunks.length} big piece${chunks.length > 1 ? "s" : ""}</b> covering ${Math.round(avg)} topics: all the context, but the meaning becomes a blur of leave, travel, laptops and passwords.`
-    : `<b>${chunks.length} pieces</b> of about 200 words, ${avg.toFixed(1)} topics each: the kit's balance between precise and complete.`;
+  $("#fan-title").textContent = `${cards.length} index card${cards.length === 1 ? "" : "s"}`;
+  $("#fan").innerHTML = cards.map((c, i) => `<button class="icard fly" style="animation-delay: ${reduce ? 0 : 120 + i * 90}ms" data-ok="${c.answers}"><header><span>Card ${i + 1}</span><span>${c.words} words</span></header><span class="topics">${c.topics.map((t) => `<span>${esc(t)}</span>`).join("")}</span><span class="body">${c.body}</span></button>`).join("");
+  $$("#fan .icard").forEach((b) => (b.onclick = () => {
+    b.classList.remove("wrong"); void b.offsetWidth;
+    if (b.dataset.ok === "true") { b.classList.add("right"); $("#verdict").innerHTML = b.querySelector(".topics").children.length > 1 ? `<b>Found it</b>, but this card also talks about ${b.querySelector(".topics").children.length - 1} other topic${b.querySelector(".topics").children.length > 2 ? "s" : ""}. Its meaning is a mix.` : `<b>Found it!</b> A focused card: its meaning is clearly "leave".`; }
+    else b.classList.add("wrong");
+  }));
+  const avg = cards.reduce((a, c) => a + c.topics.length, 0) / cards.length;
+  $("#g-focus").style.width = `${Math.min(100, 100 / avg)}%`;
+  $("#g-ctx").style.width = `${Math.min(100, (cards.reduce((a, c) => a + c.words, 0) / cards.length) / 2.2)}%`;
+  $("#verdict").innerHTML = size <= 60 ? `<b>${cards.length} small cards</b>, about ${avg.toFixed(1)} topic each: very focused, but a card like "any extra unused days expire on 31 March" can lose what it's about.`
+    : size >= 400 ? `<b>${cards.length} big card${cards.length > 1 ? "s" : ""}</b> covering ${Math.round(avg)} topics: all the context, but the meaning is a blur of leave, travel, laptops and passwords.`
+    : `<b>${cards.length} cards</b> of about 200 words, ${avg.toFixed(1)} topics each: the kit's balance between focused and complete.`;
+  $("#challenge").hidden = false;
+  triedSizes.add(size);
+  if (triedSizes.size >= 2) discover("s2", `There's no perfect size, only a trade-off. Small cards are <b>focused</b> but lose context; big cards keep context but <b>blur</b> many topics into one meaning. The kit uses <b>200 words with a 40-word overlap</b>.`);
 }
-document.querySelectorAll("[data-size]").forEach((b) => b.onclick = () => { size = +b.dataset.size; renderChunks(); });
-$("#ov").onchange = renderChunks;
-renderChunks();
+$$("[data-size]").forEach((b) => (b.onclick = () => { size = +b.dataset.size; $$("[data-size]").forEach((x) => x.setAttribute("aria-pressed", x === b)); slice(); }));
+$("#slice").onclick = slice; $("#ov").onchange = () => { if ($("#fan .icard")) slice(); };
 
-/* ---------- step 3: words -> numbers ---------- */
-const VEC = DATA.chunk0_vector;
-$("#emb-before").textContent = DATA.chunk0_text.replace(/^#.*?\n+/, "").replace(/#+\s*/g, "").replace(/\s+/g, " ").slice(0, 230) + "…";
-$("#numbers").innerHTML = VEC.slice(0, 18).map((v) => `<span class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${v.toFixed(3)}</span>`).join("") + `<span class="more">… 750 more</span>`;
-
-/* the meaning map: hand-placed topic groups; the line always goes to the real closest sentence */
-const GROUPS = [
-  { name: "Leave & time off", x: 250, y: 165, rx: 195, ry: 118, fill: "--c1",
-    pts: [["leave", "24 days of annual leave", 160, 118], ["carry", "carry over up to 5 unused days", 300, 205], ["sick", "sick leave: 12 days", 150, 210], ["parental", "parental leave: 26 weeks", 360, 88]] },
-  { name: "Devices & equipment", x: 700, y: 110, rx: 165, ry: 80, fill: "--c3",
-    pts: [["laptop", "a laptop on day one", 630, 92], ["lost", "report lost or stolen equipment", 740, 140]] },
-  { name: "Security", x: 730, y: 330, rx: 140, ry: 62, fill: "--c4",
-    pts: [["2fa", "password manager + 2FA", 730, 335]] },
-  { name: "Money & travel", x: 300, y: 395, rx: 240, ry: 62, fill: "--c2",
-    pts: [["meals", "meals up to ₹1,500/day", 165, 400], ["travel", "book travel on TravelDesk", 315, 375], ["learning", "learning budget ₹30,000", 445, 415]] },
-  { name: "Working time", x: 525, y: 238, rx: 98, ry: 58, fill: "--c5",
-    pts: [["hours", "core hours 10–16", 510, 222], ["wfh", "work from home 3 days", 540, 262]] },
-];
-const QPOS = { q_carry: [330, 160], q_laptop: [700, 182], q_hindi: [235, 150], q_stock: [560, 330] };
-const svg = $("#mmap"), NS = "http://www.w3.org/2000/svg";
-function el(name, attrs, parent = svg) { const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
-const PTS = {}; GROUPS.forEach((g) => g.pts.forEach(([id, label, x, y]) => (PTS[id] = { label, x, y, group: g.name })));
-let mapQ = "q_carry";
-function drawMap(q) {
-  mapQ = q; svg.innerHTML = "";
-  GROUPS.forEach((g) => {
-    el("ellipse", { cx: g.x, cy: g.y, rx: g.rx, ry: g.ry, style: `fill: var(${g.fill})` });
-    const t = el("text", { x: g.x, y: g.y - g.ry + 20, "text-anchor": "middle", style: "font: 700 13px var(--body); fill: var(--muted); letter-spacing: 0.04em" });
-    t.textContent = g.name.toUpperCase();
-  });
-  const sims = Object.keys(PTS).map((id) => ({ id, c: DATA.cos[q][id] })).sort((a, b) => b.c - a.c);
-  const best = sims[0], [qx, qy] = QPOS[q];
-  el("line", { x1: qx, y1: qy, x2: PTS[best.id].x, y2: PTS[best.id].y, style: "stroke: var(--q-fill)", "stroke-width": 3, "stroke-dasharray": q === "q_stock" ? "6 5" : "" });
-  Object.entries(PTS).forEach(([id, p]) => {
-    el("circle", { cx: p.x, cy: p.y, r: id === best.id ? 8 : 6, style: "fill: var(--doc); stroke: var(--card)", "stroke-width": 2 });
-    const t = el("text", { x: p.x, y: p.y + 21, "text-anchor": "middle", style: `font: ${id === best.id ? 700 : 400} 13px var(--body); fill: var(${id === best.id ? "--ink" : "--ink-2"})` });
-    t.textContent = p.label;
-  });
-  el("circle", { cx: qx, cy: qy, r: 11, style: "fill: var(--q-fill); stroke: var(--card)", "stroke-width": 3 });
-  const qt = el("text", { x: qx, y: qy - 18, "text-anchor": "middle", style: "font: 700 14px var(--body); fill: var(--q)" });
-  qt.textContent = "Priya's question";
-  const qtext = text(q);
-  $("#mmap-read").innerHTML = q === "q_stock"
-    ? `<b>"${esc(qtext)}"</b> has no real home. The closest sentence is "${esc(text(best.id))}", at only <b>${best.c.toFixed(2)}</b>. The handbook simply doesn't talk about stock prices.`
-    : `<b>"${esc(qtext)}"</b> lands in <b>${PTS[best.id].group}</b>, closest to "${esc(text(best.id))}" with a score of <b>${best.c.toFixed(2)}</b>${q === "q_hindi" ? ", even though the question is in Hindi and the handbook in English" : q === "q_carry" ? ", even though they share almost no words" : ""}.`;
-  document.querySelectorAll("[data-q]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.q === q));
-}
-document.querySelectorAll("[data-q]").forEach((b) => b.onclick = () => drawMap(b.dataset.q));
-drawMap(mapQ);
-
-/* all 768 numbers (inside "go deeper") */
-const strip = $("#strip"), sctx = strip.getContext("2d");
+/* ---------- 3a. the number machine: card 1's real 768 numbers ---------- */
+const VEC = DATA.chunk0_vector, MAXV = Math.max(...VEC.map(Math.abs));
+const feedText = DATA.chunk0_text.replace(/#+\s*/g, "").replace(/\s+/g, " "), feedWords = feedText.slice(feedText.indexOf("Every full-time")).split(" ").slice(0, 40);
+$("#feed").innerHTML = feedWords.map((w) => `<span>${esc(w)}</span>`).join(" ") + " …";
+const strip = $("#strip"), sx = strip.getContext("2d"); let filled = 0, hoverCell = -1;
 function drawStrip() {
-  const COLS = 48, ROWS = 16, w = strip.width / COLS, h = strip.height / ROWS, max = Math.max(...VEC.map(Math.abs));
-  sctx.fillStyle = css("--paper"); sctx.fillRect(0, 0, strip.width, strip.height);
-  VEC.forEach((v, i) => {
-    sctx.globalAlpha = 0.12 + 0.88 * Math.min(1, Math.abs(v) / max) ** 0.7;
-    sctx.fillStyle = v >= 0 ? css("--doc") : css("--neg");
-    sctx.fillRect((i % COLS) * w + 1, Math.floor(i / COLS) * h + 1, w - 2, h - 2);
+  const d = Math.min(2, devicePixelRatio || 1), W = strip.clientWidth, cw = W / 48, H = Math.round(cw * 16);
+  strip.width = W * d; strip.height = H * d; strip.style.height = `${H}px`; sx.setTransform(d, 0, 0, d, 0, 0);
+  sx.fillStyle = "#050810"; sx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 768; i++) {
+    const x = (i % 48) * cw, y = Math.floor(i / 48) * cw, v = VEC[i];
+    sx.globalAlpha = i < filled ? 0.15 + 0.85 * Math.min(1, Math.abs(v) / MAXV) ** 0.7 : 0.08;
+    sx.fillStyle = i < filled ? (v >= 0 ? "#5b8cff" : "#ff6fae") : "#8592ad";
+    sx.fillRect(x + 0.5, y + 0.5, cw - 1, cw - 1);
+  }
+  sx.globalAlpha = 1;
+  if (hoverCell >= 0) { sx.strokeStyle = "#ffb547"; sx.lineWidth = 2; sx.strokeRect((hoverCell % 48) * cw, Math.floor(hoverCell / 48) * cw, cw, cw); }
+}
+addEventListener("resize", drawStrip); drawStrip();
+$("#feed-btn").onclick = () => {
+  $("#core").classList.add("on"); $("#feed-btn").disabled = true;
+  $$("#feed span").forEach((s, i) => setTimeout(() => s.classList.add("eaten"), reduce ? 0 : i * 28));
+  tween(1700, (p) => { filled = Math.round(768 * ease(p)); drawStrip(); $("#readout").textContent = `${filled} / 768 numbers`; }, () => {
+    $("#core").classList.remove("on"); $("#feed-btn").disabled = false; $("#feed-btn").textContent = "Feed it again";
+    $("#readout").innerHTML = `768 / 768 numbers. Hover or tap a cell.`;
   });
-  sctx.globalAlpha = 1;
-}
-drawStrip();
+  setTimeout(() => $$("#feed span").forEach((s) => s.classList.remove("eaten")), reduce ? 0 : 3200);
+};
+function cellAt(e) { const r = strip.getBoundingClientRect(), cw = r.width / 48, c = Math.floor((e.clientX - r.left) / cw), rw = Math.floor((e.clientY - r.top) / cw); return c >= 0 && c < 48 && rw >= 0 && rw < 16 ? rw * 48 + c : -1; }
+strip.addEventListener("pointermove", (e) => {
+  if (filled < 768) return; hoverCell = cellAt(e); drawStrip();
+  if (hoverCell >= 0) $("#readout").innerHTML = `number <b>#${hoverCell + 1}</b> = ${VEC[hoverCell] >= 0 ? "+" : ""}${VEC[hoverCell].toFixed(4)}. Means "leave"? <b>No single number does.</b>`;
+});
 
-/* ---------- step 4: real scores drawn at their real angles ---------- */
-const PAIRS = [["carry", "close", "very close: same idea"], ["sick", "mid", "related topic"], ["2fa", "far", "different topic"]];
-function arrowSVG(c) {
-  const a = Math.acos(Math.min(1, c)), L = 100, x = 20 + L * Math.cos(a), y = 105 - L * Math.sin(a);
-  return `<svg viewBox="0 0 150 120" aria-hidden="true">
-    <line x1="20" y1="105" x2="125" y2="105" style="stroke: var(--doc)" stroke-width="5" stroke-linecap="round"/>
-    <line x1="20" y1="105" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" style="stroke: var(--q-fill)" stroke-width="5" stroke-linecap="round"/>
-    <path d="M 52 105 A 32 32 0 0 0 ${(20 + 32 * Math.cos(a)).toFixed(1)} ${(105 - 32 * Math.sin(a)).toFixed(1)}" fill="none" style="stroke: var(--muted)" stroke-width="1.5"/>
-    <text x="58" y="${(100 - 10 * Math.sin(a)).toFixed(1)}" style="font: 600 12px var(--mono); fill: var(--muted)">${Math.round(a * 180 / Math.PI)}°</text></svg>`;
+/* ---------- 3b. the meaning galaxy ---------- */
+const QUESTIONS = [
+  { id: "q_carry", tag: "Priya's question" }, { id: "q_laptop", tag: "A worried employee" },
+  { id: "q_hindi", tag: "Asked in Hindi" }, { id: "q_stock", tag: "A tricky one" },
+];
+let gq = "q_carry", kwOn = false;
+const sky = Galaxy($("#sky"), {
+  guessing: true,
+  onGuess: (id) => { $("#prompt").innerHTML = `You picked <b>"${esc(STARS[id].label)}"</b>. Now press <b>Launch</b>.`; $("#r-guess").classList.remove("hide"); $("#g-score").textContent = "?"; $("#g-text").textContent = `"${text(id)}"`; },
+  onStatus: (s) => { $("#counter").hidden = false; $("#prompt").innerHTML = s === "embed" ? "Turning the question into <b>768 numbers</b>…" : "Flying to the closest meaning…"; },
+  onCount: (n) => ($("#counter").textContent = `${n} / 768 numbers`),
+  onDone: (scores) => {
+    const best = scores[0]; $("#counter").textContent = "768 / 768 numbers";
+    $("#prompt").innerHTML = gq === "q_stock" ? "It drifted into <b>empty space</b>: nothing here is about this." : `Landed in <b>${STARS[best.id].group.toLowerCase()}</b>, next to <b>"${esc(STARS[best.id].label)}"</b>.`;
+    $("#r-model").classList.remove("hide"); $("#m-score").textContent = best.c.toFixed(2); $("#m-text").textContent = `"${text(best.id)}"`;
+    if (sky.guess) {
+      $("#g-score").textContent = DATA.cos[gq][sky.guess].toFixed(2);
+      $("#g-text").innerHTML = sky.guess === best.id ? `Spot on! You thought like the model: "${esc(text(sky.guess))}"` : `"${esc(text(sky.guess))}". Close in topic, but the model found a better match.`;
+    }
+    $("#r-why").classList.remove("hide");
+    const n = sharedWords(gq, best.id);
+    if (gq === "q_stock") { $("#w-big").textContent = "no home"; $("#w-text").textContent = `Even the closest star is only ${best.c.toFixed(2)}. In the kit, the AI then answers "couldn't find this" instead of inventing a number.`; }
+    else if (gq === "q_hindi") { $("#w-big").textContent = "0 shared words"; $("#w-text").textContent = "Different language, same meaning. Turn on the keyword flashlight: not one star lights up."; }
+    else { $("#w-big").textContent = `${n} shared word${n === 1 ? "" : "s"}`; $("#w-text").textContent = "The model matched the meaning, not the letters. A plain text search for these words would struggle."; }
+    discover("s3", `The model doesn't compare letters, it compares <b>places in meaning space</b>. "Holidays" lands next to "unused days", and a Hindi question lands next to the English leave rule, with <b>zero shared words</b>.`);
+  },
+});
+function pickQ(id) {
+  gq = id; sky.setQuestion(id);
+  $$(".qcard").forEach((c) => c.setAttribute("aria-pressed", c.dataset.q === id));
+  $("#prompt").innerHTML = `Where will <b>"${esc(text(id))}"</b> land? <b>Tap a star.</b>`;
+  $("#counter").hidden = true; $("#launch").disabled = false;
+  ["r-guess", "r-model", "r-why"].forEach((x) => $("#" + x).classList.add("hide"));
+  $("#g-score").textContent = "?"; $("#g-text").textContent = "Tap a star before launching.";
 }
-$("#arrows").innerHTML = PAIRS.map(([id, cls, words]) => {
-  const c = DATA.cos.q_carry[id];
-  return `<div class="arrow-card">${arrowSVG(c)}<span class="score">${c.toFixed(2)}</span><span class="tag ${cls}">${words}</span><span class="pair"><span class="q-text">holidays question</span> ↔ <span class="d-text">"${esc(text(id))}"</span></span></div>`;
-}).join("");
+$("#deck").innerHTML = QUESTIONS.map((x) => `<button class="qcard" data-q="${x.id}" aria-pressed="false"><small>${x.tag}</small><b>"${esc(text(x.id))}"</b></button>`).join("");
+$$(".qcard").forEach((c) => (c.onclick = () => pickQ(c.dataset.q)));
+$("#launch").onclick = () => { if (sky.phase === "done") pickQ(gq); $(".stage").scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); $("#launch").disabled = true; setTimeout(() => sky.launch(), reduce ? 0 : 350); setTimeout(() => ($("#launch").disabled = false), reduce ? 0 : 3200); };
+$("#kw").onclick = () => { kwOn = !kwOn; sky.setKw(kwOn); $("#kw").setAttribute("aria-pressed", kwOn); $("#kw").textContent = kwOn ? "Keyword flashlight: on (green = exact words)" : "Keyword flashlight: off"; };
+pickQ("q_carry");
 
-/* the dial (go deeper) */
-function drawDial() {
-  const deg = +$("#deg").value, len = +$("#len").value / 100, a = deg * Math.PI / 180;
-  $("#deg-out").textContent = `${deg}°`; $("#len-out").textContent = len.toFixed(2);
-  $("#cos-out").textContent = Math.cos(a).toFixed(2);
-  const L = 90 * len, x = L * Math.cos(a), y = -L * Math.sin(a);
-  $("#dial").innerHTML = `<line x1="0" y1="0" x2="90" y2="0" style="stroke: var(--doc)" stroke-width="5" stroke-linecap="round"/>
-    <line x1="0" y1="0" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" style="stroke: var(--q-fill)" stroke-width="5" stroke-linecap="round"/>
-    <path d="M 30 0 A 30 30 0 0 0 ${(30 * Math.cos(a)).toFixed(1)} ${(-30 * Math.sin(a)).toFixed(1)}" fill="none" style="stroke: var(--muted)" stroke-width="1.5"/>`;
+/* ---------- 4. the arrow duel: real scores, real angles ---------- */
+const ROUNDS = [
+  { a: "w_vacation", b: "w_holiday", aL: '"vacation days"', bL: '"holiday"' },
+  { a: "carry", b: "q_carry", bL: "Priya's question" },
+  { a: "sick", b: "q_carry", bL: "Priya's question" },
+  { a: "2fa", b: "q_carry", bL: "Priya's question" },
+].map((r) => ({ ...r, c: DATA.cos[r.b][r.a] }));
+const duel = $("#duel"), dx = duel.getContext("2d");
+let round = 0, ang = 60, len = 0.8, locked = false, reveal = 0, points = 0; const results = [];
+const cosOf = (deg) => Math.cos(deg * Math.PI / 180);
+function duelSize() { const d = Math.min(2, devicePixelRatio || 1), W = duel.clientWidth, H = Math.round(Math.min(340, W * 0.62)); duel.width = W * d; duel.height = H * d; duel.style.height = `${H}px`; dx.setTransform(d, 0, 0, d, 0, 0); drawDuel(); }
+function origin() { const W = duel.clientWidth, H = duel.clientHeight; return [W * 0.08, H * 0.88, Math.min(W * 0.78, H * 0.76)]; }
+function arrow(ox, oy, deg, L, color, w, dash) {
+  const a = deg * Math.PI / 180, x = ox + L * Math.cos(a), y = oy - L * Math.sin(a);
+  dx.strokeStyle = color; dx.fillStyle = color; dx.lineWidth = w; dx.setLineDash(dash || []); dx.lineCap = "round";
+  dx.beginPath(); dx.moveTo(ox, oy); dx.lineTo(x, y); dx.stroke(); dx.setLineDash([]);
+  dx.beginPath(); dx.moveTo(x, y); dx.lineTo(x - 14 * Math.cos(a - 0.4), y + 14 * Math.sin(a - 0.4)); dx.lineTo(x - 14 * Math.cos(a + 0.4), y + 14 * Math.sin(a + 0.4)); dx.closePath(); dx.fill();
 }
-$("#deg").oninput = drawDial; $("#len").oninput = drawDial; drawDial();
+function drawDuel() {
+  const W = duel.clientWidth, H = duel.clientHeight, [ox, oy, R] = origin();
+  dx.clearRect(0, 0, W, H);
+  // the scale: score along the arc
+  dx.strokeStyle = "#24304b"; dx.lineWidth = 1;
+  dx.beginPath(); dx.arc(ox, oy, R, -Math.PI / 2, 0); dx.stroke();
+  [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.3, 0].forEach((c) => {
+    const a = Math.acos(c), x = ox + (R + 14) * Math.cos(a), y = oy - (R + 14) * Math.sin(a);
+    dx.fillStyle = "#8592ad"; dx.font = "600 11px JetBrains Mono, monospace"; dx.textAlign = "center"; dx.fillText(c.toFixed(c === 0 || c === 1 ? 0 : 1), x, y + 4);
+    dx.beginPath(); dx.moveTo(ox + R * Math.cos(a), oy - R * Math.sin(a)); dx.lineTo(ox + (R - 6) * Math.cos(a), oy - (R - 6) * Math.sin(a)); dx.stroke();
+  });
+  arrow(ox, oy, 0, R, "#8fb4ff", 5);
+  const r = ROUNDS[round];
+  if (locked) {
+    const real = Math.acos(r.c) * 180 / Math.PI, shown = ang + (real - ang) * ease(reveal);
+    arrow(ox, oy, shown, R * 0.95, "#4ee08f", 3, [7, 6]);
+  }
+  arrow(ox, oy, ang, R * len, "#ffb547", 5);
+  dx.strokeStyle = "#b9c4dc"; dx.lineWidth = 1.5; dx.beginPath(); dx.arc(ox, oy, 34, -ang * Math.PI / 180, 0); dx.stroke();
+  dx.fillStyle = "#b9c4dc"; dx.font = "600 12px JetBrains Mono, monospace"; dx.textAlign = "left"; dx.fillText(`${Math.round(ang)}°`, ox + 40, oy - 8);
+  $("#live").textContent = cosOf(ang).toFixed(2);
+  $("#live-mini").textContent = `angle ${Math.round(ang)}° · arrow length ${len.toFixed(2)} (try changing it)`;
+}
+function setRound() {
+  const r = ROUNDS[round]; locked = false; reveal = 0; ang = 70; len = 0.8;
+  $("#duel-instr").innerHTML = `Round <b>${round + 1} of ${ROUNDS.length}</b>: <b>drag the amber arrow</b> to how close you think these two meanings are.`;
+  $("#pa").innerHTML = `<b class="d-text">${r.aL || "Handbook"}</b>${r.aL ? "" : `: "${esc(text(r.a))}"`}`;
+  $("#pb").innerHTML = `<b class="q-text">${r.bL}</b>${r.b.startsWith("q_") ? `: "${esc(text(r.b))}"` : ""}`;
+  $("#lock").hidden = false; $("#next").hidden = true; $("#result").textContent = ""; drawDuel();
+  showRounds();
+}
+function showRounds() { $("#rounds").innerHTML = ROUNDS.map((_, i) => `<span class="${i < results.length ? "done" : ""}">${i < results.length ? `R${i + 1}: +${results[i]}` : `R${i + 1}`}</span>`).join("") + `<span class="done">${points} points</span>`; }
+function pointer(e) {
+  if (locked) return;
+  const rect = duel.getBoundingClientRect(), [ox, oy, R] = origin(), x = e.clientX - rect.left - ox, y = oy - (e.clientY - rect.top);
+  ang = Math.max(0, Math.min(90, Math.atan2(Math.max(0, y), Math.max(0, x)) * 180 / Math.PI)); len = Math.max(0.3, Math.min(1, Math.hypot(x, y) / R)); drawDuel();
+}
+duel.addEventListener("pointerdown", (e) => { duel.setPointerCapture(e.pointerId); pointer(e); });
+duel.addEventListener("pointermove", (e) => e.buttons && pointer(e));
+$("#lock").onclick = () => {
+  const r = ROUNDS[round], mine = cosOf(ang), pts = Math.max(0, Math.round(100 - Math.abs(mine - r.c) * 400));
+  locked = true; results.push(pts); points += pts; $("#lock").hidden = true; showRounds();
+  tween(900, (p) => { reveal = p; drawDuel(); }, () => {
+    $("#result").innerHTML = `You said <b class="q-text">${mine.toFixed(2)}</b>, the model says <b>${r.c.toFixed(2)}</b> (${Math.round(Math.acos(r.c) * 180 / Math.PI)}°). <b>+${pts}</b> points.`;
+    if (round < ROUNDS.length - 1) $("#next").hidden = false;
+    else { discover("s4", `Same meaning = small angle = score near <b>1</b>. And the surprise: the password/2FA sentence has nothing to do with holidays, yet it still scores <b>${ROUNDS[3].c.toFixed(2)}</b>, not 0. With this model, "unrelated" sits around 0.5. That's why the kit <b>ranks</b> cards and uses a bar of 0.50.`); }
+  });
+};
+$("#next").onclick = () => { round++; setRound(); };
+addEventListener("resize", duelSize); duelSize(); setRound();
 const a4 = [0.2, 0.1, 0.4, 0.3], b4 = [0.25, 0.05, 0.35, 0.3];
 const dot4 = a4.reduce((s, v, i) => s + v * b4[i], 0), la4 = Math.hypot(...a4), lb4 = Math.hypot(...b4);
-$("#calc").innerHTML = `<tr><th>number</th><th>A (piece)</th><th>B (question)</th><th>A × B</th></tr>` +
-  a4.map((v, i) => `<tr><td>${i + 1}</td><td style="color:var(--doc)">${v.toFixed(2)}</td><td style="color:var(--q)">${b4[i].toFixed(2)}</td><td>${(v * b4[i]).toFixed(4)}</td></tr>`).join("") +
-  `<tr class="sum"><td>add up</td><td>length ${la4.toFixed(3)}</td><td>length ${lb4.toFixed(3)}</td><td>${dot4.toFixed(4)}</td></tr>` +
-  `<tr class="sum"><td colspan="3">cosine = ${dot4.toFixed(4)} / (${la4.toFixed(3)} × ${lb4.toFixed(3)})</td><td style="color:var(--ok)">${(dot4 / (la4 * lb4)).toFixed(3)}</td></tr>`;
+$("#calc").innerHTML = `<tr><th>number</th><th>A (card)</th><th>B (question)</th><th>A × B</th></tr>` +
+  a4.map((v, i) => `<tr><td>${i + 1}</td><td class="d-text">${v.toFixed(2)}</td><td class="q-text">${b4[i].toFixed(2)}</td><td>${(v * b4[i]).toFixed(4)}</td></tr>`).join("") +
+  `<tr><td>add up</td><td>length ${la4.toFixed(3)}</td><td>length ${lb4.toFixed(3)}</td><td>${dot4.toFixed(4)}</td></tr>` +
+  `<tr><td colspan="3">cosine = ${dot4.toFixed(4)} / (${la4.toFixed(3)} × ${lb4.toFixed(3)})</td><td class="k-text"><b>${(dot4 / (la4 * lb4)).toFixed(3)}</b></td></tr>`;
 
-/* ---------- step 5: the real rows ---------- */
-const kw = DATA.chunk0_tsv.split(" ").filter((x) => /^'\p{L}/u.test(x)).slice(0, 6).map((x) => x.split(":")[0].replace(/'/g, "")).join(", ");
-$("#rows").innerHTML = `<tr><th>#</th><th>words (content)</th><th>meaning (768 numbers)</th><th>keywords</th></tr>` +
-  DATA.chunks.map((c, i) => `<tr><td>${i + 1}</td><td>${esc(c.text.replace(/#+\s*/g, "").replace(/\s+/g, " ").slice(0, 90))}… <span class="note">(${c.words} words)</span></td>
-    <td class="n">${i === 0 ? `[${VEC.slice(0, 3).map((v) => v.toFixed(3)).join(", ")}, …]` : "[… 768 numbers …]"}</td>
-    <td class="k">${i === 0 ? esc(kw) + ", …" : "…"}</td></tr>`).join("");
-
-/* exact vs index: a small simulation */
-const hc = $("#hnsw"), hx = hc.getContext("2d");
-let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-const N = 140, pts = Array.from({ length: N }, () => ({ x: 30 + rnd() * 840, y: 25 + rnd() * 310 }));
-const d2 = (a, b) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
-const nbrs = pts.map((p, i) => pts.map((q, j) => [j, d2(p, q)]).filter(([j]) => j !== i).sort((a, b) => a[1] - b[1]).slice(0, 5).map(([j]) => j));
-const upper = Array.from({ length: 14 }, (_, k) => Math.floor(k * N / 14));
-let query = { x: 700, y: 270 }, anim = null;
-function drawHnsw(path = [], scanned = -1, best = -1) {
-  hx.clearRect(0, 0, hc.width, hc.height);
-  hx.strokeStyle = css("--line"); hx.lineWidth = 1;
-  nbrs.forEach((ns, i) => ns.forEach((j) => { hx.beginPath(); hx.moveTo(pts[i].x, pts[i].y); hx.lineTo(pts[j].x, pts[j].y); hx.stroke(); }));
-  pts.forEach((p, i) => { hx.beginPath(); hx.arc(p.x, p.y, 4, 0, 7); hx.fillStyle = i <= scanned ? css("--doc-mid") : css("--doc"); hx.fill(); });
-  if (path.length) { hx.strokeStyle = css("--q-fill"); hx.lineWidth = 3; hx.beginPath(); hx.moveTo(pts[path[0]].x, pts[path[0]].y); path.forEach((i) => hx.lineTo(pts[i].x, pts[i].y)); hx.stroke(); }
-  if (best >= 0) { hx.beginPath(); hx.arc(pts[best].x, pts[best].y, 10, 0, 7); hx.strokeStyle = css("--ok"); hx.lineWidth = 3; hx.stroke(); }
-  hx.beginPath(); hx.arc(query.x, query.y, 9, 0, 7); hx.fillStyle = css("--q-fill"); hx.fill();
-  hx.fillStyle = css("--ink"); hx.font = "600 14px IBM Plex Sans, sans-serif"; hx.fillText("question", query.x + 13, query.y + 5);
-}
-const trueBest = () => pts.reduce((b, p, i) => (d2(p, query) < d2(pts[b], query) ? i : b), 0);
-const stop = () => { if (anim) clearInterval(anim); anim = null; };
-$("#run-exact").onclick = () => {
-  stop(); let i = -1; const best = trueBest();
-  const step = () => { i = Math.min(N - 1, i + 4); drawHnsw([], i, i === N - 1 ? best : -1); $("#c-exact").textContent = i + 1; if (i === N - 1) stop(); };
-  if (reduce) { i = N - 2; step(); } else anim = setInterval(step, 16);
+/* ---------- 5a. save the real rows ---------- */
+const kwList = DATA.chunk0_tsv.split(" ").filter((x) => /^'\p{L}/u.test(x)).slice(0, 6).map((x) => x.split(":")[0].replace(/'/g, "")).join(", ");
+const preview = (c) => esc(c.text.replace(/#+\s*/g, "").replace(/\s+/g, " ").slice(0, 80));
+$("#pcs").innerHTML = DATA.chunks.map((c, i) => `<div class="pc"><b>Card ${i + 1}</b> · ${c.words} words · "${preview(c)}…"</div>`).join("");
+const HEAD = `<tr><th>#</th><th>content (words)</th><th>embedding (meaning)</th><th>tsv (keywords)</th></tr>`;
+$("#rows").innerHTML = HEAD;
+$("#save").onclick = async () => {
+  $("#save").disabled = true; $("#rows").innerHTML = HEAD;
+  for (const [i, c] of DATA.chunks.entries()) {
+    $$("#pcs .pc")[i].classList.add("in"); $("#db").classList.add("on");
+    await sleep(700);
+    $("#rows").insertAdjacentHTML("beforeend", `<tr class="new"><td>${i + 1}</td><td>${preview(c)}… <span class="note">(${c.words} words)</span></td><td class="n">${i === 0 ? `[${VEC.slice(0, 3).map((v) => v.toFixed(3)).join(", ")}, …]` : "[… 768 numbers …]"}</td><td class="k">${i === 0 ? esc(kwList) + ", …" : "…"}</td></tr>`);
+    $("#db").classList.remove("on");
+  }
+  await sleep(1200); $$("#pcs .pc").forEach((p) => p.classList.remove("in")); $("#save").disabled = false; $("#save").textContent = "Save again";
 };
-$("#run-hnsw").onclick = () => {
-  stop();
+
+/* ---------- 5b. the race: check everything vs hop along the index ---------- */
+let N = 300, pts = [], nbrs = [], upper = [], query = { x: 0.78, y: 0.7 }, racing = false;
+const d2 = (a, b) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+function buildPoints() {
+  seed = 7; pts = Array.from({ length: N }, () => ({ x: 0.03 + rnd() * 0.94, y: 0.05 + rnd() * 0.9 }));
+  // 6 nearest neighbours each, looked up through a grid so 3,000 points stay quick
+  const G = Math.ceil(Math.sqrt(N / 4)), cell = (v) => Math.min(G - 1, Math.floor(v * G)), grid = {};
+  pts.forEach((p, i) => (grid[cell(p.x) + "," + cell(p.y)] ||= []).push(i));
+  nbrs = pts.map((p, i) => {
+    for (let r = 1; ; r++) {
+      const near = [];
+      for (let gx = cell(p.x) - r; gx <= cell(p.x) + r; gx++) for (let gy = cell(p.y) - r; gy <= cell(p.y) + r; gy++) (grid[gx + "," + gy] || []).forEach((j) => j !== i && near.push([j, d2(p, pts[j])]));
+      if (near.length >= 12 || r > G) return near.sort((a, b) => a[1] - b[1]).slice(0, 6).map(([j]) => j);
+    }
+  });
+  upper = Array.from({ length: Math.round(Math.sqrt(N)) }, (_, k) => Math.floor(k * N / Math.round(Math.sqrt(N))));
+}
+const lanes = { exact: $("#exact"), hnsw: $("#hnsw") };
+function laneSize(c) { const d = Math.min(2, devicePixelRatio || 1), W = c.clientWidth, H = Math.round(W * 0.62); c.width = W * d; c.height = H * d; c.style.height = `${H}px`; c.getContext("2d").setTransform(d, 0, 0, d, 0, 0); }
+function drawLane(c, st = {}) {
+  const x = c.getContext("2d"), W = c.clientWidth, H = c.clientHeight, X = (p) => p.x * W, Y = (p) => p.y * H, r = N > 1000 ? 1.4 : 2.6;
+  x.clearRect(0, 0, W, H);
+  if (st.links) { x.strokeStyle = "rgba(91,140,255,0.13)"; x.lineWidth = 1; nbrs.forEach((ns, i) => ns.forEach((j) => { if (j > i) { x.beginPath(); x.moveTo(X(pts[i]), Y(pts[i])); x.lineTo(X(pts[j]), Y(pts[j])); x.stroke(); } })); }
+  pts.forEach((p, i) => { x.fillStyle = st.seen?.has(i) ? "#ffb547" : st.upper && upper.includes(i) ? "#c9d3e6" : "#3e5a9e"; x.beginPath(); x.arc(X(p), Y(p), st.seen?.has(i) ? r + 0.8 : r, 0, 7); x.fill(); });
+  if (st.path?.length > 1) { x.strokeStyle = "#4ee08f"; x.lineWidth = 3; x.beginPath(); st.path.forEach((i, k) => (k ? x.lineTo(X(pts[i]), Y(pts[i])) : x.moveTo(X(pts[i]), Y(pts[i])))); x.stroke(); }
+  if (st.best >= 0) { x.strokeStyle = "#4ee08f"; x.lineWidth = 3; x.beginPath(); x.arc(X(pts[st.best]), Y(pts[st.best]), 9, 0, 7); x.stroke(); }
+  x.fillStyle = "#ffb547"; x.beginPath(); x.arc(query.x * W, query.y * H, 7, 0, 7); x.fill();
+  x.fillStyle = "#fff4dc"; x.font = "700 13px IBM Plex Sans, sans-serif"; x.textAlign = "left"; x.fillText("question", Math.min(W - 64, query.x * W + 11), query.y * H + 4);
+}
+function resetRace() { Object.values(lanes).forEach((c) => laneSize(c)); drawLane(lanes.exact); drawLane(lanes.hnsw, { links: true, upper: true }); $("#c-exact").textContent = 0; $("#c-hnsw").textContent = 0; $$(".flag").forEach((f) => f.classList.remove("on")); }
+function hnswSearch() {
   let cur = upper.reduce((b, i) => (d2(pts[i], query) < d2(pts[b], query) ? i : b), upper[0]);
-  let checks = upper.length; const path = [cur]; const seen = new Set(upper);
-  while (true) {
+  const seenOrder = [...upper], seen = new Set(upper), path = [cur];
+  for (;;) {
     let next = cur;
-    for (const j of nbrs[cur]) { if (!seen.has(j)) { seen.add(j); checks++; } if (d2(pts[j], query) < d2(pts[next], query)) next = j; }
+    for (const j of nbrs[cur]) { if (!seen.has(j)) { seen.add(j); seenOrder.push(j); } if (d2(pts[j], query) < d2(pts[next], query)) next = j; }
     if (next === cur) break; cur = next; path.push(cur);
   }
-  const best = trueBest(); let k = 0;
-  const show = () => { k++; drawHnsw(path.slice(0, k), -1, k >= path.length ? cur : -1); if (k >= path.length) { stop(); $("#c-hnsw").textContent = checks; $("#hnsw-res").textContent = cur === best ? "checks, same closest point" : "checks, a very close point"; } };
-  if (reduce) { k = path.length - 1; show(); } else anim = setInterval(show, 220);
-};
-$("#new-q").onclick = () => { stop(); query = { x: 40 + rnd() * 820, y: 30 + rnd() * 300 }; $("#c-exact").textContent = "–"; $("#c-hnsw").textContent = "–"; drawHnsw(); };
-drawHnsw();
-
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawStrip(); drawHnsw(); drawMap(mapQ); });
+  return { cur, seenOrder, path };
+}
+function race() {
+  if (racing) return; racing = true; resetRace();
+  const truth = pts.reduce((b, p, i) => (d2(p, query) < d2(pts[b], query) ? i : b), 0), h = hnswSearch();
+  const perFrame = N / 150; let k = 0, doneH = false;
+  const tick = () => {
+    k += reduce ? N : perFrame;
+    const ke = Math.min(N, Math.floor(k)), kh = Math.min(h.seenOrder.length, Math.floor(k));
+    drawLane(lanes.exact, { seen: new Set(Array.from({ length: ke }, (_, i) => i)), best: ke === N ? truth : -1 });
+    const hs = new Set(h.seenOrder.slice(0, kh)), hp = h.path.filter((i) => hs.has(i));
+    drawLane(lanes.hnsw, { links: true, upper: true, seen: hs, path: hp, best: kh === h.seenOrder.length ? h.cur : -1 });
+    $("#c-exact").textContent = ke; $("#c-hnsw").textContent = kh;
+    if (!doneH && kh === h.seenOrder.length) { doneH = true; $("#f-hnsw").textContent = `🏁 Done in ${kh} checks`; $("#f-hnsw").classList.add("on"); }
+    if (ke < N) return requestAnimationFrame(tick);
+    $("#f-exact").textContent = `Done in ${N.toLocaleString()} checks`; $("#f-exact").classList.add("on"); racing = false;
+    const same = h.cur === truth;
+    discover("s5", `The index checked <b>${h.seenOrder.length}</b> cards instead of <b>${N.toLocaleString()}</b> and found ${same ? "the same closest card" : "a card almost as close"}. Try 3,000 cards: the gap grows. With 10 million rows, that's the difference between seconds and <b>milliseconds</b>.`);
+  };
+  requestAnimationFrame(tick);
+}
+Object.values(lanes).forEach((c) => c.addEventListener("click", (e) => { if (racing) return; const r = c.getBoundingClientRect(); query = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; resetRace(); }));
+$$("[data-n]").forEach((b) => (b.onclick = () => { if (racing) return; N = +b.dataset.n; $$("[data-n]").forEach((x) => x.setAttribute("aria-pressed", x === b)); buildPoints(); resetRace(); }));
+$("#race").onclick = race;
+let raceW = innerWidth; addEventListener("resize", () => { if (racing || innerWidth === raceW) return; raceW = innerWidth; resetRace(); });
+buildPoints(); resetRace();
 </script>
-
+</body>
 </html>
