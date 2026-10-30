@@ -188,10 +188,10 @@ Running a workshop with this repo? See the **[hands-on exercises](docs/HANDS_ON.
 
 | Page | What it explains |
 |---|---|
-| [`docs/explainers/rag-ingestion-lab.html`](docs/explainers/rag-ingestion-lab.html) | How a document becomes searchable: extract, chunk, embed (768 numbers), cosine similarity, pgvector and the HNSW index |
-| [`docs/explainers/rag-retrieval-lab.html`](docs/explainers/rag-retrieval-lab.html) | How a question becomes a grounded answer: guard, cache, rewrite, meaning and keyword search, rank fusion, evidence gate, citations |
+| [`docs/explainers/rag-ingestion-lab.html`](docs/explainers/rag-ingestion-lab.html) | Part 1, how a document is prepared: read, cut into pieces, turn meaning into numbers, compare, save (pgvector) |
+| [`docs/explainers/rag-retrieval-lab.html`](docs/explainers/rag-retrieval-lab.html) | Part 2, how a question is answered: check, cache, rewrite, search two ways, combine, evidence gate, answer, check sources |
 
-Every number in them is real: the sample handbook embedded with `gemini-embedding-001`, and Postgres keyword ranks.
+Both follow one example (the sample handbook and the question "Can I carry over unused holidays?") step by step, and every number in them is real.
 
 ## License
 
