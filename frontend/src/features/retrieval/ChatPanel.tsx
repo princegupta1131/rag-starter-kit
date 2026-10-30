@@ -68,7 +68,9 @@ export default function ChatPanel({ collection, onUpload }: Props) {
       <input
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        placeholder={hasDocuments ? `Ask about the documents in ${collection.name}…` : 'Upload a document first'}
+        placeholder={
+          !hasDocuments ? 'Upload a document first' : empty ? `Ask about the documents in ${collection.name}…` : 'Ask a follow-up…'
+        }
         aria-label="Question"
         disabled={!hasDocuments}
       />
@@ -88,10 +90,10 @@ export default function ChatPanel({ collection, onUpload }: Props) {
       <div className="messages" ref={list} aria-live="polite">
         {empty && (
           <div className="chat-empty">
-            <Logo size={56} className="hero-icon" />
+            <Logo size={44} className="hero-icon" />
             {hasDocuments ? (
               <>
-                <h2>Ask anything about the documents in {collection.name}.</h2>
+                <h2>Ask anything about {collection.name}</h2>
                 <p>Answers cite their sources. Open “How this answer was made” to see each step.</p>
                 {composer}
                 {suggestions.length > 0 && (
@@ -115,19 +117,17 @@ export default function ChatPanel({ collection, onUpload }: Props) {
           <div className="thread">
             {messages.map((m, i) =>
               m.role === 'user' ? (
-                <div key={i} className="msg user">{m.content}</div>
+                <h2 key={i} className="question">{m.content}</h2>
               ) : (
                 <AnswerMessage key={i} id={`m${i}`} text={m.content} response={m.response} error={m.error} />
               ),
             )}
             {thinking && (
-              <div className="turn" role="status">
-                <Logo size={30} className="avatar thinking-avatar" />
-                <div className="msg assistant thinking">
-                  <span className="thinking-label">Searching your documents and writing an answer…</span>
-                  <span className="skeleton w80" />
-                  <span className="skeleton w60" />
-                </div>
+              <div className="answer-block" role="status">
+                <h3 className="section-label"><Logo size={18} className="pulse" /> Searching your documents…</h3>
+                <span className="skeleton w80" />
+                <span className="skeleton w60" />
+                <span className="skeleton w40" />
               </div>
             )}
           </div>

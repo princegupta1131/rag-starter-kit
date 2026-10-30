@@ -10,9 +10,11 @@ interface Props {
 }
 
 export default function AnswerText({ text, sourceAnchor }: Props) {
+  // "water [1]." → "water.[1]" so a full stop never wraps onto its own line after a chip
+  const tidy = text.replace(/((?:\s*\[\d+\])+)([.,;:!?।])/g, (_, cites: string, p: string) => `${p}${cites.trim()}`)
   const withLinks = sourceAnchor
-    ? text.replace(/\[(\d+)\](?!\()/g, (_, n: string) => `[${n}](#${sourceAnchor(Number(n))})`)
-    : text
+    ? tidy.replace(/\[(\d+)\](?!\()/g, (_, n: string) => `[${n}](#${sourceAnchor(Number(n))})`)
+    : tidy
   return (
     <div className="answer">
       <Markdown
