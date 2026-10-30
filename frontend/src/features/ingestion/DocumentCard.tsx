@@ -6,7 +6,7 @@ import StepTrace from '../../shared/StepTrace'
 import type { Chunk, DocumentInfo } from '../../types'
 
 // "handbook.md" -> "MD"; pasted text has no extension -> "TEXT"
-const fileType = (name: string) => (name.includes('.') ? name.split('.').pop()!.slice(0, 4).toUpperCase() : 'TEXT')
+export const fileType = (name: string) => (name.includes('.') ? name.split('.').pop()!.slice(0, 4).toUpperCase() : 'TEXT')
 
 export default function DocumentCard({ doc, onDeleted }: { doc: DocumentInfo; onDeleted: () => void }) {
   const [open, setOpen] = useState(false)

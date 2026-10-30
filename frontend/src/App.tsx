@@ -1,20 +1,30 @@
-// A sidebar to pick the collection; the main area shows the chat or the Documents page.
+// A sidebar to pick the category (a collection) and see its documents; the main area shows the chat or the Documents page.
 
 import { useCallback, useEffect, useState } from 'react'
 import { api } from './api/client'
 import CollectionPicker from './features/collections/CollectionPicker'
 import IngestionPanel from './features/ingestion/IngestionPanel'
+import SidebarDocs from './features/ingestion/SidebarDocs'
 import ChatPanel from './features/retrieval/ChatPanel'
 import Logo from './shared/Logo'
 import type { Collection, Health } from './types'
 
 const SAVED_COLLECTION = 'rag-starter:collection'
+const SAVED_THEME = 'rag-starter:theme' // also read in index.html, before the first paint
 
 function savedCollection(): string | null {
   try {
     return localStorage.getItem(SAVED_COLLECTION)
   } catch {
     return null
+  }
+}
+
+function savedTheme(): 'dark' | 'light' {
+  try {
+    return localStorage.getItem(SAVED_THEME) === 'light' ? 'light' : 'dark'
+  } catch {
+    return 'dark'
   }
 }
 
@@ -25,6 +35,17 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(savedCollection)
   const [chatKey, setChatKey] = useState(0) // bump to start a new chat
   const [view, setView] = useState<'chat' | 'documents'>('chat')
+  const [theme, setTheme] = useState(savedTheme)
+
+  useEffect(() => {
+    if (theme === 'light') document.documentElement.dataset.theme = 'light'
+    else delete document.documentElement.dataset.theme
+    try {
+      localStorage.setItem(SAVED_THEME, theme)
+    } catch {
+      /* storage unavailable: the theme just isn't remembered */
+    }
+  }, [theme])
 
   const refreshCollections = useCallback(async () => {
     const list = await api.listCollections()
@@ -73,24 +94,21 @@ export default function App() {
           />
         )}
 
-        {selected && (
-          <button
-            className="docs-card"
-            onClick={() => setView((v) => (v === 'documents' ? 'chat' : 'documents'))}
-            aria-current={view === 'documents' ? 'page' : undefined}
-          >
-            <span className="docs-icon" aria-hidden>↑</span>
-            <span className="docs-text">
-              <b>Documents</b>
-              <small>Upload and view files</small>
-            </span>
-            <span className="chev" aria-hidden />
-          </button>
+        {selected && !healthFailed && (
+          <SidebarDocs collection={selected} active={view === 'documents'} onOpen={() => setView('documents')} />
         )}
       </aside>
 
       <main className="main">
         <div className="main-top">
+          <button
+            className="theme-toggle"
+            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+          >
+            <span aria-hidden>{theme === 'dark' ? '☀' : '☾'}</span>
+          </button>
           <HealthPills health={health} failed={healthFailed} />
         </div>
         <div className="main-body">
@@ -116,7 +134,7 @@ export default function App() {
             <div className="state-panel" role="status">
               <span className="skeleton w60" />
               <span className="skeleton w40" />
-              <span className="sr-only">Loading collections…</span>
+              <span className="sr-only">Loading categories…</span>
             </div>
           ) : selected ? (
             // stays mounted on the Documents page, so the conversation is kept
@@ -130,10 +148,10 @@ export default function App() {
           ) : (
             <div className="state-panel">
               <Logo size={56} />
-              <h2>Create a collection to start</h2>
+              <h2>Create a category to start</h2>
               <p className="muted">
-                A collection is one knowledge base, e.g. "HR policies" or "Product docs". Name it in the sidebar and
-                press Create.
+                A category groups related documents, e.g. HR, Finance or Tech. The chat answers only from the
+                selected category. Name one in the sidebar and press Create.
               </p>
             </div>
           )}
