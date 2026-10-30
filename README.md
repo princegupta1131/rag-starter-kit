@@ -41,7 +41,8 @@ Open <http://localhost:5173>. The database must be Postgres with pgvector ([opti
 ## Features
 
 - **Collections:** separate knowledge bases (e.g. "HR", "Product"); chat with one at a time
-- **Any document:** PDF, Word, TXT, Markdown, CSV, JSON, HTML, and images (described by the vision model)
+- **Any document:** PDF, Word, TXT, Markdown, CSV, JSON, HTML, images (described by the vision model),
+  and videos (MP4, MOV, WebM: speech transcribed with timestamps plus on-screen text, Gemini only)
 - **Hybrid search:** meaning (pgvector) + keywords (Postgres full-text), fused with RRF
 - **Grounded answers:** says "not found" when nothing matches; every fact cites a source; fake citations removed
 - **Clean answers:** formatted Markdown, only relevant sources, the most relevant sentence shown for each
@@ -60,7 +61,7 @@ Open <http://localhost:5173>. The database must be Postgres with pgvector ([opti
 | Step | What it does |
 |---|---|
 | 1. Extract | Gets text from PDF, Word, TXT, Markdown, CSV, JSON, HTML |
-| 2. Caption | Describes images with the vision model so they become text |
+| 2. Caption | Describes images, and transcribes videos, with the model so they become text |
 | 3. Chunk | Splits text into small overlapping pieces |
 | 4. Embed | Turns each piece into a vector (numbers that capture meaning) |
 | 5. Store | Saves pieces + vectors in Postgres, ready to search |
@@ -171,7 +172,7 @@ This kit includes the basics. Before serving real users, also consider:
 | No login | Authentication, and per-user access to collections |
 | Background tasks inside the web server | A job queue (Celery, RQ) for large or many uploads |
 | In-memory answer cache | Redis, shared by all servers |
-| Text and images | OCR for scanned PDFs, speech-to-text for audio and video |
+| Text, images and video | OCR for scanned PDFs, audio files, very long videos (split them first) |
 | Rule-based guard | A safety classifier for your domain |
 | Tests with fake providers | An evaluation set of real questions and expected answers |
 

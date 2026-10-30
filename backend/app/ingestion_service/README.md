@@ -10,7 +10,7 @@ upload -> step1_extract -> step2_caption -> step3_chunk -> step4_embed -> step5_
 | `schemas.py` | Request and response types |
 | `pipeline.py` | Runs the steps in order in the background and saves a step log for the UI |
 | `steps/step1_extract.py` | PDF / DOCX / TXT / MD / CSV / JSON / HTML to text (keeps PDF page numbers) |
-| `steps/step2_caption.py` | Images to text with the vision model |
+| `steps/step2_caption.py` | Images to text with the vision model; videos to a timestamped transcript (Gemini) |
 | `steps/step3_chunk.py` | Sentence-aware chunks with overlap; drops repeats |
 | `steps/step4_embed.py` | Chunks to vectors with the configured embedder |
 | `steps/step5_store.py` | Saves chunks + vectors and marks the document ready, in one transaction |

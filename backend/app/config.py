@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     chunk_size_words: int = 200
     chunk_overlap_words: int = 40
     max_upload_mb: int = 20
+    max_video_mb: int = 200   # videos are bigger; they go to Gemini through its Files API
 
     # Retrieval
     top_k: int = 6

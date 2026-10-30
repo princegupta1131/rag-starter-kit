@@ -5,7 +5,7 @@ import { api } from '../../api/client'
 import type { Collection, DocumentInfo, UploadResult } from '../../types'
 import DocumentCard from './DocumentCard'
 
-const ACCEPT = '.pdf,.docx,.txt,.md,.csv,.json,.html,.htm,.png,.jpg,.jpeg,.webp'
+const ACCEPT = '.pdf,.docx,.txt,.md,.csv,.json,.html,.htm,.png,.jpg,.jpeg,.webp,.mp4,.mov,.webm,.mpeg'
 
 // What happened to a file that wasn't queued: skipped (already here), refused, or a failed request
 interface Notice {
@@ -85,7 +85,7 @@ export default function IngestionPanel({ collection, onChanged }: Props) {
         <span className="panel-icon" aria-hidden>↑</span>
         <div className="panel-title">
           <h2 id="upload-title">Upload</h2>
-          <span className="muted">into {collection.name}</span>
+          <span className="muted">into the {collection.name} category</span>
         </div>
       </div>
 
@@ -107,7 +107,7 @@ export default function IngestionPanel({ collection, onChanged }: Props) {
         >
           <span className={`drop-icon ${busy ? 'spin' : ''}`} aria-hidden>{busy ? '◌' : '↑'}</span>
           <strong>{busy ? 'Uploading…' : 'Drop files or click to choose'}</strong>
-          <span>PDF, Word, TXT, Markdown, CSV, JSON, HTML, images</span>
+          <span>PDF, Word, TXT, Markdown, CSV, JSON, HTML, images and videos (MP4, MOV, WebM)</span>
         </button>
       ) : (
         <PasteForm busy={busy} onSubmit={(title, text) => upload(async () => [await api.uploadText(collection.id, title, text)])} />

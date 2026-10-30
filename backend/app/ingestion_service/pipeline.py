@@ -29,8 +29,11 @@ def run_ingestion(document_id: str, filename: str, data: bytes) -> None:
             step["detail"] = f"{len(sections)} section(s), {chars:,} characters"
 
         with trace.step("caption") as step:
-            sections, captioned = caption(filename, data, sections)
-            step["detail"] = "image described by the vision model" if captioned else "not an image, skipped"
+            sections, described = caption(filename, data, sections)
+            step["detail"] = {
+                "image": "image described by the vision model",
+                "video": "video transcribed and described by the model",
+            }.get(described, "not an image or video, skipped")
 
         if not any(s["text"].strip() for s in sections):
             raise ValueError("No text found. Scanned PDF? Add OCR in step1_extract.py.")

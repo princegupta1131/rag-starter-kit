@@ -3,7 +3,7 @@ import base64
 
 from openai import OpenAI
 
-from app.providers.base import with_retry
+from app.providers.base import ProviderError, with_retry
 
 BATCH = 100
 
@@ -32,6 +32,9 @@ class OpenAIChat:
             }],
         ))
         return (result.output_text or "").strip()
+
+    def describe_video(self, data: bytes, mime_type: str, instruction: str) -> str:
+        raise ProviderError("openai: chat models can't read video. Set LLM_PROVIDER=gemini to upload videos.")
 
 
 class OpenAIEmbedder:

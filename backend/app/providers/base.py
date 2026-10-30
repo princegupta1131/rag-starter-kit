@@ -30,6 +30,10 @@ class ChatModel(Protocol):
         """Return a text description of an image."""
         ...
 
+    def describe_video(self, data: bytes, mime_type: str, instruction: str) -> str:
+        """Return a transcript and description of a video."""
+        ...
+
 
 class Embedder(Protocol):
     name: str  # stored per document; search only compares vectors from the same model

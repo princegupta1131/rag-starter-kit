@@ -1,10 +1,15 @@
 """Google Gemini (default). Needs GEMINI_API_KEY."""
+import contextlib
+import io
+import time
+
 from google import genai
 from google.genai import types
 
-from app.providers.base import with_retry
+from app.providers.base import ProviderError, with_retry
 
 BATCH = 50
+VIDEO_READY_TIMEOUT_S = 300  # Gemini processes an uploaded video before it can be read
 
 
 class GeminiChat:
@@ -27,6 +32,30 @@ class GeminiChat:
             config=types.GenerateContentConfig(temperature=0.0),
         ))
         return (result.text or "").strip()
+
+    def describe_video(self, data: bytes, mime_type: str, instruction: str) -> str:
+        """Videos are too big to send inline: upload with the Files API, wait until processed, ask, delete."""
+        uploaded = with_retry("gemini", lambda: self._client.files.upload(
+            file=io.BytesIO(data), config=types.UploadFileConfig(mime_type=mime_type),
+        ))
+        try:
+            deadline = time.monotonic() + VIDEO_READY_TIMEOUT_S
+            while uploaded.state == types.FileState.PROCESSING:
+                if time.monotonic() > deadline:
+                    raise ProviderError("gemini: the video took too long to process; try a shorter one")
+                time.sleep(3)
+                uploaded = with_retry("gemini", lambda name=uploaded.name: self._client.files.get(name=name))
+            if uploaded.state != types.FileState.ACTIVE:
+                raise ProviderError(f"gemini: couldn't process the video ({uploaded.state})")
+            result = with_retry("gemini", lambda: self._client.models.generate_content(
+                model=self.name,
+                contents=[uploaded, instruction],
+                config=types.GenerateContentConfig(temperature=0.0),
+            ))
+            return (result.text or "").strip()
+        finally:
+            with contextlib.suppress(Exception):  # Gemini also deletes uploaded files by itself after 48 hours
+                self._client.files.delete(name=uploaded.name)
 
 
 class GeminiEmbedder:

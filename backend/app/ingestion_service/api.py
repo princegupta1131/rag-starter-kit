@@ -19,7 +19,7 @@ from app.config import settings
 from app.core.errors import NotFound
 from app.ingestion_service.pipeline import run_ingestion
 from app.ingestion_service.schemas import ChunkOut, DocumentOut, PastedText, UploadResponse, UploadResult
-from app.ingestion_service.steps.step1_extract import SUPPORTED
+from app.ingestion_service.steps.step1_extract import SUPPORTED, VIDEO_TYPES
 from app.providers import get_embedder
 from app.repositories import chunks as chunks_repo
 from app.repositories import collections as collections_repo
@@ -33,8 +33,9 @@ def upload_files(background: BackgroundTasks, collection_id: UUID = Form(...), f
     _require_collection(collection_id)
     results = []
     for upload in files:
-        data = upload.file.read(_max_bytes() + 1)  # never hold more than the limit in memory
-        results.append(_register(background, collection_id, upload.filename or "untitled.txt", data))
+        filename = upload.filename or "untitled.txt"
+        data = upload.file.read(_max_bytes(filename) + 1)  # never hold more than the limit in memory
+        results.append(_register(background, collection_id, filename, data))
     return {"results": results}
 
 
@@ -70,8 +71,12 @@ def _require_collection(collection_id: UUID) -> None:
         raise NotFound("Collection not found")
 
 
-def _max_bytes() -> int:
-    return settings.max_upload_mb * 1024 * 1024
+def _max_mb(filename: str) -> int:
+    return settings.max_video_mb if Path(filename).suffix.lower() in VIDEO_TYPES else settings.max_upload_mb
+
+
+def _max_bytes(filename: str) -> int:
+    return _max_mb(filename) * 1024 * 1024
 
 
 def _register(background: BackgroundTasks, collection_id: UUID, filename: str, data: bytes) -> UploadResult:
@@ -79,8 +84,8 @@ def _register(background: BackgroundTasks, collection_id: UUID, filename: str, d
     if Path(filename).suffix.lower() not in SUPPORTED:
         return UploadResult(filename=filename, status="rejected",
                             reason=f"Unsupported type. Use: {', '.join(sorted(SUPPORTED))}")
-    if len(data) > _max_bytes():
-        return UploadResult(filename=filename, status="rejected", reason=f"Larger than {settings.max_upload_mb} MB")
+    if len(data) > _max_bytes(filename):
+        return UploadResult(filename=filename, status="rejected", reason=f"Larger than {_max_mb(filename)} MB")
     if not data.strip():
         return UploadResult(filename=filename, status="rejected", reason="File is empty")
 

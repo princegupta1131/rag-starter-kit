@@ -38,6 +38,10 @@ def test_images_return_no_text():
     assert extract("photo.PNG", b"\x89PNG") == []
 
 
+def test_videos_return_no_text():
+    assert extract("training.MP4", b"\x00\x00\x00\x18ftypmp42") == []
+
+
 def test_unsupported_type_raises():
     with pytest.raises(ValueError, match="Unsupported"):
         extract("virus.exe", b"x")

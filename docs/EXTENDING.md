@@ -5,7 +5,8 @@ Where each kind of change goes, and the few rules that keep the code clean.
 ## Add an LLM provider
 
 1. Create `backend/app/providers/<name>.py` with two classes that match the interfaces in `providers/base.py`:
-   - a chat model: `generate(prompt, system)` and `describe_image(data, mime_type, instruction)`
+   - a chat model: `generate(prompt, system)`, `describe_image(data, mime_type, instruction)` and
+     `describe_video(data, mime_type, instruction)` (raise `ProviderError` if the model can't read video)
    - an embedder: `embed_documents(texts)`, `embed_query(text)`, plus `name` and `dim`
 2. Wrap API calls in `with_retry("<name>", lambda: ...)` to get retries and clean errors.
 3. Register it in `providers/__init__.py` (`get_chat_model` / `get_embedder`) and add it to

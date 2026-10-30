@@ -5,9 +5,10 @@ Output is a list of "sections": {"text": "...", "page": 3}
 (page is None for formats without pages). Keeping the page lets answers cite "page 3".
 
 Supported: .pdf .docx .txt .md .csv .json .html .htm
-Images (.png .jpg .jpeg .webp) return no text here — step 2 (caption) handles them.
+Images (.png .jpg .jpeg .webp) and videos (.mp4 .mov .webm .mpeg) return no text here —
+step 2 (caption) turns them into text with the model.
 
-Extend: add OCR for scanned PDFs, Whisper for audio/video, a URL fetcher, etc.
+Extend: add OCR for scanned PDFs, audio files, a URL fetcher, etc.
 """
 import io
 import json
@@ -19,7 +20,8 @@ from pypdf import PdfReader
 
 TEXT_TYPES = {".txt", ".md", ".csv"}
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
-SUPPORTED = {".pdf", ".docx", ".json", ".html", ".htm", *TEXT_TYPES, *IMAGE_TYPES}
+VIDEO_TYPES = {".mp4": "video/mp4", ".mov": "video/mov", ".webm": "video/webm", ".mpeg": "video/mpeg"}
+SUPPORTED = {".pdf", ".docx", ".json", ".html", ".htm", *TEXT_TYPES, *IMAGE_TYPES, *VIDEO_TYPES}
 
 
 def extract(filename: str, data: bytes) -> list[dict]:
@@ -37,7 +39,7 @@ def extract(filename: str, data: bytes) -> list[dict]:
         return [{"text": json.dumps(json.loads(_decode(data)), indent=2, ensure_ascii=False), "page": None}]
     if ext in TEXT_TYPES:
         return [{"text": _decode(data), "page": None}]
-    return []  # images: nothing to extract as text
+    return []  # images and videos: nothing to extract as text yet, step 2 describes them
 
 
 def _decode(data: bytes) -> str:

@@ -1,4 +1,5 @@
 import socket
+from types import SimpleNamespace
 
 import pytest
 
@@ -92,3 +93,57 @@ def test_database_errors_are_one_readable_line():
     assert explain_db_error(Exception(libpq)) == (
         'password authentication failed for user "me". Wrong user or password in DATABASE_URL.'
     )
+
+
+class FakeGeminiFiles:
+    """Stands in for client.files: the video is 'processing' once, then ready."""
+
+    def __init__(self, final_state):
+        from google.genai import types
+        self.types, self.final_state, self.log = types, final_state, []
+
+    def _file(self, state):
+        return self.types.File(name="files/abc", state=state)
+
+    def upload(self, file, config):
+        self.log.append(("upload", config.mime_type))
+        return self._file(self.types.FileState.PROCESSING)
+
+    def get(self, name):
+        self.log.append(("get", name))
+        return self._file(self.final_state)
+
+    def delete(self, name):
+        self.log.append(("delete", name))
+
+
+def gemini_with_files(monkeypatch, files):
+    from app.providers.gemini import GeminiChat
+    monkeypatch.setattr("app.providers.gemini.time.sleep", lambda s: None)
+    chat = GeminiChat(api_key="test", model="gemini-test")
+    answer = SimpleNamespace(text=" [00:01] Hello. ")
+    chat._client = SimpleNamespace(files=files, models=SimpleNamespace(generate_content=lambda **kw: answer))
+    return chat
+
+
+def test_gemini_video_uploads_waits_answers_and_cleans_up(monkeypatch):
+    from google.genai import types
+    files = FakeGeminiFiles(types.FileState.ACTIVE)
+    chat = gemini_with_files(monkeypatch, files)
+    assert chat.describe_video(b"video", "video/mp4", "transcribe") == "[00:01] Hello."
+    assert files.log == [("upload", "video/mp4"), ("get", "files/abc"), ("delete", "files/abc")]
+
+
+def test_gemini_video_that_fails_processing_is_reported_and_deleted(monkeypatch):
+    from google.genai import types
+    files = FakeGeminiFiles(types.FileState.FAILED)
+    chat = gemini_with_files(monkeypatch, files)
+    with pytest.raises(ProviderError, match="couldn't process the video"):
+        chat.describe_video(b"video", "video/mp4", "transcribe")
+    assert files.log[-1] == ("delete", "files/abc")
+
+
+def test_openai_explains_it_cannot_read_video():
+    from app.providers.openai import OpenAIChat
+    with pytest.raises(ProviderError, match="LLM_PROVIDER=gemini"):
+        OpenAIChat(api_key="test", model="gpt-test").describe_video(b"video", "video/mp4", "transcribe")

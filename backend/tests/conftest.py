@@ -82,6 +82,10 @@ class FakeChat:
     def describe_image(self, data, mime_type, instruction):
         return "A diagram of the five steps of hand washing."
 
+    def describe_video(self, data, mime_type, instruction):
+        self.calls.append((mime_type, instruction))
+        return "[00:05] Seema: VHSND now covers people of all ages.\nOn screen:\n[00:12] Title: What is new in VHSND"
+
 
 LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost"}
 
